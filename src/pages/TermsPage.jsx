@@ -4,6 +4,7 @@ import { PolicyPageLayout } from '../components/PolicyPageLayout.jsx';
 const cardClassName = 'rounded-3xl border border-slate-700/70 bg-slate-900/80 p-6 shadow-[0_24px_48px_-16px_rgba(185,28,28,0.25)]';
 const textClassName = 'text-[15px] leading-relaxed text-slate-200/85';
 
+// Renderiza os termos de uso da aplicacao.
 export function TermsPage() {
   return (
     <PolicyPageLayout

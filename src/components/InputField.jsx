@@ -1,6 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
 
+// Campo de entrada padrao para formularios com estilo consistente.
 export const InputField = ({
   label,
   type = 'text',

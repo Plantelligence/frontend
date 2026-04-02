@@ -1,8 +1,10 @@
 // Preferencias visuais das estufas salvas em localStorage — tipos de cultivo, logos e status.
 const STORAGE_KEY = 'plantelligence-greenhouse-ui-prefs';
 
+// Normaliza texto para comparacoes consistentes.
 const normalize = (value) => (value ?? '').toString().trim().toLowerCase();
 
+// Carrega preferencias salvas do usuario no navegador.
 export const loadGreenhouseUiPrefs = () => {
   if (typeof window === 'undefined') {
     return {};
@@ -20,6 +22,7 @@ export const loadGreenhouseUiPrefs = () => {
   }
 };
 
+// Persiste preferencias de UI no localStorage.
 export const saveGreenhouseUiPrefs = (prefs) => {
   if (typeof window === 'undefined') {
     return;
@@ -28,6 +31,7 @@ export const saveGreenhouseUiPrefs = (prefs) => {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs ?? {}));
 };
 
+// Tenta identificar o tipo de cultivo pelo nome do perfil.
 export const inferCropTypeFromName = (profileName) => {
   const normalized = normalize(profileName);
 
@@ -54,6 +58,7 @@ export const inferCropTypeFromName = (profileName) => {
   return 'personalizado';
 };
 
+// Resolve o tipo da estufa priorizando preferencia salva.
 export const resolveGreenhouseType = (greenhouse, uiPrefs = {}) => {
   const prefType = uiPrefs?.[greenhouse?.id]?.type;
   if (prefType) {
@@ -145,6 +150,7 @@ const logoCatalogByType = {
   ]
 };
 
+// Gera hash simples para escolher logo de forma deterministica.
 const hashText = (value) => {
   const input = (value ?? '').toString();
   let hash = 0;
@@ -154,12 +160,14 @@ const hashText = (value) => {
   return hash;
 };
 
+// Seleciona uma logo fixa por estufa, evitando troca aleatoria na tela.
 export const resolveCatalogLogo = (greenhouseId, type = 'personalizado') => {
   const catalog = logoCatalogByType[type] ?? logoCatalogByType.personalizado;
   const index = hashText(greenhouseId) % catalog.length;
   return catalog[index];
 };
 
+// Define o visual do status com base na configuracao e nos alertas.
 export const resolveStatusVisual = (greenhouse) => {
   if (!greenhouse?.flowerProfileId && !greenhouse?.profile) {
     return {

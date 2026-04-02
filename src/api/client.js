@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore.js';
 
+// Resolve URL base da API para ambiente local e producao.
 const resolveBaseUrl = () => {
   const raw = (import.meta.env?.VITE_APP_API_URL ?? '').trim();
 
@@ -33,6 +34,7 @@ const refreshClient = axios.create({
 
 let refreshPromise = null;
 
+// Executa refresh token com trava para evitar requisições duplicadas em paralelo.
 const refreshSession = async () => {
   if (!refreshPromise) {
     const { tokens, setSession, clearSession } = useAuthStore.getState();
@@ -68,6 +70,7 @@ const refreshSession = async () => {
 };
 
 api.interceptors.request.use((config) => {
+  // Injeta access token automaticamente em cada chamada autenticada.
   const { tokens } = useAuthStore.getState();
   if (tokens?.accessToken) {
     config.headers.Authorization = `Bearer ${tokens.accessToken}`;
@@ -78,6 +81,7 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
+    // Em caso de 401, tenta renovar token e repetir a requisicao uma unica vez.
     const originalRequest = error.config;
     if (originalRequest && error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;

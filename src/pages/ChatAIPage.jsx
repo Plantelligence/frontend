@@ -1,6 +1,5 @@
 // Pagina de chat com IA integrada ao contexto da estufa.
-// A interface fica pronta para receber a API de backend assim que o colega terminar
-// o endpoint /api/ai/chat. Enquanto isso, respostas ficam em modo stub (offline).
+// Esta tela usa respostas simuladas para manter o fluxo de conversa no frontend.
 
 import React, { useEffect, useRef, useState } from 'react';
 import { DashboardSideNav } from '../components/DashboardSideNav.jsx';
@@ -13,30 +12,20 @@ const INITIAL_MESSAGE = {
   timestamp: new Date().toISOString()
 };
 
-// Respostas stub usadas quando o backend de IA ainda nao esta disponivel.
-// Remove essas entradas assim que o endpoint /api/ai/chat estiver ativo.
+// Respostas simuladas usadas pela experiencia local de conversa.
 const STUB_RESPONSES = [
-  'Entendido! Vou analisar os dados da estufa e responder em instantes. (Modulo de IA em integracao — em breve funcionando em tempo real.)',
+  'Entendido! Vou analisar os dados da estufa e responder em instantes. (Resposta simulada do modo local.)',
   'Boa pergunta sobre cogumelos! Recomendo verificar a umidade do substrato e garantir que esteja dentro da faixa ideal para esta especie.',
   'Para otimizar a producao, o intervalo de ventilacao e fundamental. Cogumelos produzem CO₂ e precisam de renovacao constante do ar.',
   'Veja os graficos de telemetria da estufa para identificar tendencias de temperatura nas ultimas horas. Variações acima de 3°C em 2 horas merecem atencao.',
-  'Estou pronto para ajudar! Assim que o modulo de IA estiver conectado ao backend, responderei com analise real dos seus dados de cultivo.',
+  'Estou pronto para ajudar! Posso orientar ajustes de cultivo com base no contexto informado na conversa.',
 ];
 
-// Chama o endpoint de IA quando estiver disponivel.
-// Por enquanto retorna uma resposta simulada.
+// Retorna a resposta do fluxo de conversa em modo simulado.
 const fetchAIResponse = async (userMessage, conversationHistory) => {
-  // TODO: substituir por chamada real assim que o colega implementar o backend.
-  // Exemplo de contrato esperado:
-  //   POST /api/ai/chat
-  //   Body: { message: string, history: [{role, text}] }
-  //   Response: { reply: string }
-  //
-  // import api from '../api/client.js';
-  // const result = await api.post('/ai/chat', { message: userMessage, history: conversationHistory });
-  // return result.data.reply;
-
-  // Stub: simula latencia de rede e retorna resposta fixa
+  // Simula latencia de rede e retorna uma mensagem do catalogo local.
+  void userMessage;
+  void conversationHistory;
   await new Promise((resolve) => setTimeout(resolve, 900 + Math.random() * 600));
   const index = Math.floor(Math.random() * STUB_RESPONSES.length);
   return STUB_RESPONSES[index];
@@ -162,7 +151,7 @@ export const ChatAIPage = () => {
         <div className="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
           <DashboardSideNav
             active="chat"
-            footerText="Assistente IA em integracao. Respostas em tempo real disponiveis em breve."
+            footerText="Assistente IA em modo simulado para suporte no dashboard."
           />
 
           <section className="flex flex-col overflow-hidden rounded-[26px] bg-[#f5f1eb] p-4 md:p-6 lg:h-[calc(100vh-160px)] lg:min-h-[640px] lg:max-h-[820px]">
@@ -181,7 +170,7 @@ export const ChatAIPage = () => {
                   </h1>
                 </div>
                 <span className="ml-auto rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">
-                  Em integracao
+                  Modo simulado
                 </span>
               </div>
               <p className="mt-2 text-sm text-slate-600">

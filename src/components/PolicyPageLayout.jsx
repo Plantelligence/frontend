@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
+// Estrutura base das paginas legais (termos, privacidade e cookies).
 export function PolicyPageLayout({ eyebrow, title, children }) {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(185,28,28,0.14)_0%,#120f0f_55%)] text-slate-200">

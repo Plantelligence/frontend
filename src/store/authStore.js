@@ -2,6 +2,7 @@ import { create } from 'zustand';
 
 const STORAGE_KEY = 'plantelligence-session';
 
+// Recupera sessao salva para manter login apos recarregar a pagina.
 const loadFromStorage = () => {
   if (typeof window === 'undefined') {
     return null;
@@ -18,6 +19,7 @@ const loadFromStorage = () => {
   }
 };
 
+// Persiste estado de sessao atual no navegador.
 const persistToStorage = (state) => {
   if (typeof window === 'undefined') {
     return;
@@ -31,6 +33,7 @@ const initialState = loadFromStorage() ?? {
   requiresPasswordReset: false
 };
 
+// Store central de autenticacao (sessao, tokens e sinalizadores de seguranca).
 export const useAuthStore = create((set, get) => ({
   ...initialState,
   setSession: ({ user, tokens, requiresPasswordReset }) => {
