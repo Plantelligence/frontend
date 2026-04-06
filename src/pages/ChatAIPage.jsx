@@ -1,8 +1,10 @@
 // Pagina de chat com IA integrada ao contexto da estufa.
-// Esta tela usa respostas simuladas para manter o fluxo de conversa no frontend.
 
 import React, { useEffect, useRef, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { DashboardSideNav } from '../components/DashboardSideNav.jsx';
+import { sendChatMessage } from '../api/chatService.js';
 
 // Mensagem inicial que aparece quando o usuario abre o chat.
 const INITIAL_MESSAGE = {
@@ -10,25 +12,6 @@ const INITIAL_MESSAGE = {
   role: 'assistant',
   text: 'Ola! Sou o assistente da Plantelligence. Posso te ajudar com duvidas sobre cultivo de cogumelos, interpretar alertas das suas estufas ou sugerir ajustes nos parametros ambientais. Como posso ajudar?',
   timestamp: new Date().toISOString()
-};
-
-// Respostas simuladas usadas pela experiencia local de conversa.
-const STUB_RESPONSES = [
-  'Entendido! Vou analisar os dados da estufa e responder em instantes. (Resposta simulada do modo local.)',
-  'Boa pergunta sobre cogumelos! Recomendo verificar a umidade do substrato e garantir que esteja dentro da faixa ideal para esta especie.',
-  'Para otimizar a producao, o intervalo de ventilacao e fundamental. Cogumelos produzem CO₂ e precisam de renovacao constante do ar.',
-  'Veja os graficos de telemetria da estufa para identificar tendencias de temperatura nas ultimas horas. Variações acima de 3°C em 2 horas merecem atencao.',
-  'Estou pronto para ajudar! Posso orientar ajustes de cultivo com base no contexto informado na conversa.',
-];
-
-// Retorna a resposta do fluxo de conversa em modo simulado.
-const fetchAIResponse = async (userMessage, conversationHistory) => {
-  // Simula latencia de rede e retorna uma mensagem do catalogo local.
-  void userMessage;
-  void conversationHistory;
-  await new Promise((resolve) => setTimeout(resolve, 900 + Math.random() * 600));
-  const index = Math.floor(Math.random() * STUB_RESPONSES.length);
-  return STUB_RESPONSES[index];
 };
 
 const generateMessageId = () =>
@@ -42,6 +25,41 @@ const formatTime = (iso) => {
   } catch (_error) {
     return '--';
   }
+};
+
+// Normaliza texto markdown da IA para melhorar leitura na bolha do chat.
+const normalizeAssistantText = (rawText) => {
+  if (typeof rawText !== 'string') {
+    return '';
+  }
+
+  return rawText
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .replace(/\s+(#{1,6}\s)/g, '\n\n$1')
+    .replace(/\s+(\d+\.\s+\*\*)/g, '\n\n$1')
+    .replace(/\s+(-\s+\*\*)/g, '\n$1')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+};
+
+const resolveSectionBadgeClass = (title = '') => {
+  const normalized = title.toLowerCase();
+
+  if (normalized.includes('diagn')) {
+    return 'border-amber-200 bg-amber-50 text-amber-800';
+  }
+  if (normalized.includes('agora') || normalized.includes('acao') || normalized.includes('fazer')) {
+    return 'border-emerald-200 bg-emerald-50 text-emerald-800';
+  }
+  if (normalized.includes('erro') || normalized.includes('evitar') || normalized.includes('prev')) {
+    return 'border-rose-200 bg-rose-50 text-rose-800';
+  }
+  if (normalized.includes('grave') || normalized.includes('urg')) {
+    return 'border-violet-200 bg-violet-50 text-violet-800';
+  }
+
+  return 'border-slate-200 bg-slate-50 text-slate-700';
 };
 
 // Bolha de mensagem individual. Assistente fica a esquerda, usuario a direita.
@@ -60,7 +78,27 @@ const MessageBubble = ({ message }) => {
             Assistente IA
           </p>
         ) : null}
-        <p className="leading-relaxed">{message.text}</p>
+        {isUser ? (
+          <p className="whitespace-pre-wrap break-words leading-relaxed">{message.text}</p>
+        ) : (
+          <div className="break-words text-slate-800 leading-relaxed [&_h1]:mb-2 [&_h1]:mt-3 [&_h1]:text-base [&_h1]:font-semibold [&_h2]:mb-2 [&_h2]:mt-3 [&_h2]:text-[15px] [&_h2]:font-semibold [&_h3]:mb-2 [&_h3]:mt-3 [&_h3]:text-sm [&_h3]:font-semibold [&_p]:my-2 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1 [&_strong]:font-semibold [&_code]:rounded [&_code]:bg-stone-100 [&_code]:px-1 [&_code]:py-0.5">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                h3: ({ children }) => {
+                  const title = String(children ?? '').replace(/^#+\s*/, '').trim();
+                  return (
+                    <h3 className={`mb-2 mt-3 inline-flex rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${resolveSectionBadgeClass(title)}`}>
+                      {children}
+                    </h3>
+                  );
+                }
+              }}
+            >
+              {message.text}
+            </ReactMarkdown>
+          </div>
+        )}
         <p className={`mt-1 text-[10px] ${isUser ? 'text-red-200' : 'text-slate-400'}`}>
           {formatTime(message.timestamp)}
         </p>
@@ -89,12 +127,20 @@ export const ChatAIPage = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const messagesContainerRef = useRef(null);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
   // Rola automaticamente para o final quando chega nova mensagem.
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const container = messagesContainerRef.current;
+    if (!container) {
+      return;
+    }
+    container.scrollTo({
+      top: container.scrollHeight,
+      behavior: 'smooth'
+    });
   }, [messages, loading]);
 
   const sendMessage = async () => {
@@ -116,10 +162,14 @@ export const ChatAIPage = () => {
     setError(null);
 
     try {
-      // Passa o historico atual (sem a mensagem inicial de boas-vindas)
-      // para dar contexto ao modelo de IA.
-      const history = messages.slice(1).map(({ role, text }) => ({ role, text }));
-      const reply = await fetchAIResponse(trimmed, history);
+      const history = [...messages, userMessage].map(({ role, text }) => ({
+        role,
+        content: text
+      }));
+      const result = await sendChatMessage({ messages: history });
+      const reply = normalizeAssistantText(
+        result?.response ?? 'Não consegui gerar resposta agora.'
+      );
 
       setMessages((prev) => [
         ...prev,
@@ -130,8 +180,19 @@ export const ChatAIPage = () => {
           timestamp: new Date().toISOString()
         }
       ]);
-    } catch (_fetchError) {
-      setError('Nao foi possivel conectar ao assistente. Verifique sua conexao e tente novamente.');
+    } catch (fetchError) {
+      const detail = fetchError?.response?.data?.detail;
+      const isIaUnavailable =
+        typeof detail === 'string'
+        && detail.toLowerCase().includes('assistente de ia indisponivel');
+
+      setError(
+        isIaUnavailable
+          ? 'Assistente temporariamente indisponível. Tente novamente em alguns minutos.'
+          : fetchError?.response?.data?.detail
+          ?? fetchError?.response?.data?.message
+          ?? 'Não foi possível obter uma resposta agora. Tente novamente em instantes.'
+      );
     } finally {
       setLoading(false);
       inputRef.current?.focus();
@@ -151,7 +212,7 @@ export const ChatAIPage = () => {
         <div className="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
           <DashboardSideNav
             active="chat"
-            footerText="Assistente IA em modo simulado para suporte no dashboard."
+            footerText="Use o assistente para tirar duvidas de cultivo e receber orientacoes praticas."
           />
 
           <section className="flex flex-col overflow-hidden rounded-[26px] bg-[#f5f1eb] p-4 md:p-6 lg:h-[calc(100vh-160px)] lg:min-h-[640px] lg:max-h-[820px]">
@@ -169,8 +230,8 @@ export const ChatAIPage = () => {
                     Chat com IA
                   </h1>
                 </div>
-                <span className="ml-auto rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">
-                  Modo simulado
+                <span className="ml-auto rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+                  Assistente online
                 </span>
               </div>
               <p className="mt-2 text-sm text-slate-600">
@@ -179,7 +240,7 @@ export const ChatAIPage = () => {
             </header>
 
             {/* Area de mensagens — ocupa o espaco restante e rola internamente */}
-            <div className="flex-1 space-y-4 overflow-y-auto pr-1 pb-2">
+            <div ref={messagesContainerRef} className="flex-1 space-y-4 overflow-y-auto pr-1 pb-2">
               {messages.map((message) => (
                 <MessageBubble key={message.id} message={message} />
               ))}

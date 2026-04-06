@@ -4,8 +4,13 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore.js';
 
 export const ProtectedRoute = () => {
-  const user = useAuthStore((state) => state.user);
-  if (!user) {
+  const { user, tokens } = useAuthStore((state) => ({
+    user: state.user,
+    tokens: state.tokens
+  }));
+  const hasSessionToken = Boolean(tokens?.accessToken || tokens?.refreshToken);
+
+  if (!user || !hasSessionToken) {
     return <Navigate to="/login" replace />;
   }
   return <Outlet />;

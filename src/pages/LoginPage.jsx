@@ -1,11 +1,12 @@
-// Página de login — lida com autenticação normal e verificação de MFA (TOTP/QR Code).
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import QRCode from 'react-qr-code';
 import { login, initiateMfa, verifyMfa } from '../api/authService.js';
 import { useAuthStore } from '../store/authStore.js';
+import { getFriendlyErrorMessage } from '../utils/errorMessages.js';
 
 const initialState = { email: '', password: '' };
+const QRCodeComponent = QRCode?.default ?? QRCode;
 
 /* ── Decoração SVG de cogumelo ── */
 const MushroomDecor = () => (
@@ -109,7 +110,7 @@ export const LoginPage = () => {
         navigate('/dashboard');
       }
     } catch (err) {
-      setError(err.response?.data?.message ?? 'Falha no login.');
+      setError(getFriendlyErrorMessage(err, 'Não foi possível entrar agora.', 'login'));
     } finally {
       setLoading(false);
     }
@@ -131,7 +132,7 @@ export const LoginPage = () => {
       }
     } catch (err) {
       setMethodDetails(null);
-      setMfaError(err.response?.data?.message ?? 'Não foi possível iniciar o método escolhido.');
+      setMfaError(getFriendlyErrorMessage(err, 'Não foi possível iniciar a verificação agora.', 'mfa'));
     } finally {
       setInitiatingMethod(false);
     }
@@ -158,7 +159,7 @@ export const LoginPage = () => {
       setMfaContext(null); setSelectedMethod(null); setMethodDetails(null); setCode(''); setMfaInfo(null); setStep('credentials');
       navigate('/dashboard');
     } catch (err) {
-      setMfaError(err.response?.data?.message ?? 'Falha na validação do código informado.');
+      setMfaError(getFriendlyErrorMessage(err, 'Não foi possível validar o código informado.', 'mfa'));
     } finally {
       setLoading(false);
     }
@@ -211,7 +212,7 @@ export const LoginPage = () => {
               <circle cx="14" cy="7" r="1" fill="white" opacity="0.3" />
             </svg>
           </div>
-          <h1 className="text-xl font-semibold tracking-wide text-red-50">Plantelligence</h1>
+          <h1 className="text-xl font-semibold tracking-wide text-red-50">PLANTELLIGENCE</h1>
           <p className="text-xs leading-relaxed text-red-200/50">
             Automação inteligente para<br />estufas de cogumelos.
           </p>
@@ -241,22 +242,18 @@ export const LoginPage = () => {
 
         {step === 'credentials' ? (
           <>
-            {/* Cabeçalho */}
             <div>
               <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-red-500">Sistema de Automação</p>
               <h2 className="text-2xl font-semibold text-slate-50">Acesso ao console</h2>
             </div>
 
-            {/* Erro */}
             {error && (
               <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300">
                 {error}
               </div>
             )}
 
-            {/* Formulário */}
             <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-              {/* E-mail */}
               <label className="flex flex-col gap-1.5">
                 <span className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">Usuário</span>
                 <input
@@ -271,7 +268,6 @@ export const LoginPage = () => {
                 />
               </label>
 
-              {/* Senha + mostrar/ocultar */}
               <label className="flex flex-col gap-1.5">
                 <span className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">Senha</span>
                 <div className="relative">
@@ -301,14 +297,12 @@ export const LoginPage = () => {
                 </div>
               </label>
 
-              {/* Esqueci a senha */}
               <div className="flex justify-end">
                 <Link to="/password-reset" className="text-xs text-slate-500 transition hover:text-red-400">
                   Esqueci a senha
                 </Link>
               </div>
 
-              {/* Enviar */}
               <button
                 type="submit"
                 disabled={loading}
@@ -326,7 +320,6 @@ export const LoginPage = () => {
               </button>
             </form>
 
-            {/* Link de cadastro */}
             <p className="border-t border-slate-800/50 pt-4 text-center text-xs text-slate-600">
               Novo por aqui?{' '}
               <Link to="/register" className="text-red-500 transition hover:text-red-400">
@@ -334,10 +327,35 @@ export const LoginPage = () => {
               </Link>
             </p>
 
+            <div className="rounded-xl border border-slate-800/70 bg-slate-900/40 p-3">
+              <p className="text-center text-[11px] uppercase tracking-[0.16em] text-slate-500">
+                Termos e privacidade
+              </p>
+              <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+                <Link
+                  to="/termos"
+                  className="rounded-full border border-slate-700/70 px-3 py-1.5 text-xs text-slate-300 transition hover:border-red-600/40 hover:text-red-300"
+                >
+                  Termos de Uso
+                </Link>
+                <Link
+                  to="/privacidade"
+                  className="rounded-full border border-slate-700/70 px-3 py-1.5 text-xs text-slate-300 transition hover:border-red-600/40 hover:text-red-300"
+                >
+                  Política de Privacidade
+                </Link>
+                <Link
+                  to="/cookies"
+                  className="rounded-full border border-slate-700/70 px-3 py-1.5 text-xs text-slate-300 transition hover:border-red-600/40 hover:text-red-300"
+                >
+                  Política de Cookies
+                </Link>
+              </div>
+            </div>
+
           </>
         ) : (
           <>
-            {/* Etapa de MFA */}
             <div className="flex items-center gap-3">
               <button
                 type="button"
@@ -398,7 +416,7 @@ export const LoginPage = () => {
                     <p className="text-center text-xs text-slate-400">Escaneie o QR Code para adicionar ao autenticador.</p>
                     {methodDetails.uri && (
                       <div className="rounded-xl border border-slate-700/50 bg-slate-950 p-3">
-                        <QRCode value={methodDetails.uri} size={136} bgColor="#030712" fgColor="#ef4444" />
+                        <QRCodeComponent value={methodDetails.uri} size={136} bgColor="#030712" fgColor="#ef4444" />
                       </div>
                     )}
                     <p className="text-center text-xs text-slate-500">{methodDetails.accountName} · {methodDetails.issuer}</p>

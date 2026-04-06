@@ -16,7 +16,7 @@ export const GridEstufas = ({
   }
 
   return (
-    <section className="grid auto-rows-fr gap-5 sm:grid-cols-2 xl:grid-cols-3">
+    <section className="grid auto-rows-fr gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
       {estufas.map((greenhouse) => {
         const visual = getCardVisual(greenhouse);
 
@@ -25,7 +25,6 @@ export const GridEstufas = ({
             key={greenhouse.id}
             greenhouse={greenhouse}
             typeVisual={visual.typeVisual}
-            statusVisual={visual.statusVisual}
             logoVisual={visual.logoVisual}
             onOpen={() => onOpen(greenhouse.id)}
           />

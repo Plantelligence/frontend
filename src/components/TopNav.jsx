@@ -54,9 +54,12 @@ export const TopNav = () => {
     <header className="sticky top-0 z-50 flex items-center justify-between border-b border-stone-700 bg-[#181415]/90 px-6 py-4 backdrop-blur">
       <Link to={brandDestination} className="flex items-center gap-2 text-lg font-semibold text-red-400">
         <img src="/logo.svg" alt="" aria-hidden="true" className="h-7 w-7" />
-        <span>Plantelligence</span>
+        <span>PLANTELLIGENCE</span>
       </Link>
-      <nav className="flex items-center gap-6 text-sm text-stone-300">
+      <nav className="flex items-center gap-4 text-sm text-stone-300 md:gap-6">
+        <Link to="/sobre-nos" className="hidden rounded-md px-3 py-2 text-sm font-medium text-stone-300 transition hover:bg-[#241918] hover:text-red-100 md:inline-flex">
+          SOBRE NÓS
+        </Link>
         {user ? (
           <>
             <div
@@ -84,6 +87,21 @@ export const TopNav = () => {
                   <p className="px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-400">
                     Conta
                   </p>
+                  <div className="px-3 py-2 text-xs text-stone-400">
+                    <p className="font-semibold text-stone-200">{user.fullName ?? user.email}</p>
+                    <p>{user.email}</p>
+                    <p className="mt-1 text-[11px] uppercase tracking-[0.15em] text-red-300">{user.organizationName || 'Sem organizacao'}</p>
+                  </div>
+                  <div className="my-1 border-t border-stone-700" />
+                  <Link
+                    to="/dashboard"
+                    className="flex items-center justify-between rounded px-3 py-2 transition hover:bg-[#241918] hover:text-red-100"
+                    onClick={() => setMenuOpen(false)}
+                    role="menuitem"
+                  >
+                    Espaço da organização
+                    <span className="text-xs text-slate-400">Operação</span>
+                  </Link>
                   <Link
                     to="/settings?tab=perfil"
                     className="flex items-center justify-between rounded px-3 py-2 transition hover:bg-[#241918] hover:text-red-100"

@@ -1,10 +1,11 @@
 // Componente raiz da aplicacao, define as rotas e a estrutura principal do app.
 import React, { useEffect, useRef, useState, Component } from 'react';
 import { createPortal } from 'react-dom';
-import { Link, Navigate, Outlet, Route, Routes } from 'react-router-dom';
+import { Link, Navigate, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { LoginPage } from './pages/LoginPage.jsx';
 import { RegisterPage } from './pages/RegisterPage.jsx';
 import { PasswordResetPage } from './pages/PasswordResetPage.jsx';
+import { FirstAccessPage } from './pages/FirstAccessPage.jsx';
 import { DashboardPage } from './pages/DashboardPage.jsx';
 import { GreenhousesPage } from './pages/GreenhousesPage.jsx';
 import { OnboardingGreenhousePage } from './pages/OnboardingGreenhousePage.jsx';
@@ -12,14 +13,16 @@ import { UserSettingsPage } from './pages/UserSettingsPage.jsx';
 import { SecurityLogsPage } from './pages/SecurityLogsPage.jsx';
 import { AdminUsersPage } from './pages/AdminUsersPage.jsx';
 import { ChatAIPage } from './pages/ChatAIPage.jsx';
+import { PresetsPage } from './pages/PresetsPage.jsx';
 import { TechnologyPage } from './pages/TechnologyPage.jsx';
+import { AboutPage } from './pages/AboutPage.jsx';
+import { ContactPage } from './pages/ContactPage.jsx';
 import { TermsPage } from './pages/TermsPage.jsx';
 import { PrivacyPage } from './pages/PrivacyPage.jsx';
 import { CookiesPage } from './pages/CookiesPage.jsx';
 import { EulaPage } from './pages/EulaPage.jsx';
 import { SegurancaPage } from './pages/SegurancaPage.jsx';
 import { TopNav } from './components/TopNav.jsx';
-import { ChatbotSupportButton } from './components/ChatbotSupportButton.jsx';
 import { ScrollToTop } from './components/ScrollToTop.jsx';
 import { ProtectedRoute } from './components/ProtectedRoute.jsx';
 import { AdminRoute } from './components/AdminRoute.jsx';
@@ -232,7 +235,6 @@ const AuthShell = () => (
 const ProtectedAppContent = () => (
   <>
     <Outlet />
-    <ChatbotSupportButton />
   </>
 );
 
@@ -260,12 +262,38 @@ class ErrorBoundary extends Component {
 }
 
 const App = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const search = new URLSearchParams(location.search || '');
+    const firstAccessToken = (search.get('firstAccessToken') || search.get('token') || '').trim();
+    if (!firstAccessToken) {
+      return;
+    }
+
+    const normalizedPath = (location.pathname || '/').replace(/\/+$/, '') || '/';
+    if (normalizedPath === '/first-access' || normalizedPath === '/password-reset') {
+      return;
+    }
+
+    // Token de primeiro acesso atual e hexadecimal com 96 chars (48 bytes).
+    const isLikelyFirstAccessToken = /^[a-f0-9]{96}$/i.test(firstAccessToken);
+    if (!isLikelyFirstAccessToken) {
+      return;
+    }
+
+    navigate(`/first-access?token=${encodeURIComponent(firstAccessToken)}`, { replace: true });
+  }, [location.pathname, location.search, navigate]);
+
   return (
     <ErrorBoundary>
       <ScrollToTop />
       <Routes>
         <Route element={<Shell />}>
           <Route index element={<TechnologyPage />} />
+          <Route path="sobre-nos" element={<AboutPage />} />
+          <Route path="fale-conosco" element={<ContactPage />} />
           <Route path="termos" element={<TermsPage />} />
           <Route path="privacidade" element={<PrivacyPage />} />
           <Route path="cookies" element={<CookiesPage />} />
@@ -277,6 +305,7 @@ const App = () => {
               <Route path="dashboard/onboarding" element={<OnboardingGreenhousePage />} />
               <Route path="dashboard/estufas/:greenhouseId" element={<DashboardPage />} />
               <Route path="dashboard/chat" element={<ChatAIPage />} />
+              <Route path="dashboard/presets" element={<PresetsPage />} />
               <Route path="settings" element={<UserSettingsPage />} />
               <Route path="settings/logs" element={<SecurityLogsPage />} />
               <Route element={<AdminRoute />}>
@@ -289,6 +318,7 @@ const App = () => {
           <Route path="login" element={<LoginPage />} />
           <Route path="register" element={<RegisterPage />} />
           <Route path="password-reset" element={<PasswordResetPage />} />
+          <Route path="first-access" element={<FirstAccessPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

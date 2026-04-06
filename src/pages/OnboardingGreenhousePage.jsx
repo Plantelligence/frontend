@@ -1,13 +1,80 @@
-// Fluxo de cadastro de nova estufa com wizard guiado e selecao do perfil de cultivo de cogumelo.
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createGreenhouse, getFlowerRecommendations, listGreenhouses } from '../api/greenhouseService.js';
+import {
+  createGreenhouse,
+  getFlowerRecommendations,
+  listGreenhouses,
+  resolveCepLocation
+} from '../api/greenhouseService.js';
+import { createCulturePreset } from '../api/presetService.js';
 import { DashboardSideNav } from '../components/DashboardSideNav.jsx';
 import { WizardOnboardingCriarEstufa } from '../components/WizardOnboardingCriarEstufa.jsx';
 import { loadGreenhouseUiPrefs, saveGreenhouseUiPrefs } from '../utils/greenhouseUiPrefs.js';
+import { getFriendlyErrorMessage } from '../utils/errorMessages.js';
+import { useAuthStore } from '../store/authStore.js';
+
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+const normalizeIdealRange = (rawMin, rawMax, bounds, fallback) => {
+  const parsedMin = Number(rawMin);
+  const parsedMax = Number(rawMax);
+
+  const safeMin = Number.isFinite(parsedMin) ? clamp(parsedMin, bounds.min, bounds.max) : fallback.min;
+  const safeMax = Number.isFinite(parsedMax) ? clamp(parsedMax, bounds.min, bounds.max) : fallback.max;
+
+  if (safeMin <= safeMax) {
+    return { min: safeMin, max: safeMax };
+  }
+
+  return { min: safeMax, max: safeMin };
+};
+
+const buildMetricRangesFromIdeal = (ideal, bounds) => {
+  const lowMid = Number((bounds.min + ideal.min) / 2);
+  const highMid = Number((ideal.max + bounds.max) / 2);
+
+  return {
+    critico_baixo: { min: bounds.min, max: lowMid },
+    alerta_baixo: { min: lowMid, max: ideal.min },
+    ideal: { min: ideal.min, max: ideal.max },
+    alerta_alto: { min: ideal.max, max: highMid },
+    critico_alto: { min: highMid, max: bounds.max },
+  };
+};
+
+const buildCustomPresetPayload = (customParams) => {
+  const temperatureIdeal = normalizeIdealRange(
+    customParams?.temperatureMin,
+    customParams?.temperatureMax,
+    { min: -5, max: 45 },
+    { min: 14, max: 18 }
+  );
+  const humidityIdeal = normalizeIdealRange(
+    customParams?.humidityMin,
+    customParams?.humidityMax,
+    { min: 0, max: 100 },
+    { min: 84, max: 92 }
+  );
+  const substrateIdeal = normalizeIdealRange(
+    customParams?.soilMoistureMin,
+    customParams?.soilMoistureMax,
+    { min: 0, max: 500 },
+    { min: 180, max: 500 }
+  );
+
+  return {
+    nome_cultura: (customParams?.profileName ?? '').trim(),
+    tipo_cultura: 'Cogumelos',
+    descricao: (customParams?.plantation ?? '').trim(),
+    temperatura: buildMetricRangesFromIdeal(temperatureIdeal, { min: -5, max: 45 }),
+    umidade: buildMetricRangesFromIdeal(humidityIdeal, { min: 0, max: 100 }),
+    luminosidade: buildMetricRangesFromIdeal(substrateIdeal, { min: 0, max: 500 }),
+  };
+};
 
 export const OnboardingGreenhousePage = () => {
   const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
   const [profiles, setProfiles] = useState([]);
   const [greenhouseCount, setGreenhouseCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -15,6 +82,12 @@ export const OnboardingGreenhousePage = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (user?.role === 'Reader') {
+      setError('Perfil Leitor possui acesso somente de consulta das estufas delegadas.');
+      navigate('/dashboard', { replace: true });
+      return;
+    }
+
     let active = true;
 
     const loadData = async () => {
@@ -37,7 +110,7 @@ export const OnboardingGreenhousePage = () => {
         setGreenhouseCount(loadedGreenhouses.length);
       } catch (loadError) {
         if (active) {
-          setError(loadError.response?.data?.message ?? 'Não foi possível preparar o cadastro da estufa.');
+          setError(getFriendlyErrorMessage(loadError, 'Não foi possível preparar o cadastro da estufa.'));
         }
       } finally {
         if (active) {
@@ -51,11 +124,13 @@ export const OnboardingGreenhousePage = () => {
     return () => {
       active = false;
     };
-  }, []);
+  }, [navigate, user?.role]);
 
   const forceMode = !loading && greenhouseCount === 0;
 
-  const handleCreate = async ({ name, cropType, flowerProfileId, customParams }) => {
+  const handleResolveCep = async (cep) => resolveCepLocation(cep);
+
+  const handleCreate = async ({ name, cep, city, state, cropType, flowerProfileId, customParams }) => {
     if (submitting) {
       return;
     }
@@ -64,9 +139,28 @@ export const OnboardingGreenhousePage = () => {
     setError(null);
 
     try {
+      let resolvedProfileId = flowerProfileId;
+
+      if (cropType === 'personalizado') {
+        const customPayload = buildCustomPresetPayload(customParams);
+        if (!customPayload.nome_cultura || !customPayload.descricao) {
+          throw new Error('Informe nome e descrição para criar o perfil personalizado.');
+        }
+
+        const createdPreset = await createCulturePreset(customPayload);
+        resolvedProfileId = createdPreset?.id ?? null;
+
+        if (!resolvedProfileId) {
+          throw new Error('Não foi possível criar o perfil personalizado.');
+        }
+      }
+
       const response = await createGreenhouse({
         name,
-        flowerProfileId
+        cep,
+        city,
+        state,
+        flowerProfileId: resolvedProfileId
       });
 
       const created = response?.greenhouse ?? response;
@@ -89,7 +183,7 @@ export const OnboardingGreenhousePage = () => {
 
       navigate('/dashboard', { replace: true });
     } catch (createError) {
-      setError(createError.response?.data?.message ?? 'Não foi possível criar a estufa agora.');
+      setError(getFriendlyErrorMessage(createError, 'Não foi possível criar a estufa agora.'));
     } finally {
       setSubmitting(false);
     }
@@ -115,6 +209,7 @@ export const OnboardingGreenhousePage = () => {
               loading={loading || submitting}
               error={error}
               onCreate={handleCreate}
+              onResolveCep={handleResolveCep}
             />
           </section>
         </div>

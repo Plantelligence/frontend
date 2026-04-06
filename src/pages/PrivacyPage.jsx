@@ -23,12 +23,16 @@ export function PrivacyPage() {
         <h2 className="mb-3 text-lg font-semibold text-red-400">1. Quais dados coletamos</h2>
         <p className={textClassName}>Coletamos apenas:</p>
         <ul className={`${textClassName} ml-5 mt-2 list-disc space-y-2`}>
+          <li>Nome completo</li>
           <li>E-mail</li>
-          <li>Telefone</li>
+          <li>Consentimento LGPD</li>
         </ul>
         <p className={`${textClassName} mt-3`}>
-          Essas informações são fornecidas voluntariamente pelo usuário em nossos canais de
-          contato (como chatbot ou links de e-mail).
+          Esses dados são informados durante o cadastro para criação e proteção da conta.
+        </p>
+        <p className={`${textClassName} mt-3`}>
+          O telefone não é coletado no cadastro inicial. Caso exista campo de telefone em
+          configurações de conta, o preenchimento é opcional.
         </p>
       </section>
 

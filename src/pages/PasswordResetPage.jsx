@@ -1,4 +1,3 @@
-// Página de redefinição de senha — fluxo de solicitação de token e confirmação da nova senha.
 import React, { useState } from 'react';
 import { InputField } from '../components/InputField.jsx';
 import { Button } from '../components/Button.jsx';
@@ -6,6 +5,7 @@ import {
   requestPasswordReset,
   confirmPasswordReset
 } from '../api/authService.js';
+import { getFriendlyErrorMessage } from '../utils/errorMessages.js';
 
 export const PasswordResetPage = () => {
   const [email, setEmail] = useState('');
@@ -24,7 +24,9 @@ export const PasswordResetPage = () => {
         message: result.message ?? 'Se o e-mail existir, enviaremos instruções de recuperação.'
       });
     } catch (error) {
-      setRequestFeedback({ message: error.response?.data?.message ?? 'Falha na solicitação.' });
+      setRequestFeedback({
+        message: getFriendlyErrorMessage(error, 'Não foi possível processar sua solicitação agora.')
+      });
     } finally {
       setLoading(false);
     }
@@ -37,7 +39,9 @@ export const PasswordResetPage = () => {
       const result = await confirmPasswordReset({ token, newPassword });
       setResetFeedback({ message: result.message });
     } catch (error) {
-      setResetFeedback({ message: error.response?.data?.message ?? 'Token inválido ou expirado.' });
+      setResetFeedback({
+        message: getFriendlyErrorMessage(error, 'Token invalido ou expirado. Solicite um novo token.')
+      });
     } finally {
       setLoading(false);
     }

@@ -1,10 +1,8 @@
-// Preferencias visuais das estufas salvas em localStorage — tipos de cultivo, logos e status.
+// preferências visuais das estufas: tipo de cultivo, logos, status
 const STORAGE_KEY = 'plantelligence-greenhouse-ui-prefs';
 
-// Normaliza texto para comparacoes consistentes.
 const normalize = (value) => (value ?? '').toString().trim().toLowerCase();
 
-// Carrega preferencias salvas do usuario no navegador.
 export const loadGreenhouseUiPrefs = () => {
   if (typeof window === 'undefined') {
     return {};
@@ -22,7 +20,6 @@ export const loadGreenhouseUiPrefs = () => {
   }
 };
 
-// Persiste preferencias de UI no localStorage.
 export const saveGreenhouseUiPrefs = (prefs) => {
   if (typeof window === 'undefined') {
     return;
@@ -31,7 +28,6 @@ export const saveGreenhouseUiPrefs = (prefs) => {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs ?? {}));
 };
 
-// Tenta identificar o tipo de cultivo pelo nome do perfil.
 export const inferCropTypeFromName = (profileName) => {
   const normalized = normalize(profileName);
 
@@ -47,18 +43,9 @@ export const inferCropTypeFromName = (profileName) => {
     return 'shiitake';
   }
 
-  if (normalized.includes('ostra')) {
-    return 'ostra';
-  }
-
-  if (normalized.includes('portobello')) {
-    return 'portobello';
-  }
-
   return 'personalizado';
 };
 
-// Resolve o tipo da estufa priorizando preferencia salva.
 export const resolveGreenhouseType = (greenhouse, uiPrefs = {}) => {
   const prefType = uiPrefs?.[greenhouse?.id]?.type;
   if (prefType) {
@@ -94,20 +81,6 @@ export const cropTypeVisuals = {
     badge: 'bg-amber-100 text-amber-700',
     iconWrap: 'bg-amber-100 text-amber-700'
   },
-  ostra: {
-    label: 'Cogumelo Ostra',
-    icon: 'fa-solid fa-wind',
-    ring: 'border-sky-200',
-    badge: 'bg-sky-100 text-sky-700',
-    iconWrap: 'bg-sky-100 text-sky-700'
-  },
-  portobello: {
-    label: 'Portobello',
-    icon: 'fa-solid fa-circle',
-    ring: 'border-stone-300',
-    badge: 'bg-stone-100 text-stone-700',
-    iconWrap: 'bg-stone-100 text-stone-700'
-  },
   personalizado: {
     label: 'Personalizado',
     icon: 'fa-solid fa-clover',
@@ -133,16 +106,6 @@ const logoCatalogByType = {
     { icon: 'fa-solid fa-tree', wrap: 'bg-orange-100 text-orange-700' },
     { icon: 'fa-solid fa-spa', wrap: 'bg-amber-100 text-amber-700' }
   ],
-  ostra: [
-    { icon: 'fa-solid fa-wind', wrap: 'bg-sky-100 text-sky-700' },
-    { icon: 'fa-solid fa-leaf', wrap: 'bg-teal-100 text-teal-700' },
-    { icon: 'fa-solid fa-clover', wrap: 'bg-sky-100 text-sky-700' }
-  ],
-  portobello: [
-    { icon: 'fa-solid fa-circle', wrap: 'bg-stone-100 text-stone-700' },
-    { icon: 'fa-solid fa-seedling', wrap: 'bg-stone-100 text-stone-700' },
-    { icon: 'fa-solid fa-leaf', wrap: 'bg-stone-100 text-stone-700' }
-  ],
   personalizado: [
     { icon: 'fa-solid fa-seedling', wrap: 'bg-lime-100 text-lime-700' },
     { icon: 'fa-solid fa-clover', wrap: 'bg-green-100 text-green-700' },
@@ -150,7 +113,7 @@ const logoCatalogByType = {
   ]
 };
 
-// Gera hash simples para escolher logo de forma deterministica.
+// hash simples para logo determinística por estufa (sem aleatoriedade na tela)
 const hashText = (value) => {
   const input = (value ?? '').toString();
   let hash = 0;
@@ -160,14 +123,12 @@ const hashText = (value) => {
   return hash;
 };
 
-// Seleciona uma logo fixa por estufa, evitando troca aleatoria na tela.
 export const resolveCatalogLogo = (greenhouseId, type = 'personalizado') => {
   const catalog = logoCatalogByType[type] ?? logoCatalogByType.personalizado;
   const index = hashText(greenhouseId) % catalog.length;
   return catalog[index];
 };
 
-// Define o visual do status com base na configuracao e nos alertas.
 export const resolveStatusVisual = (greenhouse) => {
   if (!greenhouse?.flowerProfileId && !greenhouse?.profile) {
     return {

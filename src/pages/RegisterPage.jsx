@@ -1,4 +1,3 @@
-// Página de cadastro de novos usuários, com suporte a configuração de MFA via QR Code.
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import QRCode from 'react-qr-code';
@@ -6,20 +5,14 @@ import { InputField } from '../components/InputField.jsx';
 import { Button } from '../components/Button.jsx';
 import { register, confirmRegistration, finalizeRegistration } from '../api/authService.js';
 import { isPasswordCompliant, passwordPattern, passwordPolicy } from '../utils/passwordPolicy.js';
+import { getFriendlyErrorMessage } from '../utils/errorMessages.js';
 
-// Lista de estados brasileiros para o select — usada futuramente para buscar
-// a temperatura do local via API de geolocalização.
-const BR_STATES = [
-  'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG',
-  'PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'
-];
+const QRCodeComponent = QRCode?.default ?? QRCode;
 
 const initialState = {
   fullName: '',
+  organizationName: '',
   email: '',
-  phone: '',
-  city: '',
-  state: '',
   password: '',
   confirmPassword: '',
   consent: false
@@ -56,14 +49,6 @@ export const RegisterPage = () => {
         setError(passwordPolicy.message);
         return;
       }
-      if (!form.city.trim()) {
-        setError('Cidade é obrigatória.');
-        return;
-      }
-      if (!form.state) {
-        setError('Estado é obrigatório.');
-        return;
-      }
       if (!form.consent) {
         setError('Consentimento LGPD é obrigatório para o cadastro.');
         return;
@@ -73,10 +58,8 @@ export const RegisterPage = () => {
       try {
         const result = await register({
           fullName: form.fullName,
+          organizationName: form.organizationName,
           email: form.email,
-          phone: form.phone,
-          city: form.city.trim(),
-          state: form.state,
           password: form.password,
           consent: form.consent
         });
@@ -87,7 +70,7 @@ export const RegisterPage = () => {
         setOtpSetup(null);
         setOtpCode('');
       } catch (err) {
-        setError(err.response?.data?.detail ?? err.response?.data?.message ?? 'Não foi possível iniciar o cadastro.');
+        setError(getFriendlyErrorMessage(err, 'Não foi possível iniciar o cadastro agora.', 'register'));
       } finally {
         setLoading(false);
       }
@@ -99,7 +82,6 @@ export const RegisterPage = () => {
         setError('Solicitação de cadastro expirada. Reenvie os dados.');
         setStep('form');
         setChallenge(null);
-        setDebugEmailCode(null);
         return;
       }
 
@@ -117,14 +99,14 @@ export const RegisterPage = () => {
 
         if (response.nextStep === 'otp') {
           setOtpSetup(response);
-          setStep('otp');
-          setSuccess('E-mail confirmado. Configure o aplicativo autenticador e informe o primeiro código para ativar o acesso seguro.');
+          setStep('email-confirmed');
+          setSuccess('E-mail confirmado com sucesso. Clique em continuar para configurar o aplicativo autenticador.');
           setOtpCode('');
         } else {
           setError('Fluxo de cadastro inválido.');
         }
       } catch (err) {
-        setError(err.response?.data?.detail ?? err.response?.data?.message ?? 'Não foi possível confirmar o código enviado por e-mail.');
+        setError(getFriendlyErrorMessage(err, 'Não foi possível confirmar o código enviado por e-mail.', 'mfa'));
       } finally {
         setLoading(false);
       }
@@ -138,7 +120,6 @@ export const RegisterPage = () => {
         setStep('form');
         setOtpSetup(null);
         setOtpCode('');
-        setDebugOtpCode(null);
         return;
       }
 
@@ -162,7 +143,7 @@ export const RegisterPage = () => {
         setStep('form');
         setTimeout(() => navigate('/login'), 1200);
       } catch (err) {
-        setError(err.response?.data?.detail ?? err.response?.data?.message ?? 'Não foi possível validar o aplicativo autenticador.');
+        setError(getFriendlyErrorMessage(err, 'Não foi possível validar o aplicativo autenticador.', 'mfa'));
       } finally {
         setLoading(false);
       }
@@ -202,10 +183,8 @@ export const RegisterPage = () => {
     try {
       const result = await register({
         fullName: form.fullName,
+        organizationName: form.organizationName,
         email: form.email,
-        phone: form.phone,
-        city: form.city.trim(),
-        state: form.state,
         password: form.password,
         consent: form.consent
       });
@@ -213,7 +192,7 @@ export const RegisterPage = () => {
       setSuccess('Um novo código de verificação foi enviado para o e-mail informado.');
       setEmailCode('');
     } catch (err) {
-      setError(err.response?.data?.detail ?? err.response?.data?.message ?? 'Não foi possível reenviar o código.');
+      setError(getFriendlyErrorMessage(err, 'Não foi possível reenviar o código.', 'mfa'));
     } finally {
       setLoading(false);
     }
@@ -251,37 +230,13 @@ export const RegisterPage = () => {
             required
           />
           <InputField
-            label="Telefone"
-            name="phone"
-            value={form.phone}
+            label="Nome da organização"
+            name="organizationName"
+            value={form.organizationName}
             onChange={handleChange}
-            autoComplete="tel"
-          />
-          <InputField
-            label="Cidade"
-            name="city"
-            value={form.city}
-            onChange={handleChange}
-            autoComplete="address-level2"
+            autoComplete="organization"
             required
           />
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-slate-300">
-              Estado <span className="text-rose-400">*</span>
-            </label>
-            <select
-              name="state"
-              value={form.state}
-              onChange={handleChange}
-              required
-              className="rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/30"
-            >
-              <option value="">Selecione o estado</option>
-              {BR_STATES.map((uf) => (
-                <option key={uf} value={uf}>{uf}</option>
-              ))}
-            </select>
-          </div>
           <InputField
             label="E-mail"
             name="email"
@@ -379,6 +334,36 @@ export const RegisterPage = () => {
           </div>
         </form>
       )}
+      {step === 'email-confirmed' && otpSetup && (
+        <div className="flex flex-col gap-4">
+          <div className="rounded border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+            <p className="font-semibold">E-mail validado.</p>
+            <p className="mt-1 text-emerald-200/90">
+              Agora vamos configurar o MFA do autenticador para concluir o cadastro master com segurança.
+            </p>
+          </div>
+          <div className="flex flex-col gap-3 md:flex-row">
+            <Button
+              type="button"
+              onClick={() => {
+                setStep('otp');
+                setError(null);
+              }}
+              className="w-full md:w-auto"
+            >
+              Continuar
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleEdit}
+              className="w-full md:w-auto"
+            >
+              Reiniciar cadastro
+            </Button>
+          </div>
+        </div>
+      )}
       {step === 'otp' && otpSetup && (
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
           <div className="rounded border border-red-500/40 bg-red-500/5 px-4 py-3 text-sm text-red-100">
@@ -391,7 +376,7 @@ export const RegisterPage = () => {
             {otpSetup.uri && (
               <div className="mb-3 flex justify-center">
                 <div className="rounded-xl border border-slate-700 bg-white p-3">
-                  <QRCode value={otpSetup.uri} size={160} bgColor="#ffffff" fgColor="#1a0000" />
+                  <QRCodeComponent value={otpSetup.uri} size={160} bgColor="#ffffff" fgColor="#1a0000" />
                 </div>
               </div>
             )}

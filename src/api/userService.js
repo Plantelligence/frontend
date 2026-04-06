@@ -19,12 +19,13 @@ export const requestDeletion = (payload) =>
   api.post('/users/deletion-request', payload).then((res) => res.data);
 
 // Lista logs de seguranca visiveis para o usuario atual.
-export const getSecurityLogs = () => api.get('/users/logs').then((res) => res.data);
+export const getSecurityLogs = (limit = 500) =>
+  api.get('/users/logs', { params: { limit } }).then((res) => res.data);
 
 // Inicia cadastro do app autenticador (OTP).
 export const startOtpEnrollment = () =>
   api.post('/users/me/mfa/otp/start').then((res) => res.data);
 
-// Confirma codigo OTP para concluir o cadastro MFA.
+// Confirma código OTP para concluir o cadastro MFA.
 export const confirmOtpEnrollment = (payload) =>
   api.post('/users/me/mfa/otp/confirm', payload).then((res) => res.data);

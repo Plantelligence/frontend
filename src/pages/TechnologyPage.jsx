@@ -31,7 +31,7 @@ const differentiators = [
   {
     id: 'lgpd',
     title: 'Segurança e LGPD por design',
-    body: 'Criptografia ponta a ponta, MFA obrigatório e trilha imutável de auditoria garantem rastreabilidade do acesso de demonstração até cada acionamento da estufa.'
+    body: 'Criptografia ponta a ponta, MFA obrigatório e trilha imutável de auditoria garantem rastreabilidade desde a entrada no sistema até cada acionamento da estufa.'
   }
 ];
 
@@ -90,7 +90,7 @@ export const TechnologyPage = () => {
             Automação e monitoramento inteligente para estufas de cogumelos.
           </h1>
           <p className="text-lg text-slate-300">
-            Com telemetria contínua e orquestração de atuadores, a plataforma mantém variáveis ambientais em níveis ideais para cultivo de cogumelos. O ambiente inclui autenticação multifator, trilha de auditoria e conformidade LGPD.
+            Crie seu ambiente de estufa em poucos passos. O administrador organiza os cultivos, acompanha a operação em tempo real e delega acessos para os funcionários da estufa com segurança.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Link
@@ -104,10 +104,15 @@ export const TechnologyPage = () => {
                 to="/register"
                 className="rounded-md border border-red-400/60 px-5 py-3 text-center text-sm font-semibold text-red-200 transition hover:border-red-300 hover:text-red-100"
               >
-                Acesso de demonstração
+                Crie seu ambiente de estufa
               </Link>
             ) : null}
           </div>
+          {!user ? (
+            <p className="text-sm text-slate-400">
+              No primeiro cadastro, voce entra como administrador do seu ambiente e depois pode convidar sua equipe.
+            </p>
+          ) : null}
         </div>
         <div className="w-full rounded-2xl border border-red-500/20 bg-slate-900/60 p-7 shadow-2xl shadow-red-500/20">
           <h2 className="text-sm font-semibold uppercase tracking-widest text-red-300">

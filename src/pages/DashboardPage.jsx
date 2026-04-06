@@ -1,4 +1,3 @@
-// Painel principal de uma estufa: telemetria simulada, avaliacao de metricas e controles.
 import React, {
   useCallback,
   useEffect,
@@ -6,18 +5,23 @@ import React, {
   useRef,
   useState
 } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../components/Button.jsx';
 import { ConfirmDialog } from '../components/ConfirmDialog.jsx';
 import { useAuthStore } from '../store/authStore.js';
+import { getFriendlyErrorMessage } from '../utils/errorMessages.js';
 import {
-  getFlowerRecommendations,
   listGreenhouses,
   updateGreenhouse,
   updateGreenhouseAlerts,
   evaluateGreenhouseMetrics,
-  deleteGreenhouse
+  deleteGreenhouse,
+  listGreenhouseTeamMembers,
+  updateGreenhouseTeam,
+  getGreenhouseExternalWeather
 } from '../api/greenhouseService.js';
+import { listCulturePresets } from '../api/presetService.js';
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
@@ -43,28 +47,71 @@ const clearTimeoutSafe = (handle) => {
   }
 };
 
+const asFiniteNumber = (value) => {
+  if (value === null || value === undefined || value === '') {
+    return null;
+  }
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const buildEvaluationMetricsPayload = (telemetry, externalWeather) => {
+  const metrics = {};
+  const metricSources = {};
+  const missingMetrics = [];
+
+  const internalTemperature = asFiniteNumber(telemetry?.temperature);
+  const externalTemperature = asFiniteNumber(externalWeather?.temperatura);
+  if (internalTemperature !== null || externalTemperature !== null) {
+    const useInternal = internalTemperature !== null;
+    metrics.temperature = useInternal ? internalTemperature : externalTemperature;
+    metricSources.temperature = useInternal ? 'internal' : 'external';
+  } else {
+    missingMetrics.push('temperature');
+  }
+
+  const internalHumidity = asFiniteNumber(telemetry?.humidity);
+  const externalHumidity = asFiniteNumber(externalWeather?.umidade);
+  if (internalHumidity !== null || externalHumidity !== null) {
+    const useInternal = internalHumidity !== null;
+    metrics.humidity = useInternal ? internalHumidity : externalHumidity;
+    metricSources.humidity = useInternal ? 'internal' : 'external';
+  } else {
+    missingMetrics.push('humidity');
+  }
+
+  const internalSoilMoisture = asFiniteNumber(telemetry?.soilMoisture);
+  if (internalSoilMoisture !== null) {
+    metrics.soilMoisture = internalSoilMoisture;
+    metricSources.soilMoisture = 'internal';
+  } else {
+    missingMetrics.push('soilMoisture');
+  }
+
+  return {
+    metrics,
+    metricSources,
+    missingMetrics,
+    partialEvaluation: missingMetrics.length > 0,
+  };
+};
+
 const AUTOMATION_COOLING_DELAY_MS = 12000;
 const ALERT_WATCHDOG_DELAY_MS = 3 * 60 * 1000;
 
 const createInitialGreenhouseState = (name = 'Estufa Matriz') => ({
   greenhouseName: name,
-  temperature: 24.6,
-  humidity: 63,
-  soilMoisture: 48,
-  co2: 416,
-  irrigation: 'Irrigação em stand-by',
-  ventilation: 'Ventilação modulada',
-  lighting: 'Iluminação automática',
-  lastUpdate: new Date().toISOString()
+  temperature: null,
+  humidity: null,
+  soilMoisture: null,
+  co2: null,
+  irrigation: 'Integração IoT em implantação',
+  ventilation: 'Integração IoT em implantação',
+  lighting: 'Integração IoT em implantação',
+  lastUpdate: null
 });
 
-const createInitialEventLog = (name = 'Estufa Matriz') => ([
-  {
-    id: generateEventId(),
-    timestamp: new Date().toISOString(),
-    message: `Controlador IoT da ${name} iniciado em modo seguro. Sensores e atuadores em monitoramento contínuo.`
-  }
-]);
+const createInitialEventLog = () => ([]);
 
 const computeNextGreenhouseState = (prev) => {
   const temperature = clamp(prev.temperature + (Math.random() - 0.5) * 0.6, 22, 28);
@@ -147,7 +194,7 @@ const evaluateMetricRange = (value, range) => {
   const normalized = typeof value === 'number' && Number.isFinite(value) ? value : null;
 
   if (normalized === null) {
-    return { ok: false, value: null, expected: range, direction: 'unknown' };
+    return { ok: true, value: null, expected: range, direction: 'unknown' };
   }
 
   if (normalized < range.min) {
@@ -236,27 +283,83 @@ const buildAlertFingerprint = (metrics) =>
     .filter(Boolean)
     .join('|');
 
+const normalizeProfileRange = (metric) => {
+  if (!metric || typeof metric !== 'object') {
+    return null;
+  }
+
+  const source = metric.ideal && typeof metric.ideal === 'object' ? metric.ideal : metric;
+  const min = Number(source.min);
+  const max = Number(source.max);
+
+  if (!Number.isFinite(min) || !Number.isFinite(max)) {
+    return null;
+  }
+
+  return { min, max };
+};
+
+const normalizeProfile = (profile) => {
+  if (!profile || typeof profile !== 'object') {
+    return null;
+  }
+
+  // formato legado (flower_profiles.py)
+  if (profile.temperature && profile.humidity && profile.soilMoisture) {
+    return {
+      id: profile.id,
+      name: profile.name,
+      summary: profile.summary ?? '',
+      temperature: normalizeProfileRange(profile.temperature),
+      humidity: normalizeProfileRange(profile.humidity),
+      soilMoisture: normalizeProfileRange(profile.soilMoisture)
+    };
+  }
+
+  // formato atual (presets da API)
+  if (profile.temperatura && profile.umidade && profile.luminosidade) {
+    return {
+      id: profile.id,
+      name: profile.nome_cultura ?? 'Perfil sem nome',
+      summary: profile.descricao ?? '',
+      temperature: normalizeProfileRange(profile.temperatura),
+      humidity: normalizeProfileRange(profile.umidade),
+      // a tela ainda espera "soilMoisture", então mapeamos luminosidade aqui
+      soilMoisture: normalizeProfileRange(profile.luminosidade)
+    };
+  }
+
+  return null;
+};
+
 const GreenhousePanel = ({
   greenhouse,
   telemetry,
   eventLog,
   evaluation,
   profiles,
+  teamMembers,
   notifyFeedback,
   saving,
+  teamSaving,
   alertsSaving,
   notifyBusy,
+  externalWeather,
+  externalWeatherLoading,
   onSave,
+  onUpdateTeam,
   onToggleAlerts,
   onNotify,
   onSimulateHeat,
-  onDeleteRequest
+  onDeleteRequest,
+  readOnly = false
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [draftName, setDraftName] = useState(greenhouse.name ?? 'Estufa Matriz');
   const [draftProfileId, setDraftProfileId] = useState(greenhouse.flowerProfileId ?? '');
+  const [draftResponsibleIds, setDraftResponsibleIds] = useState(greenhouse.responsibleUserIds ?? []);
   const [menuFeedback, setMenuFeedback] = useState(null);
-  const menuRef = useRef(null);
+  const [activeTopic, setActiveTopic] = useState('operacao');
 
   const currentProfile = useMemo(() => {
     if (greenhouse.profile) {
@@ -273,23 +376,35 @@ const GreenhousePanel = ({
     setDraftProfileId(greenhouse.flowerProfileId ?? '');
   }, [greenhouse.flowerProfileId]);
 
-  const handleMenuBlur = (event) => {
-    if (!menuRef.current) {
-      return;
+  useEffect(() => {
+    setDraftResponsibleIds(greenhouse.responsibleUserIds ?? []);
+  }, [greenhouse.responsibleUserIds]);
+
+  useEffect(() => {
+    setActiveTopic('operacao');
+  }, [greenhouse.id]);
+
+  useEffect(() => {
+    if (!menuOpen) {
+      return undefined;
     }
 
-    const nextTarget = event.relatedTarget;
-    if (!nextTarget || !menuRef.current.contains(nextTarget)) {
-      setMenuOpen(false);
-    }
-  };
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setMenuOpen(false);
+      }
+    };
 
-  const handleMenuKeyDown = (event) => {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      setMenuOpen(false);
-    }
-  };
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleEscape);
+
+    return () => {
+      window.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [menuOpen]);
 
   const handleSave = async (event) => {
     event.preventDefault();
@@ -300,14 +415,9 @@ const GreenhousePanel = ({
       return;
     }
 
-    if (!draftProfileId) {
-      setMenuFeedback({ type: 'error', text: 'Selecione o preset de cultivo de cogumelo para esta estufa.' });
-      return;
-    }
-
     const result = await onSave(greenhouse.id, {
       name: trimmedName,
-      flowerProfileId: draftProfileId
+      flowerProfileId: draftProfileId || null
     });
 
     if (result.ok) {
@@ -334,9 +444,45 @@ const GreenhousePanel = ({
     setMenuOpen(false);
   };
 
+  const handleToggleResponsible = (userId, enabled) => {
+    setDraftResponsibleIds((prev) => {
+      if (enabled) {
+        if (prev.includes(userId)) {
+          return prev;
+        }
+        return [...prev, userId];
+      }
+      return prev.filter((id) => id !== userId);
+    });
+    setMenuFeedback(null);
+  };
+
+  const handleSaveTeam = async () => {
+    const result = await onUpdateTeam(greenhouse.id, draftResponsibleIds);
+    if (result.ok) {
+      setMenuFeedback({ type: 'success', text: 'Equipe responsável atualizada.' });
+    } else {
+      setMenuFeedback({ type: 'error', text: result.message });
+    }
+  };
+
   const resolvedTelemetry = telemetry ?? createInitialGreenhouseState(greenhouse.name);
   const resolvedLog = eventLog ?? createInitialEventLog(greenhouse.name);
-  const resolvedEvaluation = evaluation ?? { status: 'pending', alerts: [], metrics: {} };
+  const hasTelemetry =
+    typeof resolvedTelemetry.temperature === 'number'
+    || typeof resolvedTelemetry.humidity === 'number'
+    || typeof resolvedTelemetry.soilMoisture === 'number'
+    || typeof resolvedTelemetry.co2 === 'number';
+  const previewEvaluationPayload = buildEvaluationMetricsPayload(resolvedTelemetry, externalWeather);
+  const hasEvaluableMetrics = Object.keys(previewEvaluationPayload.metrics).length > 0;
+  const resolvedEvaluation = evaluation ?? {
+    status: 'pending',
+    alerts: [],
+    metrics: {},
+    partialEvaluation: false,
+    metricSources: {},
+    missingMetrics: []
+  };
   const statusTone =
     resolvedEvaluation.status === 'ok'
       ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
@@ -345,50 +491,88 @@ const GreenhousePanel = ({
         : 'border-stone-300 bg-stone-100 text-stone-600';
   const statusLabel =
     resolvedEvaluation.status === 'ok'
-      ? 'Tudo estável'
+      ? 'Tudo certo'
       : resolvedEvaluation.status === 'alert'
-        ? 'Precisa atenção'
-        : 'Aguardando avaliação';
+        ? 'Atenção'
+        : 'Sem avaliação';
 
   return (
     <section className="rounded-[26px] border border-stone-300 bg-[#f5f1eb] p-4 shadow-sm md:p-6">
       <header className="relative flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-stone-300 bg-[#fcfaf7] p-4">
         <div>
           <span className="text-xs font-semibold uppercase tracking-[0.18em] text-red-700">
-            Resumo da estufa
+            Visão geral da estufa
           </span>
           <h2 className="text-2xl font-semibold text-slate-800">
             {resolvedTelemetry.greenhouseName}
           </h2>
-          <p className="mt-1 text-sm text-slate-600">Visão simples do cultivo em tempo real.</p>
+          <p className="mt-1 text-sm text-slate-600">Aqui você acompanha como a estufa está agora.</p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex w-full flex-wrap items-center justify-start gap-3 md:w-auto md:justify-end">
           <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${statusTone}`}>
             {statusLabel}
           </span>
-          <label className="flex items-center gap-2 rounded-full border border-stone-300 bg-white px-3 py-1.5 text-xs text-slate-700">
-            <input
-              type="checkbox"
-              checked={Boolean(greenhouse.alertsEnabled)}
-              onChange={handleToggleAlerts}
-              disabled={alertsSaving}
-              className="h-4 w-4 rounded border border-stone-400 bg-white text-red-600 focus:ring-red-400"
-            />
-            <span>{greenhouse.alertsEnabled ? 'Alertas ligados' : 'Alertas desligados'}</span>
-          </label>
-          <div
-            className="relative"
-            ref={menuRef}
-            onBlur={handleMenuBlur}
-            onKeyDown={handleMenuKeyDown}
-          >
-            <Button variant="secondary" onClick={() => setMenuOpen((open) => !open)}>
-              Configurar
-            </Button>
-            {menuOpen ? (
-              <div className="absolute right-0 z-20 mt-2 w-72 rounded-xl border border-stone-300 bg-white p-4 shadow-xl">
-                <form onSubmit={handleSave} className="space-y-3 text-sm text-slate-700">
-                  <div className="flex flex-col gap-2">
+          {currentProfile ? (
+            <span className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
+              Perfil: {currentProfile.name}
+            </span>
+          ) : null}
+          {readOnly ? (
+            <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">
+              Perfil Leitor: consulta somente
+            </span>
+          ) : (
+            <>
+              <label className="flex items-center gap-2 rounded-full border border-stone-300 bg-white px-3 py-1.5 text-xs text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={Boolean(greenhouse.alertsEnabled)}
+                  onChange={handleToggleAlerts}
+                  disabled={alertsSaving}
+                  className="h-4 w-4 rounded border border-stone-400 bg-white text-red-600 focus:ring-red-400"
+                />
+                <span>{greenhouse.alertsEnabled ? 'Alertas ligados' : 'Alertas desligados'}</span>
+              </label>
+              <Button variant="secondary" onClick={() => setMenuOpen(true)}>
+                Editar estufa
+              </Button>
+            </>
+          )}
+        </div>
+      </header>
+
+      {menuOpen ? createPortal(
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-slate-950/70 p-4"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setMenuOpen(false);
+            }
+          }}
+        >
+          <div className="w-full max-w-2xl rounded-2xl border border-stone-300 bg-[#fcfaf7] p-4 shadow-2xl sm:p-5">
+            <div className="mb-4 flex items-start justify-between gap-3 border-b border-stone-200 pb-3">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-800">Editar estufa</h3>
+                <p className="text-xs text-slate-500">Atualize nome, perfil de cultivo e equipe responsável.</p>
+              </div>
+              <Button
+                type="button"
+                variant="secondary"
+                className="h-9 px-3 text-xs"
+                onClick={() => setMenuOpen(false)}
+              >
+                Fechar
+              </Button>
+            </div>
+
+            <form onSubmit={handleSave} className="space-y-3 text-sm text-slate-700">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-md border border-stone-200 bg-stone-50 px-3 py-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    Dados da estufa
+                  </p>
+                  <div className="mt-2 flex flex-col gap-2">
                     <span className="text-xs uppercase tracking-[0.18em] text-slate-500">
                       Nome da estufa
                     </span>
@@ -402,9 +586,15 @@ const GreenhousePanel = ({
                       className="rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-500/20"
                     />
                   </div>
-                  <div className="flex flex-col gap-2">
+                </div>
+
+                <div className="rounded-md border border-stone-200 bg-stone-50 px-3 py-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    Perfil de cultivo
+                  </p>
+                  <div className="mt-2 flex flex-col gap-2">
                     <span className="text-xs uppercase tracking-[0.18em] text-slate-500">
-                      Preset de cultivo
+                      Perfil de cultivo
                     </span>
                     <select
                       value={draftProfileId}
@@ -421,115 +611,291 @@ const GreenhousePanel = ({
                         </option>
                       ))}
                     </select>
-                  </div>
-                  {menuFeedback ? (
-                    <div
-                      className={`rounded border px-3 py-2 text-xs ${
-                        menuFeedback.type === 'success'
-                          ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                          : 'border-rose-200 bg-rose-50 text-rose-700'
-                      }`}
-                    >
-                      {menuFeedback.text}
-                    </div>
-                  ) : null}
-                  <div className="flex items-center justify-end gap-2">
-                    <Button
-                      variant="secondary"
-                      type="button"
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      Fechar
-                    </Button>
-                    <Button type="submit" disabled={saving}>
-                      {saving ? 'Salvando...' : 'Salvar alterações'}
-                    </Button>
-                  </div>
-                  <div className="border-t border-stone-200 pt-3">
-                    <span className="text-[11px] uppercase tracking-[0.2em] text-rose-600">
-                      Remoção de estufa
-                    </span>
-                    <p className="mt-1 text-[11px] text-slate-500">
-                      Use apenas se não for mais acompanhar este cultivo.
+                    <p className="text-[11px] text-slate-500">
+                      Dica: escolha o perfil mais próximo do seu cultivo para melhorar os alertas automáticos.
                     </p>
-                    <Button
-                      type="button"
-                      variant="danger"
-                      className="mt-3 w-full"
-                      onClick={handleDeleteClick}
+                    <Link
+                      to="/dashboard/presets"
+                      className="inline-flex items-center justify-center rounded-md border border-stone-300 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-red-400 hover:text-red-700"
                     >
-                      Remover estufa
-                    </Button>
+                      Gerenciar perfis de cultivo
+                    </Link>
                   </div>
-                </form>
+                </div>
               </div>
-            ) : null}
-          </div>
-        </div>
-      </header>
 
+              <div className="rounded-md border border-stone-200 bg-white px-3 py-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Equipe responsável
+                </p>
+                <p className="mt-1 text-[11px] text-slate-500">
+                  Somente os responsáveis marcados recebem o alerta do botão Notificar equipe.
+                </p>
+                <ul className="mt-2 max-h-44 space-y-1 overflow-y-auto pr-1">
+                  {teamMembers.length > 0 ? (
+                    teamMembers.map((member) => {
+                      const checked = draftResponsibleIds.includes(member.id);
+                      return (
+                        <li key={member.id}>
+                          <label className="flex cursor-pointer items-start gap-2 rounded border border-stone-200 px-2 py-1.5 text-xs text-slate-700 hover:border-red-300">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={(event) => handleToggleResponsible(member.id, event.target.checked)}
+                              className="mt-0.5 h-4 w-4 rounded border border-stone-400 bg-white text-red-600 focus:ring-red-400"
+                            />
+                            <span>
+                              <span className="block font-semibold text-slate-800">{member.fullName}</span>
+                              <span className="text-[11px] text-slate-500">{member.email}</span>
+                            </span>
+                          </label>
+                        </li>
+                      );
+                    })
+                  ) : (
+                    <li className="text-[11px] text-slate-500">Nenhum colaborador disponível para delegação.</li>
+                  )}
+                </ul>
+                <div className="mt-2 flex flex-wrap justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="h-9 px-3 text-xs"
+                    onClick={handleSaveTeam}
+                    disabled={teamSaving}
+                  >
+                    {teamSaving ? 'Salvando equipe...' : 'Salvar equipe responsável'}
+                  </Button>
+                </div>
+              </div>
+
+              {menuFeedback ? (
+                <div
+                  className={`rounded border px-3 py-2 text-xs ${
+                    menuFeedback.type === 'success'
+                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                      : 'border-rose-200 bg-rose-50 text-rose-700'
+                  }`}
+                >
+                  {menuFeedback.text}
+                </div>
+              ) : null}
+
+              <div className="flex flex-col-reverse gap-2 border-t border-stone-200 pt-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <span className="text-[11px] uppercase tracking-[0.2em] text-rose-600">
+                    Remoção de estufa
+                  </span>
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    Use apenas se não for mais acompanhar este cultivo.
+                  </p>
+                </div>
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                  <Button
+                    variant="danger"
+                    type="button"
+                    className="w-full sm:w-auto"
+                    onClick={handleDeleteClick}
+                  >
+                    Remover estufa
+                  </Button>
+                  <Button type="submit" className="w-full sm:w-auto" disabled={saving}>
+                    {saving ? 'Salvando...' : 'Salvar alterações'}
+                  </Button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      ) : null}
+
+      <div className="mt-4 flex flex-wrap items-center gap-2 rounded-2xl border border-stone-300 bg-[#fcfaf7] p-2">
+        {[
+          { id: 'operacao', label: 'Operação' },
+          { id: 'monitoramento', label: 'Monitoramento' },
+          { id: 'guia', label: 'Guia rápido' }
+        ].map((topic) => (
+          <button
+            key={topic.id}
+            type="button"
+            onClick={() => setActiveTopic(topic.id)}
+            className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+              activeTopic === topic.id
+                ? 'bg-red-600 text-white'
+                : 'border border-stone-300 bg-white text-slate-700 hover:border-red-300 hover:text-red-700'
+            }`}
+          >
+            {topic.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTopic === 'monitoramento' ? (
       <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
         <article className="rounded-2xl border border-stone-300 bg-white p-5">
           <header className="mb-4 flex items-center justify-between text-xs text-slate-500">
-            <span>Leituras principais</span>
-            <span>Atualizado às {formatTimestamp(resolvedTelemetry.lastUpdate)}</span>
+            <span>Como está sua estufa agora</span>
+            <span>
+              {hasTelemetry
+                ? `Atualizado às ${formatTimestamp(resolvedTelemetry.lastUpdate)}`
+                : 'Sem telemetria IoT disponível'}
+            </span>
           </header>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 text-slate-800">
-            <div className="rounded-xl border border-stone-200 bg-[#fcfaf7] p-4">
-              <p className="text-xs uppercase tracking-wide text-slate-500">Temperatura</p>
-              <p className="text-2xl font-semibold text-slate-900">{resolvedTelemetry.temperature.toFixed(1)}°C</p>
-              <p className="text-xs text-slate-500">{resolvedTelemetry.ventilation}</p>
-            </div>
-            <div className="rounded-xl border border-stone-200 bg-[#fcfaf7] p-4">
-              <p className="text-xs uppercase tracking-wide text-slate-500">Umidade do ar</p>
-              <p className="text-2xl font-semibold text-slate-900">{Math.round(resolvedTelemetry.humidity)}%</p>
-              <p className="text-xs text-slate-500">Controle automático ativo</p>
-            </div>
-            <div className="rounded-xl border border-stone-200 bg-[#fcfaf7] p-4">
-              <p className="text-xs uppercase tracking-wide text-slate-500">Umidade do substrato</p>
-              <p className="text-2xl font-semibold text-slate-900">{Math.round(resolvedTelemetry.soilMoisture)}%</p>
-              <p className="text-xs text-slate-500">{resolvedTelemetry.irrigation}</p>
-            </div>
-            <div className="rounded-xl border border-stone-200 bg-[#fcfaf7] p-4">
-              <p className="text-xs uppercase tracking-wide text-slate-500">CO₂</p>
-              <p className="text-2xl font-semibold text-slate-900">{Math.round(resolvedTelemetry.co2)} ppm</p>
-              <p className="text-xs text-slate-500">
-                Fluxo {resolvedTelemetry.co2 > 500 ? 'alto' : 'modulado'}
-              </p>
-            </div>
+            {hasTelemetry ? (
+              <>
+                <div className="rounded-xl border border-stone-200 bg-[#fcfaf7] p-4">
+                  <p className="text-xs uppercase tracking-wide text-slate-500">Temperatura</p>
+                  <p className="text-2xl font-semibold text-slate-900">
+                    {typeof resolvedTelemetry.temperature === 'number' ? `${resolvedTelemetry.temperature.toFixed(1)}°C` : '—'}
+                  </p>
+                  <p className="text-xs text-slate-500">{resolvedTelemetry.ventilation}</p>
+                </div>
+                <div className="rounded-xl border border-stone-200 bg-[#fcfaf7] p-4">
+                  <p className="text-xs uppercase tracking-wide text-slate-500">Umidade do ambiente</p>
+                  <p className="text-2xl font-semibold text-slate-900">
+                    {typeof resolvedTelemetry.humidity === 'number' ? `${Math.round(resolvedTelemetry.humidity)}%` : '—'}
+                  </p>
+                  <p className="text-xs text-slate-500">Controle automático ativo</p>
+                </div>
+                <div className="rounded-xl border border-stone-200 bg-[#fcfaf7] p-4">
+                  <p className="text-xs uppercase tracking-wide text-slate-500">Umidade do solo/substrato</p>
+                  <p className="text-2xl font-semibold text-slate-900">
+                    {typeof resolvedTelemetry.soilMoisture === 'number' ? `${Math.round(resolvedTelemetry.soilMoisture)}%` : '—'}
+                  </p>
+                  <p className="text-xs text-slate-500">{resolvedTelemetry.irrigation}</p>
+                </div>
+                <div className="rounded-xl border border-stone-200 bg-[#fcfaf7] p-4">
+                  <p className="text-xs uppercase tracking-wide text-slate-500">CO₂</p>
+                  <p className="text-2xl font-semibold text-slate-900">
+                    {typeof resolvedTelemetry.co2 === 'number' ? `${Math.round(resolvedTelemetry.co2)} ppm` : '—'}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {typeof resolvedTelemetry.co2 === 'number'
+                      ? `Fluxo ${resolvedTelemetry.co2 > 500 ? 'alto' : 'modulado'}`
+                      : 'Sem leitura de fluxo'}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-stone-200 bg-[#fcfaf7] p-4 sm:col-span-2 xl:col-span-4">
+                  <p className="text-xs uppercase tracking-wide text-slate-500">Iluminação</p>
+                  <p className="text-sm font-semibold text-slate-800">{resolvedTelemetry.lighting}</p>
+                </div>
+              </>
+            ) : (
+              <div className="rounded-xl border border-dashed border-stone-300 bg-[#fcfaf7] p-4 text-sm text-slate-600 sm:col-span-2 xl:col-span-4">
+                Telemetria interna oculta por enquanto. Este bloco será habilitado automaticamente quando os dispositivos IoT estiverem conectados.
+              </div>
+            )}
             <div className="rounded-xl border border-stone-200 bg-[#fcfaf7] p-4 sm:col-span-2 xl:col-span-4">
-              <p className="text-xs uppercase tracking-wide text-slate-500">Iluminação</p>
-              <p className="text-sm font-semibold text-slate-800">{resolvedTelemetry.lighting}</p>
+              <p className="text-xs uppercase tracking-wide text-slate-500">Clima da cidade (OpenWeather)</p>
+              {externalWeatherLoading ? (
+                <p className="text-sm text-slate-600">Consultando clima externo...</p>
+              ) : externalWeather ? (
+                <div className="mt-2 grid gap-2 text-sm text-slate-700 sm:grid-cols-4">
+                  <p>
+                    <span className="text-xs text-slate-500">Local</span>
+                    <span className="block font-semibold">{externalWeather.cidade}/{externalWeather.estado}</span>
+                  </p>
+                  <p>
+                    <span className="text-xs text-slate-500">Temperatura</span>
+                    <span className="block font-semibold">{externalWeather.temperatura}°C</span>
+                  </p>
+                  <p>
+                    <span className="text-xs text-slate-500">Umidade</span>
+                    <span className="block font-semibold">{externalWeather.umidade}%</span>
+                  </p>
+                  <p>
+                    <span className="text-xs text-slate-500">Condição</span>
+                    <span className="block font-semibold">{externalWeather.descricao}</span>
+                  </p>
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500">
+                  Sem dados climáticos externos no momento. Verifique se cidade/estado da estufa estão válidos.
+                </p>
+              )}
             </div>
           </div>
         </article>
 
         <article className="rounded-2xl border border-stone-300 bg-white p-5">
           <header className="mb-3 flex items-center justify-between text-sm text-slate-700">
-            <h3 className="text-lg font-semibold text-slate-800">Últimos eventos</h3>
+            <h3 className="text-lg font-semibold text-slate-800">Últimas atualizações</h3>
             <span className="text-xs uppercase tracking-[0.18em] text-slate-500">Histórico</span>
           </header>
           <p className="text-xs text-slate-500">
-            Registro simples do que aconteceu na estufa recentemente.
+            Aqui aparece o que aconteceu na estufa nos últimos momentos.
           </p>
           <ul className="mt-4 max-h-72 space-y-3 overflow-y-auto pr-1 text-sm text-slate-700">
-            {resolvedLog.map((entry) => (
-              <li key={entry.id} className="rounded-md border border-stone-200 bg-[#fcfaf7] p-3">
-                <p className="text-xs text-slate-500">{formatTimestamp(entry.timestamp)}</p>
-                <p className="mt-1 text-slate-700">{entry.message}</p>
+            {resolvedLog.length > 0 ? (
+              resolvedLog.map((entry) => (
+                <li key={entry.id} className="rounded-md border border-stone-200 bg-[#fcfaf7] p-3">
+                  <p className="text-xs text-slate-500">{formatTimestamp(entry.timestamp)}</p>
+                  <p className="mt-1 text-slate-700">{entry.message}</p>
+                </li>
+              ))
+            ) : (
+              <li className="rounded-md border border-dashed border-stone-300 bg-[#fcfaf7] p-3 text-xs text-slate-500">
+                Integração de eventos IoT em implantação. As atualizações aparecerão aqui conforme os dispositivos forem conectados.
               </li>
-            ))}
+            )}
           </ul>
         </article>
       </div>
+      ) : null}
 
+      {activeTopic === 'guia' ? (
+      <article className="mt-6 rounded-2xl border border-stone-300 bg-white p-5 text-sm text-slate-700">
+        <h3 className="text-base font-semibold text-slate-800">Como ler essas informações</h3>
+        <p className="mt-1 text-xs text-slate-500">
+          Este guia rápido ajuda a entender para que serve cada opção no cultivo diário.
+        </p>
+        <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <div className="rounded border border-stone-200 bg-[#fcfaf7] p-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600">Temperatura</p>
+            <p className="mt-1 text-xs text-slate-600">Mostra se o ambiente está quente ou frio para o cultivo.</p>
+          </div>
+          <div className="rounded border border-stone-200 bg-[#fcfaf7] p-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600">Umidade do ambiente</p>
+            <p className="mt-1 text-xs text-slate-600">Ajuda a manter o ar no ponto certo para o crescimento.</p>
+          </div>
+          <div className="rounded border border-stone-200 bg-[#fcfaf7] p-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600">Umidade do solo/substrato</p>
+            <p className="mt-1 text-xs text-slate-600">Indica se precisa molhar mais ou menos o meio de cultivo.</p>
+          </div>
+          <div className="rounded border border-stone-200 bg-[#fcfaf7] p-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600">CO₂ e iluminação</p>
+            <p className="mt-1 text-xs text-slate-600">Mostra se a qualidade do ar e a luz estão adequadas.</p>
+          </div>
+          <div className="rounded border border-stone-200 bg-[#fcfaf7] p-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600">Perfil de cultivo</p>
+            <p className="mt-1 text-xs text-slate-600">É a meta que a estufa deve seguir para esse tipo de cultivo.</p>
+          </div>
+          <div className="rounded border border-stone-200 bg-[#fcfaf7] p-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600">Equipe responsável</p>
+            <p className="mt-1 text-xs text-slate-600">As pessoas marcadas aqui recebem aviso quando algo sair do esperado.</p>
+          </div>
+        </div>
+      </article>
+      ) : null}
+
+      {activeTopic === 'operacao' ? (
       <div className="mt-6 grid gap-6 md:grid-cols-2">
         <article className="rounded-2xl border border-stone-300 bg-white p-5 text-sm text-slate-700">
-          <h3 className="text-base font-semibold text-slate-800">Faixa ideal do cultivo</h3>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h3 className="text-base font-semibold text-slate-800">Meta do cultivo</h3>
+            <Link
+              to="/dashboard/presets"
+              className="inline-flex items-center justify-center rounded-md border border-stone-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-red-400 hover:text-red-700"
+            >
+              Ver perfis
+            </Link>
+          </div>
           {currentProfile ? (
             <>
               <p className="mt-1 text-xs text-slate-500">{currentProfile.summary}</p>
-              <dl className="mt-3 grid gap-3 text-xs text-slate-700 sm:grid-cols-3">
+              <dl className="mt-3 grid gap-3 text-xs text-slate-700 sm:grid-cols-4">
                 <div className="rounded border border-stone-200 bg-[#fcfaf7] p-3">
                   <dt className="text-[11px] uppercase tracking-widest text-slate-500">Temperatura</dt>
                   <dd>
@@ -537,50 +903,75 @@ const GreenhousePanel = ({
                   </dd>
                 </div>
                 <div className="rounded border border-stone-200 bg-[#fcfaf7] p-3">
-                  <dt className="text-[11px] uppercase tracking-widest text-slate-500">Umidade relativa</dt>
+                  <dt className="text-[11px] uppercase tracking-widest text-slate-500">Umidade do ambiente</dt>
                   <dd>
                     {currentProfile.humidity.min}% — {currentProfile.humidity.max}%
                   </dd>
                 </div>
                 <div className="rounded border border-stone-200 bg-[#fcfaf7] p-3">
-                  <dt className="text-[11px] uppercase tracking-widest text-slate-500">Umidade do substrato</dt>
+                  <dt className="text-[11px] uppercase tracking-widest text-slate-500">Umidade do solo/substrato</dt>
                   <dd>
                     {currentProfile.soilMoisture.min}% — {currentProfile.soilMoisture.max}%
+                  </dd>
+                </div>
+                <div className="rounded border border-stone-200 bg-[#fcfaf7] p-3">
+                  <dt className="text-[11px] uppercase tracking-widest text-slate-500">Luminosidade</dt>
+                  <dd>
+                    {currentProfile.luminosity?.min ?? '—'} lux — {currentProfile.luminosity?.max ?? '—'} lux
                   </dd>
                 </div>
               </dl>
             </>
           ) : (
             <p className="mt-2 text-xs text-slate-500">
-              Clique em Configurar e escolha o cultivo para ativar os limites ideais.
+              Clique em Editar estufa e escolha um perfil de cultivo para ativar os limites ideais.
             </p>
           )}
-          <div className="mt-4">
-            <h4 className="text-xs uppercase tracking-[0.18em] text-slate-500">Equipe responsável</h4>
-            <ul className="mt-2 flex flex-wrap gap-2">
+          <div className="mt-3 rounded-xl border border-stone-200 bg-[#fcfaf7] p-3">
+            <h4 className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Equipe responsável</h4>
+            <ul className="mt-1.5 flex flex-wrap gap-1.5">
               {greenhouse.watchersDetails?.length > 0 ? (
                 greenhouse.watchersDetails.map((watcher) => (
                   <li
                     key={watcher.id}
-                    className="rounded-full border border-red-300 bg-red-50 px-3 py-1 text-xs text-red-700"
+                    className="rounded-full border border-red-300 bg-red-50 px-2.5 py-0.5 text-[11px] text-red-700"
                   >
                     {watcher.fullName ?? watcher.email}
                   </li>
                 ))
               ) : (
-                <li className="rounded-full border border-stone-200 bg-[#fcfaf7] px-3 py-1 text-xs text-slate-500">
+                <li className="rounded-full border border-stone-200 bg-white px-2.5 py-0.5 text-[11px] text-slate-500">
                   Administrador ainda não definiu equipe para esta estufa.
                 </li>
               )}
             </ul>
+            {!readOnly ? (
+              <div className="mt-2 flex items-center justify-between gap-2">
+                <p className="text-[10px] text-slate-500">
+                  Adicione ou remova membros para receber o alerta de notificação.
+                </p>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="h-8 shrink-0 px-3 text-[11px]"
+                  onClick={() => setMenuOpen(true)}
+                >
+                  Gerenciar equipe
+                </Button>
+              </div>
+            ) : (
+              <p className="mt-2 text-[10px] text-slate-500">
+                Perfil Leitor: somente visualização da equipe delegada.
+              </p>
+            )}
           </div>
         </article>
 
         <article className="rounded-2xl border border-stone-300 bg-white p-5">
-          <h3 className="text-base font-semibold text-slate-800">O que fazer agora</h3>
+          <h3 className="text-base font-semibold text-slate-800">Próximos passos</h3>
           {resolvedEvaluation.status === 'pending' ? (
             <p className="mt-2 text-xs text-slate-500">
-              Configure o cultivo para liberar recomendações automáticas.
+              Clique em Gerar avaliação para receber orientações com os dados disponíveis neste momento.
             </p>
           ) : (
             <>
@@ -590,9 +981,14 @@ const GreenhousePanel = ({
                 }`}
               >
                 {resolvedEvaluation.status === 'ok'
-                  ? 'Parâmetros dentro da faixa ideal.'
-                  : 'Alguns parâmetros estão fora da faixa ideal.'}
+                  ? 'Com os dados atuais, tudo está dentro da faixa esperada.'
+                  : 'Com os dados atuais, encontramos pontos fora da faixa ideal.'}
               </p>
+              {resolvedEvaluation.partialEvaluation ? (
+                <p className="mt-1 text-[11px] text-slate-500">
+                  Esta avaliação é parcial. Nesta fase de implantação, o sistema analisa principalmente o clima da cidade e apenas os sensores que já estão ativos na estufa.
+                </p>
+              ) : null}
               <div className="mt-3 grid gap-3 text-xs text-slate-700 sm:grid-cols-3">
                 {['temperature', 'humidity', 'soilMoisture'].map((metricKey) => {
                   const metric = resolvedEvaluation.metrics[metricKey] ?? {};
@@ -606,9 +1002,17 @@ const GreenhousePanel = ({
                     humidity: '%',
                     soilMoisture: '%'
                   };
-                  const className = metric.ok
-                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                    : 'border-amber-200 bg-amber-50 text-amber-700';
+                  const sourceLabel =
+                    resolvedEvaluation.metricSources?.[metricKey] === 'external'
+                      ? 'Clima da cidade'
+                      : resolvedEvaluation.metricSources?.[metricKey] === 'internal'
+                        ? 'Sensor interno'
+                        : 'Não informado';
+                  const className = metric.evaluated === false
+                    ? 'border-stone-200 bg-stone-100 text-slate-600'
+                    : metric.ok
+                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                      : 'border-amber-200 bg-amber-50 text-amber-700';
                   return (
                     <div key={metricKey} className={`rounded border px-3 py-2 ${className}`}>
                       <p className="text-[11px] uppercase tracking-[0.2em]">{labelMap[metricKey]}</p>
@@ -619,6 +1023,9 @@ const GreenhousePanel = ({
                       </p>
                       <p className="text-[11px]">
                         Ideal {metric.expected?.min ?? '—'}{unitMap[metricKey]} — {metric.expected?.max ?? '—'}{unitMap[metricKey]}
+                      </p>
+                      <p className="text-[11px]">
+                        {metric.evaluated === false ? 'Sem dado coletado para este parâmetro' : `Fonte usada: ${sourceLabel}`}
                       </p>
                     </div>
                   );
@@ -636,23 +1043,17 @@ const GreenhousePanel = ({
               ) : null}
             </>
           )}
-          <div className="mt-4 space-y-3">
-            <Button
-              variant="secondary"
-              type="button"
-              onClick={() => onSimulateHeat?.(greenhouse.id)}
-              disabled={!onSimulateHeat}
-            >
-              Simular desvio térmico
-            </Button>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-3 rounded-xl border border-stone-200 bg-[#fcfaf7] p-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <Button
                 variant="secondary"
                 type="button"
+                className="h-9 w-full px-3 text-xs sm:w-auto"
                 disabled={
+                  readOnly ||
                   notifyBusy ||
                   !onNotify ||
-                  resolvedEvaluation.status === 'pending'
+                  !hasEvaluableMetrics
                 }
                 onClick={() => onNotify?.(greenhouse.id)}
               >
@@ -662,12 +1063,18 @@ const GreenhousePanel = ({
                     ? 'Notificar equipe'
                     : 'Gerar avaliação'}
               </Button>
-              <p className="text-[11px] text-slate-500">
-                Evita envio repetido: intervalo mínimo de 15 min.
+              <p className="text-[10px] text-slate-500">
+                {readOnly ? 'Perfil Leitor não executa ações.' : 'Para evitar repetição, um novo aviso sai só após 15 min.'}
               </p>
             </div>
-            <p className="text-[11px] text-slate-500">
-              A simulação ajuda a treinar resposta para dias quentes.
+            <p className="mt-2 text-[10px] text-slate-500">
+              {readOnly
+                ? 'Você pode apenas acompanhar os dados da estufa delegada.'
+                : hasTelemetry
+                  ? 'Com sensores internos ativos, as recomendações ficam mais precisas.'
+                  : hasEvaluableMetrics
+                    ? 'Ainda sem telemetria interna completa: avaliação parcial baseada principalmente no clima da cidade.'
+                    : 'Sem dados suficientes para avaliar agora. Aguarde novos dados.'}
             </p>
           </div>
           {notifyFeedback ? (
@@ -685,6 +1092,7 @@ const GreenhousePanel = ({
           ) : null}
         </article>
       </div>
+      ) : null}
     </section>
   );
 };
@@ -692,17 +1100,23 @@ const GreenhousePanel = ({
 export const DashboardPage = () => {
   const navigate = useNavigate();
   const { greenhouseId } = useParams();
+  const currentUser = useAuthStore((state) => state.user);
   const requiresPasswordReset = useAuthStore((state) => state.requiresPasswordReset);
+  const isReader = currentUser?.role === 'Reader';
 
   const [profiles, setProfiles] = useState([]);
+  const [teamMembers, setTeamMembers] = useState([]);
   const [greenhouses, setGreenhouses] = useState([]);
   const [telemetryById, setTelemetryById] = useState({});
   const [eventLogById, setEventLogById] = useState({});
   const [evaluationById, setEvaluationById] = useState({});
   const [notifyFeedbackById, setNotifyFeedbackById] = useState({});
   const [savingById, setSavingById] = useState({});
+  const [teamSavingById, setTeamSavingById] = useState({});
   const [alertsSavingById, setAlertsSavingById] = useState({});
   const [notifyBusyById, setNotifyBusyById] = useState({});
+  const [externalWeatherById, setExternalWeatherById] = useState({});
+  const [externalWeatherLoadingById, setExternalWeatherLoadingById] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -731,20 +1145,40 @@ export const DashboardPage = () => {
       setLoading(true);
       setError(null);
       try {
-        const [profilesResult, greenhousesResult] = await Promise.all([
-          getFlowerRecommendations(),
-          listGreenhouses()
+        const [profilesResult, greenhousesResult, teamMembersResult] = await Promise.allSettled([
+          listCulturePresets(),
+          listGreenhouses(),
+          listGreenhouseTeamMembers()
         ]);
 
         if (!active) {
           return;
         }
 
-        setProfiles(profilesResult?.profiles ?? []);
-        setGreenhouses(greenhousesResult?.greenhouses ?? []);
+        const resolvedProfiles = profilesResult.status === 'fulfilled' ? profilesResult.value : [];
+        const resolvedGreenhouses = greenhousesResult.status === 'fulfilled' ? greenhousesResult.value : { greenhouses: [] };
+        const resolvedTeamMembers = teamMembersResult.status === 'fulfilled' ? teamMembersResult.value : { members: [] };
+
+        const rawProfiles = Array.isArray(resolvedProfiles)
+          ? resolvedProfiles
+          : Array.isArray(resolvedProfiles?.profiles)
+            ? resolvedProfiles.profiles
+            : [];
+
+        const normalizedProfiles = rawProfiles
+          .map(normalizeProfile)
+          .filter((profile) => profile?.id && profile?.temperature && profile?.humidity && profile?.soilMoisture);
+
+        setProfiles(normalizedProfiles);
+        setGreenhouses(resolvedGreenhouses?.greenhouses ?? []);
+        setTeamMembers(resolvedTeamMembers?.members ?? []);
+
+        if (greenhousesResult.status === 'rejected') {
+          throw greenhousesResult.reason;
+        }
       } catch (loadError) {
         if (active) {
-          setError(loadError.response?.data?.message ?? 'Não foi possível carregar as estufas de cultivo.');
+          setError(getFriendlyErrorMessage(loadError, 'Não foi possível carregar as estufas de cultivo.'));
         }
       } finally {
         if (active) {
@@ -819,7 +1253,39 @@ export const DashboardPage = () => {
       return next;
     });
 
+    setExternalWeatherById((prev) => {
+      const next = {};
+      greenhouses.forEach((greenhouse) => {
+        if (prev[greenhouse.id]) {
+          next[greenhouse.id] = prev[greenhouse.id];
+        }
+      });
+      return next;
+    });
+
+    setExternalWeatherLoadingById((prev) => {
+      const next = {};
+      greenhouses.forEach((greenhouse) => {
+        next[greenhouse.id] = prev[greenhouse.id] ?? false;
+      });
+      return next;
+    });
+
     setSavingById((prev) => {
+      const next = {};
+      const validIds = new Set(greenhouses.map((entry) => entry.id));
+      greenhouses.forEach((greenhouse) => {
+        next[greenhouse.id] = prev[greenhouse.id] ?? false;
+      });
+      Object.keys(prev).forEach((id) => {
+        if (!validIds.has(id) && next[id]) {
+          delete next[id];
+        }
+      });
+      return next;
+    });
+
+    setTeamSavingById((prev) => {
       const next = {};
       const validIds = new Set(greenhouses.map((entry) => entry.id));
       greenhouses.forEach((greenhouse) => {
@@ -854,7 +1320,10 @@ export const DashboardPage = () => {
         next[greenhouse.id] = prev[greenhouse.id] ?? {
           status: 'pending',
           alerts: [],
-          metrics: {}
+          metrics: {},
+          partialEvaluation: false,
+          metricSources: {},
+          missingMetrics: []
         };
       });
       Object.keys(prev).forEach((id) => {
@@ -916,65 +1385,83 @@ export const DashboardPage = () => {
   }, [telemetryById]);
 
   useEffect(() => {
+    if (!selectedGreenhouse?.id) {
+      return undefined;
+    }
+
+    let active = true;
+    const targetId = selectedGreenhouse.id;
+
+    const loadExternalWeather = async () => {
+      setExternalWeatherLoadingById((prev) => ({
+        ...prev,
+        [targetId]: true
+      }));
+
+      try {
+        const weather = await getGreenhouseExternalWeather(targetId);
+        if (!active) {
+          return;
+        }
+        setExternalWeatherById((prev) => ({
+          ...prev,
+          [targetId]: weather
+        }));
+      } catch (_error) {
+        if (!active) {
+          return;
+        }
+        setExternalWeatherById((prev) => ({
+          ...prev,
+          [targetId]: null
+        }));
+      } finally {
+        if (active) {
+          setExternalWeatherLoadingById((prev) => ({
+            ...prev,
+            [targetId]: false
+          }));
+        }
+      }
+    };
+
+    loadExternalWeather();
+    const refreshHandle = setInterval(loadExternalWeather, 5 * 60 * 1000);
+
+    return () => {
+      active = false;
+      clearInterval(refreshHandle);
+    };
+  }, [selectedGreenhouse?.id]);
+
+  useEffect(() => {
     if (loading) {
       return;
     }
 
-    if (greenhouses.length === 0) {
-      navigate('/dashboard/onboarding', { replace: true });
+    if (error) {
+      return;
+    }
+
+    if (greenhouseId && greenhouses.length === 0) {
+      return;
+    }
+
+    if (!greenhouseId && greenhouses.length === 0) {
+      if (isReader) {
+        navigate('/dashboard', { replace: true });
+      } else {
+        navigate('/dashboard/onboarding', { replace: true });
+      }
       return;
     }
 
     if (greenhouseId && !selectedGreenhouse) {
       navigate('/dashboard', { replace: true });
     }
-  }, [loading, greenhouses.length, greenhouseId, selectedGreenhouse, navigate]);
+  }, [loading, greenhouses.length, greenhouseId, selectedGreenhouse, navigate, isReader]);
 
-  useEffect(() => {
-    if (greenhouses.length === 0) {
-      return undefined;
-    }
-
-    const interval = window.setInterval(() => {
-      const telemetrySnapshot = {};
-
-      setTelemetryById((previous) => {
-        const next = {};
-        greenhouses.forEach((greenhouse) => {
-          const baseline = previous[greenhouse.id] ?? createInitialGreenhouseState(greenhouse.name);
-          const updated = computeNextGreenhouseState(baseline);
-          telemetrySnapshot[greenhouse.id] = updated;
-          next[greenhouse.id] = updated;
-        });
-        return next;
-      });
-
-      if (Object.keys(telemetrySnapshot).length === 0) {
-        return;
-      }
-
-      setEventLogById((previous) => {
-        const next = { ...previous };
-        greenhouses.forEach((greenhouse) => {
-          const existing = next[greenhouse.id] ?? createInitialEventLog(greenhouse.name);
-          const telemetry = telemetrySnapshot[greenhouse.id];
-          if (!telemetry) {
-            next[greenhouse.id] = existing;
-            return;
-          }
-          const entry = {
-            id: generateEventId(),
-            timestamp: telemetry.lastUpdate,
-            message: buildEventMessage(telemetry)
-          };
-          next[greenhouse.id] = [entry, ...existing].slice(0, 24);
-        });
-        return next;
-      });
-    }, 6500);
-
-    return () => window.clearInterval(interval);
-  }, [greenhouses]);
+  useEffect(() => undefined, []);
 
   useEffect(() => {
     if (greenhouses.length === 0) {
@@ -1073,7 +1560,7 @@ export const DashboardPage = () => {
     } catch (updateError) {
       return {
         ok: false,
-        message: updateError.response?.data?.message ?? 'Não foi possível atualizar a estufa.'
+        message: getFriendlyErrorMessage(updateError, 'Não foi possível atualizar a estufa agora.')
       };
     } finally {
       setSavingById((prev) => ({
@@ -1115,9 +1602,7 @@ export const DashboardPage = () => {
     } catch (toggleError) {
       return {
         ok: false,
-        message:
-          toggleError.response?.data?.message ??
-          'Não foi possível atualizar as preferências de alertas agora.'
+        message: getFriendlyErrorMessage(toggleError, 'Não foi possível atualizar as preferencias de alertas agora.')
       };
     } finally {
       setAlertsSavingById((prev) => ({
@@ -1127,15 +1612,48 @@ export const DashboardPage = () => {
     }
   }, []);
 
+  const handleUpdateTeam = useCallback(async (greenhouseId, responsibleUserIds) => {
+    setTeamSavingById((prev) => ({
+      ...prev,
+      [greenhouseId]: true
+    }));
+
+    try {
+      const response = await updateGreenhouseTeam(greenhouseId, responsibleUserIds);
+      const updated = response?.greenhouse ?? response;
+
+      if (updated) {
+        setGreenhouses((prev) =>
+          prev.map((greenhouse) => (greenhouse.id === greenhouseId ? { ...greenhouse, ...updated } : greenhouse))
+        );
+      }
+
+      return { ok: true };
+    } catch (updateError) {
+      return {
+        ok: false,
+        message: getFriendlyErrorMessage(updateError, 'Não foi possível atualizar os responsáveis desta estufa.')
+      };
+    } finally {
+      setTeamSavingById((prev) => ({
+        ...prev,
+        [greenhouseId]: false
+      }));
+    }
+  }, []);
+
   const handleNotifyTeam = useCallback(async (greenhouseId) => {
     const telemetry = telemetryById[greenhouseId];
+    const externalWeather = externalWeatherById[greenhouseId];
+    const evaluationPayload = buildEvaluationMetricsPayload(telemetry, externalWeather);
+    const metricsPayload = evaluationPayload.metrics;
 
-    if (!telemetry) {
+    if (Object.keys(metricsPayload).length === 0) {
       setNotifyFeedbackById((prev) => ({
         ...prev,
         [greenhouseId]: {
           type: 'error',
-          text: 'Telemetria ainda não está disponível para esta estufa.'
+          text: 'Sem dados suficientes para avaliar. Aguarde telemetria interna ou clima externo da cidade.'
         }
       }));
       return;
@@ -1156,11 +1674,10 @@ export const DashboardPage = () => {
 
     try {
       const result = await evaluateGreenhouseMetrics(greenhouseId, {
-        metrics: {
-          temperature: telemetry.temperature,
-          humidity: telemetry.humidity,
-          soilMoisture: telemetry.soilMoisture
-        },
+        metrics: metricsPayload,
+        metricSources: evaluationPayload.metricSources,
+        missingMetrics: evaluationPayload.missingMetrics,
+        partialEvaluation: evaluationPayload.partialEvaluation,
         notify: true
       });
 
@@ -1178,17 +1695,24 @@ export const DashboardPage = () => {
           [greenhouseId]: {
             status: result.status,
             alerts: result.alerts,
-            metrics: result.metricsEvaluation
+            metrics: result.metricsEvaluation,
+            partialEvaluation: Boolean(result.partialEvaluation),
+            metricSources: result.metricSources ?? {},
+            missingMetrics: Array.isArray(result.missingMetrics) ? result.missingMetrics : []
           }
         }));
       }
 
       if (result?.notified) {
+        const metricCount = Array.isArray(result?.missingMetrics) ? 3 - result.missingMetrics.length : 0;
         setNotifyFeedbackById((prev) => ({
           ...prev,
           [greenhouseId]: {
             type: 'success',
-            text: 'Equipe técnica notificada com sucesso.'
+            text:
+              result?.partialEvaluation
+                ? `Equipe técnica notificada com avaliação parcial (${Math.max(metricCount, 1)}/3 parâmetros avaliados).`
+                : 'Equipe técnica notificada com sucesso com avaliação completa.'
           }
         }));
       } else if (result?.throttled) {
@@ -1204,7 +1728,9 @@ export const DashboardPage = () => {
           ...prev,
           [greenhouseId]: {
             type: 'success',
-            text: 'Nenhum desvio crítico detectado neste ciclo de avaliação.'
+            text: result?.partialEvaluation
+              ? 'Nenhum desvio crítico detectado na avaliação parcial com os dados disponíveis.'
+              : 'Nenhum desvio crítico detectado neste ciclo de avaliação.'
           }
         }));
       } else if (Array.isArray(result?.alerts) && result.alerts.length > 0) {
@@ -1212,7 +1738,10 @@ export const DashboardPage = () => {
           ...prev,
           [greenhouseId]: {
             type: 'info',
-            text: 'Alertas registrados. Recomenda-se inspeção operacional manual.'
+            text:
+              result?.responsibleCount > 0
+                ? 'Alertas registrados. Recomenda-se inspeção operacional manual.'
+                : 'Alertas registrados, mas não há equipe responsável delegada para receber notificação.'
           }
         }));
       } else {
@@ -1229,7 +1758,7 @@ export const DashboardPage = () => {
         ...prev,
         [greenhouseId]: {
           type: 'error',
-            text: notifyError.response?.data?.message ?? 'Falha ao notificar a equipe técnica.'
+            text: getFriendlyErrorMessage(notifyError, 'Não foi possível notificar a equipe tecnica agora.')
         }
       }));
     } finally {
@@ -1238,7 +1767,7 @@ export const DashboardPage = () => {
         [greenhouseId]: false
       }));
     }
-  }, [telemetryById]);
+  }, [telemetryById, externalWeatherById]);
 
   const clearSimulationTimers = useCallback((greenhouseId, options = { cooling: true, watchdog: true }) => {
     const entry = simulationTimersRef.current[greenhouseId];
@@ -1336,6 +1865,15 @@ export const DashboardPage = () => {
         return next;
       });
 
+      setTeamSavingById((prev) => {
+        if (!prev[deleteTarget.id]) {
+          return prev;
+        }
+        const next = { ...prev };
+        delete next[deleteTarget.id];
+        return next;
+      });
+
       setAlertsSavingById((prev) => {
         if (!prev[deleteTarget.id]) {
           return prev;
@@ -1357,7 +1895,7 @@ export const DashboardPage = () => {
 
       setDeleteTarget(null);
     } catch (deleteError) {
-      setError(deleteError.response?.data?.message ?? 'Não foi possível remover a estufa agora.');
+      setError(getFriendlyErrorMessage(deleteError, 'Não foi possível remover a estufa agora.'));
     } finally {
       setDeleteBusy(false);
     }
@@ -1472,16 +2010,21 @@ export const DashboardPage = () => {
         }
       }));
 
-      if (!greenhouse.alertsEnabled || !telemetry) {
+      if (!greenhouse.alertsEnabled) {
+        return;
+      }
+
+      const externalWeather = externalWeatherById[greenhouseId];
+      const evaluationPayload = buildEvaluationMetricsPayload(telemetry, externalWeather);
+      if (Object.keys(evaluationPayload.metrics).length === 0) {
         return;
       }
 
       evaluateGreenhouseMetrics(greenhouseId, {
-        metrics: {
-          temperature: telemetry.temperature,
-          humidity: telemetry.humidity,
-          soilMoisture: telemetry.soilMoisture
-        },
+        metrics: evaluationPayload.metrics,
+        metricSources: evaluationPayload.metricSources,
+        missingMetrics: evaluationPayload.missingMetrics,
+        partialEvaluation: evaluationPayload.partialEvaluation,
         notify: true
       }).catch(() => {
         setNotifyFeedbackById((prev) => ({
@@ -1493,7 +2036,7 @@ export const DashboardPage = () => {
         }));
       });
     },
-    [greenhouses, profileMap, clearSimulationTimers]
+    [greenhouses, profileMap, clearSimulationTimers, externalWeatherById]
   );
 
   const handleSimulateHeat = useCallback(
@@ -1554,12 +2097,28 @@ export const DashboardPage = () => {
         [greenhouseId]: true
       }));
 
+      const externalWeather = externalWeatherById[greenhouseId];
+      const evaluationPayload = buildEvaluationMetricsPayload(simulatedTelemetry, externalWeather);
+      if (Object.keys(evaluationPayload.metrics).length === 0) {
+        setNotifyFeedbackById((prev) => ({
+          ...prev,
+          [greenhouseId]: {
+            type: 'info',
+            text: 'Sem dados válidos para avaliar a simulação neste momento.'
+          }
+        }));
+        setNotifyBusyById((prev) => ({
+          ...prev,
+          [greenhouseId]: false
+        }));
+        return;
+      }
+
       evaluateGreenhouseMetrics(greenhouseId, {
-        metrics: {
-          temperature: simulatedTelemetry?.temperature,
-          humidity: simulatedTelemetry?.humidity,
-          soilMoisture: simulatedTelemetry?.soilMoisture
-        },
+        metrics: evaluationPayload.metrics,
+        metricSources: evaluationPayload.metricSources,
+        missingMetrics: evaluationPayload.missingMetrics,
+        partialEvaluation: evaluationPayload.partialEvaluation,
         notify: true,
         forceNotify: true
       })
@@ -1570,7 +2129,10 @@ export const DashboardPage = () => {
               [greenhouseId]: {
                 status: result.status,
                 alerts: result.alerts,
-                metrics: result.metricsEvaluation
+                metrics: result.metricsEvaluation,
+                partialEvaluation: Boolean(result.partialEvaluation),
+                metricSources: result.metricSources ?? {},
+                missingMetrics: Array.isArray(result.missingMetrics) ? result.missingMetrics : []
               }
             }));
           }
@@ -1628,7 +2190,7 @@ export const DashboardPage = () => {
         watchdogTimer: watchdogTimer ?? null
       };
     },
-    [greenhouses, clearSimulationTimers, applyAutomaticCooling, runWatchdogCheck]
+    [greenhouses, clearSimulationTimers, applyAutomaticCooling, runWatchdogCheck, externalWeatherById]
   );
 
   if (requiresPasswordReset) {
@@ -1713,15 +2275,21 @@ export const DashboardPage = () => {
             eventLog={eventLogById[selectedGreenhouse.id]}
             evaluation={evaluationById[selectedGreenhouse.id]}
             profiles={profiles}
+            teamMembers={teamMembers}
             notifyFeedback={notifyFeedbackById[selectedGreenhouse.id]}
             saving={Boolean(savingById[selectedGreenhouse.id])}
+            teamSaving={Boolean(teamSavingById[selectedGreenhouse.id])}
             alertsSaving={Boolean(alertsSavingById[selectedGreenhouse.id])}
             notifyBusy={Boolean(notifyBusyById[selectedGreenhouse.id])}
+            externalWeather={externalWeatherById[selectedGreenhouse.id]}
+            externalWeatherLoading={Boolean(externalWeatherLoadingById[selectedGreenhouse.id])}
             onSave={handleSaveGreenhouse}
+            onUpdateTeam={handleUpdateTeam}
             onToggleAlerts={handleToggleAlerts}
             onNotify={handleNotifyTeam}
             onSimulateHeat={handleSimulateHeat}
             onDeleteRequest={handleRequestDeleteGreenhouse}
+            readOnly={isReader}
           />
         </div>
       ) : null}

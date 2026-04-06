@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore.js';
 
-// Resolve URL base da API para ambiente local e producao.
 const resolveBaseUrl = () => {
   const raw = (import.meta.env?.VITE_APP_API_URL ?? '').trim();
 
@@ -23,22 +22,42 @@ const resolveBaseUrl = () => {
 };
 
 const configuredBaseUrl = resolveBaseUrl();
+const REQUEST_TIMEOUT_MS = Number.parseInt(import.meta.env?.VITE_APP_API_TIMEOUT_MS ?? '15000', 10);
+const resolvedTimeout = Number.isFinite(REQUEST_TIMEOUT_MS) && REQUEST_TIMEOUT_MS > 0
+  ? REQUEST_TIMEOUT_MS
+  : 15000;
 
 const api = axios.create({
-  baseURL: configuredBaseUrl
+  baseURL: configuredBaseUrl,
+  timeout: resolvedTimeout
 });
 
 const refreshClient = axios.create({
-  baseURL: configuredBaseUrl
+  baseURL: configuredBaseUrl,
+  timeout: resolvedTimeout
 });
 
 let refreshPromise = null;
 
-// Executa refresh token com trava para evitar requisições duplicadas em paralelo.
+const getAccessToken = (tokens) => tokens?.accessToken ?? tokens?.access_token ?? null;
+const getRefreshToken = (tokens) => tokens?.refreshToken ?? tokens?.refresh_token ?? null;
+
+const isAuthEndpoint = (url = '') => {
+  const normalized = String(url || '').toLowerCase();
+  return normalized.includes('/auth/login')
+    || normalized.includes('/auth/register')
+    || normalized.includes('/auth/mfa/')
+    || normalized.includes('/auth/password-reset')
+    || normalized.includes('/auth/first-access')
+    || normalized.includes('/auth/refresh');
+};
+
+// trava para não disparar múltiplos refreshes simultâneos
 const refreshSession = async () => {
   if (!refreshPromise) {
     const { tokens, setSession, clearSession } = useAuthStore.getState();
-    if (!tokens?.refreshToken) {
+    const refreshToken = getRefreshToken(tokens);
+    if (!refreshToken) {
       clearSession();
       throw new Error('Refresh token not available');
     }
@@ -48,14 +67,19 @@ const refreshSession = async () => {
     }
 
     refreshPromise = refreshClient
-      .post('/auth/refresh', { refreshToken: tokens.refreshToken })
+      .post('/auth/refresh', { refreshToken })
       .then((response) => {
         const payload = response.data;
         setSession({
           user: payload.user,
           tokens: payload.tokens
         });
-        return payload.tokens.accessToken;
+        const nextAccessToken = getAccessToken(payload.tokens);
+        if (!nextAccessToken) {
+          clearSession();
+          throw new Error('Access token not returned by refresh endpoint');
+        }
+        return nextAccessToken;
       })
       .catch((error) => {
         clearSession();
@@ -70,10 +94,10 @@ const refreshSession = async () => {
 };
 
 api.interceptors.request.use((config) => {
-  // Injeta access token automaticamente em cada chamada autenticada.
   const { tokens } = useAuthStore.getState();
-  if (tokens?.accessToken) {
-    config.headers.Authorization = `Bearer ${tokens.accessToken}`;
+  const accessToken = getAccessToken(tokens);
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
   }
   return config;
 });
@@ -81,9 +105,16 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    // Em caso de 401, tenta renovar token e repetir a requisicao uma unica vez.
+    // 401: tenta refresh uma única vez antes de deslogar
     const originalRequest = error.config;
-    if (originalRequest && error.response?.status === 401 && !originalRequest._retry) {
+    const { tokens } = useAuthStore.getState();
+    const shouldTryRefresh = Boolean(getRefreshToken(tokens))
+      && originalRequest
+      && error.response?.status === 401
+      && !originalRequest._retry
+      && !isAuthEndpoint(originalRequest.url);
+
+    if (shouldTryRefresh) {
       originalRequest._retry = true;
       try {
         const newAccessToken = await refreshSession();
