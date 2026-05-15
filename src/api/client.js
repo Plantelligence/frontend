@@ -1,62 +1,77 @@
+/**
+ * Cliente HTTP base — todas as requisições ao backend passam por aqui.
+ *
+ * Configuração automática:
+ *   - Em produção, lê VITE_APP_API_URL e apenda /api ao final
+ *   - Em desenvolvimento, o proxy do Vite (vite.config.js) redireciona /api
+ *     para http://localhost:4001, então não precisa de URL absoluta
+ *
+ * Autenticação:
+ *   O interceptor de requisição injeta o token JWT (accessToken) em cada
+ *   chamada. Se o servidor responder 401, tenta renovar o token via /auth/refresh
+ *   uma única vez antes de encerrar a sessão do usuário.
+ *
+ * Variáveis de ambiente usadas:
+ *   VITE_APP_API_URL         — URL do backend em produção
+ *   VITE_APP_API_TIMEOUT_MS  — timeout das requisições (padrão: 15000ms)
+ */
+
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore.js';
 
+// resolve a URL base do backend a partir da variável de ambiente
 const resolveBaseUrl = () => {
   const raw = (import.meta.env?.VITE_APP_API_URL ?? '').trim();
 
-  if (!raw) {
-    return '/api';
-  }
-
-  if (raw === '/api') {
-    return '/api';
-  }
+  if (!raw) return '/api';
+  if (raw === '/api') return '/api';
 
   if (raw.startsWith('http')) {
     const cleaned = raw.replace(/\/+$/, '');
+    // evita duplicar "/api" se a URL já terminar com ele
     return cleaned.endsWith('/api') ? cleaned : `${cleaned}/api`;
   }
 
-  const cleaned = raw.replace(/\/+$/, '');
-  return cleaned || '/api';
+  return raw.replace(/\/+$/, '') || '/api';
 };
 
 const configuredBaseUrl = resolveBaseUrl();
+
 const REQUEST_TIMEOUT_MS = Number.parseInt(import.meta.env?.VITE_APP_API_TIMEOUT_MS ?? '15000', 10);
 const resolvedTimeout = Number.isFinite(REQUEST_TIMEOUT_MS) && REQUEST_TIMEOUT_MS > 0
   ? REQUEST_TIMEOUT_MS
   : 15000;
 
-const api = axios.create({
-  baseURL: configuredBaseUrl,
-  timeout: resolvedTimeout
-});
+// instância principal usada por todos os serviços
+const api = axios.create({ baseURL: configuredBaseUrl, timeout: resolvedTimeout });
 
-const refreshClient = axios.create({
-  baseURL: configuredBaseUrl,
-  timeout: resolvedTimeout
-});
+// instância separada para o refresh — evita loop infinito caso o próprio
+// endpoint de refresh retorne 401
+const refreshClient = axios.create({ baseURL: configuredBaseUrl, timeout: resolvedTimeout });
 
+// lock para garantir que apenas um refresh rode por vez,
+// mesmo que múltiplas requisições falhem com 401 simultaneamente
 let refreshPromise = null;
 
-const getAccessToken = (tokens) => tokens?.accessToken ?? tokens?.access_token ?? null;
+const getAccessToken  = (tokens) => tokens?.accessToken  ?? tokens?.access_token  ?? null;
 const getRefreshToken = (tokens) => tokens?.refreshToken ?? tokens?.refresh_token ?? null;
 
+// rotas de autenticação não precisam do interceptor de refresh
 const isAuthEndpoint = (url = '') => {
-  const normalized = String(url || '').toLowerCase();
-  return normalized.includes('/auth/login')
-    || normalized.includes('/auth/register')
-    || normalized.includes('/auth/mfa/')
-    || normalized.includes('/auth/password-reset')
-    || normalized.includes('/auth/first-access')
-    || normalized.includes('/auth/refresh');
+  const n = String(url || '').toLowerCase();
+  return n.includes('/auth/login')
+    || n.includes('/auth/register')
+    || n.includes('/auth/mfa/')
+    || n.includes('/auth/password-reset')
+    || n.includes('/auth/first-access')
+    || n.includes('/auth/refresh');
 };
 
-// trava para não disparar múltiplos refreshes simultâneos
 const refreshSession = async () => {
   if (!refreshPromise) {
     const { tokens, setSession, clearSession } = useAuthStore.getState();
     const refreshToken = getRefreshToken(tokens);
+
     if (!refreshToken) {
       clearSession();
       throw new Error('Refresh token not available');
@@ -70,16 +85,13 @@ const refreshSession = async () => {
       .post('/auth/refresh', { refreshToken })
       .then((response) => {
         const payload = response.data;
-        setSession({
-          user: payload.user,
-          tokens: payload.tokens
-        });
-        const nextAccessToken = getAccessToken(payload.tokens);
-        if (!nextAccessToken) {
+        setSession({ user: payload.user, tokens: payload.tokens });
+        const nextToken = getAccessToken(payload.tokens);
+        if (!nextToken) {
           clearSession();
           throw new Error('Access token not returned by refresh endpoint');
         }
-        return nextAccessToken;
+        return nextToken;
       })
       .catch((error) => {
         clearSession();
@@ -93,6 +105,7 @@ const refreshSession = async () => {
   return refreshPromise;
 };
 
+// injeta o Bearer token em cada requisição
 api.interceptors.request.use((config) => {
   const { tokens } = useAuthStore.getState();
   const accessToken = getAccessToken(tokens);
@@ -102,12 +115,13 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// em 401, tenta renovar o token uma vez antes de deslogar
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    // 401: tenta refresh uma única vez antes de deslogar
     const originalRequest = error.config;
     const { tokens } = useAuthStore.getState();
+
     const shouldTryRefresh = Boolean(getRefreshToken(tokens))
       && originalRequest
       && error.response?.status === 401
@@ -124,6 +138,7 @@ api.interceptors.response.use(
         return Promise.reject(refreshError);
       }
     }
+
     return Promise.reject(error);
   }
 );

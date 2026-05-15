@@ -16,6 +16,7 @@ export const DashboardSideNav = ({ active = 'dashboard', footerText }) => {
     dashboard: { label: 'Painel de estufas', to: '/dashboard' },
     onboarding: { label: 'Criar nova estufa', to: '/dashboard/onboarding' },
     presets: { label: 'Perfis de cultivo', to: '/dashboard/presets' },
+    relatorios: { label: 'Relatórios', to: '/dashboard/relatorios' },
     chat: { label: 'Chat com IA', to: '/dashboard/chat' }
   };
 
@@ -49,6 +50,7 @@ export const DashboardSideNav = ({ active = 'dashboard', footerText }) => {
           <p className="px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-stone-400">Operação</p>
           {renderNavItem('dashboard')}
           {renderNavItem('presets')}
+          {renderNavItem('relatorios')}
           {user?.role !== 'Reader' ? renderNavItem('onboarding') : null}
         </div>
 

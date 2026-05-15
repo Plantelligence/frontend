@@ -14,6 +14,7 @@ import { SecurityLogsPage } from './pages/SecurityLogsPage.jsx';
 import { AdminUsersPage } from './pages/AdminUsersPage.jsx';
 import { ChatAIPage } from './pages/ChatAIPage.jsx';
 import { PresetsPage } from './pages/PresetsPage.jsx';
+import { RelatoriosPage } from './pages/RelatoriosPage.jsx';
 import { TechnologyPage } from './pages/TechnologyPage.jsx';
 import { AboutPage } from './pages/AboutPage.jsx';
 import { ContactPage } from './pages/ContactPage.jsx';
@@ -306,6 +307,7 @@ const App = () => {
               <Route path="dashboard/estufas/:greenhouseId" element={<DashboardPage />} />
               <Route path="dashboard/chat" element={<ChatAIPage />} />
               <Route path="dashboard/presets" element={<PresetsPage />} />
+              <Route path="dashboard/relatorios" element={<RelatoriosPage />} />
               <Route path="settings" element={<UserSettingsPage />} />
               <Route path="settings/logs" element={<SecurityLogsPage />} />
               <Route element={<AdminRoute />}>

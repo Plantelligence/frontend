@@ -1,6 +1,32 @@
+/**
+ * Serviço de estufas — CRUD, alertas, equipe e clima externo.
+ *
+ * A estufa é o recurso central do sistema. Este serviço cobre:
+ *   - Criação, edição e remoção de estufas
+ *   - Busca de localização por CEP
+ *   - Vinculação de perfil de cultivo (preset)
+ *   - Configuração de limites de alerta por sensor
+ *   - Gerenciamento da equipe responsável
+ *   - Avaliação automática das condições com base nos dados dos sensores
+ *   - Busca de clima externo da cidade vinculada (OpenWeatherMap)
+ *
+ * Alguns endpoints têm fallback para rotas legadas (/estufas vs /greenhouse)
+ * para manter compatibilidade enquanto a migração do schema está em andamento.
+ */
+
 import api from './client.js';
 
 const isNotFound = (error) => Number(error?.response?.status) === 404;
+
+// Resolve { min, max } from both old format ({ min, max }) and new nested format ({ ideal: { min, max }, ... })
+const resolveProfileRange = (metric) => {
+  if (!metric || typeof metric !== 'object') return null;
+  const source = metric.ideal && typeof metric.ideal === 'object' ? metric.ideal : metric;
+  const min = Number(source.min);
+  const max = Number(source.max);
+  if (!Number.isFinite(min) || !Number.isFinite(max)) return null;
+  return { min, max };
+};
 
 const simplifyProfileSummary = (value) => {
   const text = String(value ?? '').trim();
@@ -26,42 +52,18 @@ const mapGreenhouse = (item) => ({
   flowerProfileId: item?.preset_id ?? item?.flowerProfileId ?? null,
   alertsEnabled: item?.alerts_enabled ?? item?.alertsEnabled ?? true,
   lastAlertAt: item?.last_alert_at ?? item?.lastAlertAt ?? null,
+  alertThresholds: item?.alert_thresholds ?? item?.alertThresholds ?? null,
   responsibleUserIds: item?.responsible_user_ids ?? item?.responsibleUserIds ?? [],
   watchersDetails: item?.watchers_details ?? item?.watchersDetails ?? [],
-  profile: item?.preset ?? item?.profile
-    ? {
-      id: (item.preset ?? item.profile).id,
-      name: (item.preset ?? item.profile).nome_cultura ?? (item.preset ?? item.profile).name ?? 'Perfil sem nome',
-      summary: simplifyProfileSummary((item.preset ?? item.profile).descricao ?? (item.preset ?? item.profile).summary ?? ''),
-      temperature: (item.preset ?? item.profile).temperatura?.ideal ?? (item.preset ?? item.profile).temperature
-        ? {
-          min: Number(((item.preset ?? item.profile).temperatura?.ideal ?? (item.preset ?? item.profile).temperature).min),
-          max: Number(((item.preset ?? item.profile).temperatura?.ideal ?? (item.preset ?? item.profile).temperature).max)
-        }
-        : null,
-      humidity: (item.preset ?? item.profile).umidade?.ideal ?? (item.preset ?? item.profile).humidity
-        ? {
-          min: Number(((item.preset ?? item.profile).umidade?.ideal ?? (item.preset ?? item.profile).humidity).min),
-          max: Number(((item.preset ?? item.profile).umidade?.ideal ?? (item.preset ?? item.profile).humidity).max)
-        }
-        : null,
-      luminosity: (item.preset ?? item.profile).luminosidade?.ideal ?? (item.preset ?? item.profile).luminosity
-        ? {
-          min: Number(((item.preset ?? item.profile).luminosidade?.ideal ?? (item.preset ?? item.profile).luminosity).min),
-          max: Number(((item.preset ?? item.profile).luminosidade?.ideal ?? (item.preset ?? item.profile).luminosity).max)
-        }
-        : null,
-      // Compatibilidade com a avaliação atual baseada em soilMoisture.
-      soilMoisture: (item.preset ?? item.profile).luminosidade?.ideal
-        ?? (item.preset ?? item.profile).soilMoisture
-        ?? (item.preset ?? item.profile).luminosity
-        ? {
-          min: Number(((item.preset ?? item.profile).luminosidade?.ideal ?? (item.preset ?? item.profile).soilMoisture ?? (item.preset ?? item.profile).luminosity).min),
-          max: Number(((item.preset ?? item.profile).luminosidade?.ideal ?? (item.preset ?? item.profile).soilMoisture ?? (item.preset ?? item.profile).luminosity).max)
-        }
-        : null
-    }
-    : null,
+  profile: (item?.preset ?? item?.profile) ? {
+    id: (item.preset ?? item.profile).id,
+    name: (item.preset ?? item.profile).nome_cultura ?? (item.preset ?? item.profile).name ?? 'Perfil sem nome',
+    summary: simplifyProfileSummary((item.preset ?? item.profile).descricao ?? (item.preset ?? item.profile).summary ?? ''),
+    temperature: resolveProfileRange((item.preset ?? item.profile).temperatura) ?? resolveProfileRange((item.preset ?? item.profile).temperature) ?? null,
+    humidity: resolveProfileRange((item.preset ?? item.profile).umidade) ?? resolveProfileRange((item.preset ?? item.profile).humidity) ?? null,
+    luminosity: resolveProfileRange((item.preset ?? item.profile).luminosidade) ?? resolveProfileRange((item.preset ?? item.profile).luminosity) ?? null,
+    soilMoisture: resolveProfileRange((item.preset ?? item.profile).umidade_solo) ?? resolveProfileRange((item.preset ?? item.profile).soilMoisture) ?? null,
+  } : null,
   createdAt: item?.created_at ?? item?.createdAt ?? null,
   updatedAt: item?.updated_at ?? item?.updatedAt ?? null
 });
@@ -131,6 +133,11 @@ export const resolveCepLocation = (cep) => {
 
 export const getGreenhouseExternalWeather = (greenhouseId) =>
   api.get(`/clima/${greenhouseId}/externo`).then((res) => res.data);
+
+// Salva limiares de alerta personalizados para a estufa.
+export const updateAlertThresholds = (greenhouseId, thresholds) =>
+  api.patch(`/estufas/${greenhouseId}/alert-thresholds`, thresholds)
+    .then((res) => ({ greenhouse: mapGreenhouse(res.data) }));
 
 export const updateGreenhouseAlerts = (greenhouseId, payload) =>
   api.patch(`/estufas/${greenhouseId}/alerts`, payload)

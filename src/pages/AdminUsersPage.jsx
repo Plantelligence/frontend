@@ -12,6 +12,7 @@ import {
   updateUserRole
 } from '../api/adminService.js';
 import { useAuthStore } from '../store/authStore.js';
+import { useEmailCooldown, useEmailCooldownMap } from '../hooks/useEmailCooldown.js';
 
 const roleLabels = {
   Admin: 'Administrador de usuários',
@@ -73,6 +74,9 @@ export const AdminUsersPage = () => {
   const [readerSaving, setReaderSaving] = useState(false);
   const [readerFeedback, setReaderFeedback] = useState(null);
   const [readerError, setReaderError] = useState(null);
+
+  const createUserCooldown = useEmailCooldown();
+  const inviteCooldown = useEmailCooldownMap();
 
   useEffect(() => {
     let active = true;
@@ -285,6 +289,7 @@ export const AdminUsersPage = () => {
 
   const handleCreateUser = async (event) => {
     event.preventDefault();
+    if (!createUserCooldown.canSend) return;
 
     const fullName = createUserForm.fullName.trim();
     const email = createUserForm.email.trim().toLowerCase();
@@ -318,6 +323,7 @@ export const AdminUsersPage = () => {
         readerGreenhouseIds: []
       });
 
+      createUserCooldown.recordSend();
       if (result?.invitationSent) {
         setCreateUserFeedback(`Usuário criado e convite enviado para ${createdUser?.email ?? email}.`);
       } else {
@@ -331,7 +337,7 @@ export const AdminUsersPage = () => {
   };
 
   const handleResendInvite = async (listedUser) => {
-    if (!listedUser) {
+    if (!listedUser || !inviteCooldown.canSend(listedUser.id)) {
       return;
     }
 
@@ -340,6 +346,7 @@ export const AdminUsersPage = () => {
     setInviteLoadingId(listedUser.id);
     try {
       const result = await resendUserInvite({ userId: listedUser.id });
+      inviteCooldown.recordSend(listedUser.id);
       setUserActionFeedback(
         result?.invitationSent
           ? `Convite reenviado para ${listedUser.email}.`
@@ -578,8 +585,12 @@ export const AdminUsersPage = () => {
                 </select>
               </label>
               <div className="flex items-end">
-                <Button type="submit" disabled={createUserLoading} className="w-full">
-                  {createUserLoading ? 'Criando...' : 'Criar usuário'}
+                <Button type="submit" disabled={createUserLoading || !createUserCooldown.canSend} className="w-full">
+                  {createUserLoading
+                    ? 'Criando...'
+                    : !createUserCooldown.canSend
+                    ? `Aguarde ${createUserCooldown.secondsLeft}s`
+                    : 'Criar usuário'}
                 </Button>
               </div>
             </form>
@@ -716,9 +727,13 @@ export const AdminUsersPage = () => {
                             <Button
                               variant="secondary"
                               onClick={() => handleResendInvite(listedUser)}
-                              disabled={inviteLoadingId === listedUser.id}
+                              disabled={inviteLoadingId === listedUser.id || !inviteCooldown.canSend(listedUser.id)}
                             >
-                              {inviteLoadingId === listedUser.id ? 'Reenviando...' : 'Reenviar convite'}
+                              {inviteLoadingId === listedUser.id
+                                ? 'Reenviando...'
+                                : !inviteCooldown.canSend(listedUser.id)
+                                ? `Aguarde ${inviteCooldown.secondsLeft(listedUser.id)}s`
+                                : 'Reenviar convite'}
                             </Button>
                           ) : null}
                           {resolveCanDelete(listedUser) ? (

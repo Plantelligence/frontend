@@ -8,6 +8,7 @@ import {
   deleteCulturePreset,
   duplicateCulturePreset,
   listCulturePresets,
+  suggestPresetWithAI,
   updateCulturePreset
 } from '../api/presetService.js';
 
@@ -44,7 +45,35 @@ const makeDefaultPreset = () => ({
     alerta_alto: { min: 90, max: 96 },
     critico_alto: { min: 96, max: 100 }
   },
-  luminosidade: makeDefaultRanges()
+  luminosidade: makeDefaultRanges(),
+  umidade_solo: {
+    critico_baixo: { min: 20, max: 40 },
+    alerta_baixo: { min: 40, max: 55 },
+    ideal: { min: 55, max: 70 },
+    alerta_alto: { min: 70, max: 80 },
+    critico_alto: { min: 80, max: 100 }
+  }
+});
+
+const buildRangesFromIdeal = (min, max) => {
+  const span = Math.max(max - min, 1);
+  return {
+    critico_baixo: { min: Math.round(min - span * 1.2), max: Math.round(min - span * 0.5) },
+    alerta_baixo: { min: Math.round(min - span * 0.5), max: min },
+    ideal: { min, max },
+    alerta_alto: { min: max, max: Math.round(max + span * 0.5) },
+    critico_alto: { min: Math.round(max + span * 0.5), max: Math.round(max + span * 1.2) }
+  };
+};
+
+const aiResponseToPreset = (suggestion) => ({
+  nome_cultura: suggestion?.name ?? 'Perfil sugerido pela IA',
+  tipo_cultura: 'Cogumelos',
+  descricao: suggestion?.summary ?? '',
+  temperatura: buildRangesFromIdeal(suggestion?.temperature?.min ?? 15, suggestion?.temperature?.max ?? 25),
+  umidade: buildRangesFromIdeal(suggestion?.humidity?.min ?? 70, suggestion?.humidity?.max ?? 90),
+  luminosidade: buildRangesFromIdeal(suggestion?.luminosity?.min ?? suggestion?.soilMoisture?.min ?? 0, suggestion?.luminosity?.max ?? suggestion?.soilMoisture?.max ?? 500),
+  umidade_solo: buildRangesFromIdeal(suggestion?.soilMoisture?.min ?? 55, suggestion?.soilMoisture?.max ?? 70),
 });
 
 const getInUseCount = (preset) => Array.isArray(preset?.estufas) ? preset.estufas.length : 0;
@@ -80,6 +109,7 @@ const deriveUiPreset = (preset) => {
   const temp = getIdealMetric(preset.temperatura);
   const humidity = getIdealMetric(preset.umidade);
   const light = getIdealMetric(preset.luminosidade);
+  const soil = getIdealMetric(preset.umidade_solo);
   const inUse = getInUseCount(preset);
 
   return {
@@ -89,10 +119,12 @@ const deriveUiPreset = (preset) => {
       type: preset.sistema ? 'default' : 'custom',
       temperature: temp.target,
       humidity: humidity.target,
-      co2: light.target,
+      luminosity: light.target,
+      soilMoisture: soil.target,
       tempRange: `${temp.min}–${temp.max}`,
       humidityRange: `${humidity.min}–${humidity.max}`,
-      lightRange: `${light.min}–${light.max}`
+      lightRange: `${light.min}–${light.max}`,
+      soilRange: preset.umidade_solo ? `${soil.min}–${soil.max}` : '—'
     }
   };
 };
@@ -166,20 +198,25 @@ function PresetCard({ preset, selected, onSelect, onEdit, onDuplicate, onDelete,
           </span>
         </div>
 
-        <div className="mb-3 grid grid-cols-3 gap-2">
-          <div className="flex min-h-[96px] flex-col justify-between rounded-md border border-stone-200 bg-[#f5f2ec] p-3">
+        <div className="mb-3 grid grid-cols-2 gap-2">
+          <div className="flex min-h-[80px] flex-col justify-between rounded-md border border-stone-200 bg-[#f5f2ec] p-3">
             <p className="text-[10px] font-semibold leading-tight text-red-700">Temperatura</p>
-            <p className="text-xl font-semibold leading-none text-stone-900">{preset.ui.temperature}<span className="ml-0.5 text-[11px] font-normal text-stone-400">°C</span></p>
+            <p className="text-lg font-semibold leading-none text-stone-900">{preset.ui.temperature}<span className="ml-0.5 text-[10px] font-normal text-stone-400">°C</span></p>
             <p className="text-[10px] font-mono text-stone-400">{preset.ui.tempRange}°C</p>
           </div>
-          <div className="flex min-h-[96px] flex-col justify-between rounded-md border border-stone-200 bg-[#f5f2ec] p-3">
-            <p className="text-[10px] font-semibold leading-tight text-red-700">Umidade</p>
-            <p className="text-xl font-semibold leading-none text-stone-900">{preset.ui.humidity}<span className="ml-0.5 text-[11px] font-normal text-stone-400">%</span></p>
+          <div className="flex min-h-[80px] flex-col justify-between rounded-md border border-stone-200 bg-[#f5f2ec] p-3">
+            <p className="text-[10px] font-semibold leading-tight text-red-700">Umidade do ar</p>
+            <p className="text-lg font-semibold leading-none text-stone-900">{preset.ui.humidity}<span className="ml-0.5 text-[10px] font-normal text-stone-400">%</span></p>
             <p className="text-[10px] font-mono text-stone-400">{preset.ui.humidityRange}%</p>
           </div>
-          <div className="flex min-h-[96px] flex-col justify-between rounded-md border border-stone-200 bg-[#f5f2ec] p-3">
+          <div className="flex min-h-[80px] flex-col justify-between rounded-md border border-stone-200 bg-[#f5f2ec] p-3">
+            <p className="text-[10px] font-semibold leading-tight text-red-700">Umidade do solo</p>
+            <p className="text-lg font-semibold leading-none text-stone-900">{preset.ui.soilMoisture || '—'}<span className="ml-0.5 text-[10px] font-normal text-stone-400">%</span></p>
+            <p className="text-[10px] font-mono text-stone-400">{preset.ui.soilRange}</p>
+          </div>
+          <div className="flex min-h-[80px] flex-col justify-between rounded-md border border-stone-200 bg-[#f5f2ec] p-3">
             <p className="text-[10px] font-semibold leading-tight text-red-700">Luminosidade</p>
-            <p className="text-xl font-semibold leading-none text-stone-900">{preset.ui.co2}<span className="ml-0.5 text-[11px] font-normal text-stone-400">lux</span></p>
+            <p className="text-lg font-semibold leading-none text-stone-900">{preset.ui.luminosity}<span className="ml-0.5 text-[10px] font-normal text-stone-400">lux</span></p>
             <p className="text-[10px] font-mono text-stone-400">{preset.ui.lightRange}</p>
           </div>
         </div>
@@ -285,9 +322,9 @@ function DetailPanel({ preset, open, saving, onSave, onClose, readOnly = false }
           <p className="mb-1 border-b border-stone-100 pb-2 text-[10px] font-semibold uppercase tracking-widest text-stone-400">Faixa ideal para o cultivo</p>
           <p className="mb-3 text-xs text-stone-500">Ajuste os valores mínimo e máximo recomendados para cada parâmetro.</p>
           <p className="mb-3 rounded-md border border-stone-200 bg-stone-50 px-3 py-2 text-[11px] text-stone-600">
-            Limites permitidos: temperatura de -5 a 45 °C, umidade de 0 a 100% e luminosidade de 0 a 3000 lux. Valores fora da faixa são rejeitados ao sair do campo.
+            Limites: temperatura -5 a 45 °C, umidade 0 a 100%, umidade do solo 0 a 100% e luminosidade 0 a 3000 lux.
           </p>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-4">
             <MetricInput
               label="Temperatura mínima"
               value={form.temperatura?.ideal?.min}
@@ -298,13 +335,22 @@ function DetailPanel({ preset, open, saving, onSave, onClose, readOnly = false }
               onChange={(min) => updateRange('temperatura', { ...form.temperatura.ideal, min })}
             />
             <MetricInput
-              label="Umidade mínima"
+              label="Umidade do ar mínima"
               value={form.umidade?.ideal?.min}
               unit="%"
               min={0}
               max={100}
               range="0 a 100"
               onChange={(min) => updateRange('umidade', { ...form.umidade.ideal, min })}
+            />
+            <MetricInput
+              label="Umidade do solo mínima"
+              value={form.umidade_solo?.ideal?.min}
+              unit="%"
+              min={0}
+              max={100}
+              range="0 a 100"
+              onChange={(min) => updateRange('umidade_solo', { ...(form.umidade_solo?.ideal ?? { min: 55, max: 70 }), min })}
             />
             <MetricInput
               label="Luminosidade mínima"
@@ -316,7 +362,7 @@ function DetailPanel({ preset, open, saving, onSave, onClose, readOnly = false }
               onChange={(min) => updateRange('luminosidade', { ...form.luminosidade.ideal, min })}
             />
           </div>
-          <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-4">
             <MetricInput
               label="Temperatura máxima"
               value={form.temperatura?.ideal?.max}
@@ -327,13 +373,22 @@ function DetailPanel({ preset, open, saving, onSave, onClose, readOnly = false }
               onChange={(max) => updateRange('temperatura', { ...form.temperatura.ideal, max })}
             />
             <MetricInput
-              label="Umidade máxima"
+              label="Umidade do ar máxima"
               value={form.umidade?.ideal?.max}
               unit="%"
               min={0}
               max={100}
               range="0 a 100"
               onChange={(max) => updateRange('umidade', { ...form.umidade.ideal, max })}
+            />
+            <MetricInput
+              label="Umidade do solo máxima"
+              value={form.umidade_solo?.ideal?.max}
+              unit="%"
+              min={0}
+              max={100}
+              range="0 a 100"
+              onChange={(max) => updateRange('umidade_solo', { ...(form.umidade_solo?.ideal ?? { min: 55, max: 70 }), max })}
             />
             <MetricInput
               label="Luminosidade máxima"
@@ -368,6 +423,118 @@ function DetailPanel({ preset, open, saving, onSave, onClose, readOnly = false }
   );
 }
 
+function AIModal({ open, onClose, onUse }) {
+  const [query, setQuery] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [suggestion, setSuggestion] = useState(null);
+
+  useEffect(() => {
+    if (!open) {
+      setQuery('');
+      setError(null);
+      setSuggestion(null);
+    }
+  }, [open]);
+
+  if (!open) {
+    return null;
+  }
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (!query.trim()) {
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    setSuggestion(null);
+    try {
+      const result = await suggestPresetWithAI(query.trim());
+      setSuggestion(result);
+    } catch (err) {
+      setError(err?.response?.data?.detail ?? 'Não foi possível gerar sugestão. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+      <div
+        className="w-full max-w-lg overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-2xl"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="border-b border-stone-200 px-5 py-4">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-red-600">Inteligência Artificial</p>
+          <h2 className="mt-1 text-lg font-semibold text-stone-900">Criar perfil com IA</h2>
+          <p className="mt-1 text-sm text-stone-500">Descreva a cultura ou condições de cultivo e a IA irá sugerir os parâmetros ideais.</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-3 px-5 py-4">
+          <textarea
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Ex.: Shiitake em clima frio, alta umidade, pouca luz..."
+            rows={3}
+            disabled={loading}
+            className="w-full resize-none rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-800 outline-none focus:border-red-400 disabled:bg-stone-50"
+          />
+          {error ? (
+            <p className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>
+          ) : null}
+          <button
+            type="submit"
+            disabled={loading || !query.trim()}
+            className="w-full rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {loading ? 'Gerando sugestão...' : 'Gerar sugestão com IA'}
+          </button>
+        </form>
+
+        {suggestion ? (
+          <div className="space-y-3 border-t border-stone-200 px-5 pb-5 pt-4">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-emerald-700">Sugestão gerada</p>
+            <div className="space-y-2 rounded-xl border border-stone-200 bg-stone-50 p-4">
+              <p className="font-semibold text-stone-900">{suggestion.name}</p>
+              {suggestion.summary ? <p className="text-sm text-stone-600">{suggestion.summary}</p> : null}
+              <div className="mt-2 grid grid-cols-3 gap-2">
+                <div className="rounded-lg border border-stone-200 bg-white p-2 text-center">
+                  <p className="text-[10px] font-semibold text-red-600">Temperatura</p>
+                  <p className="mt-1 text-sm font-semibold text-stone-800">{suggestion.temperature?.min}–{suggestion.temperature?.max}°C</p>
+                </div>
+                <div className="rounded-lg border border-stone-200 bg-white p-2 text-center">
+                  <p className="text-[10px] font-semibold text-red-600">Umidade</p>
+                  <p className="mt-1 text-sm font-semibold text-stone-800">{suggestion.humidity?.min}–{suggestion.humidity?.max}%</p>
+                </div>
+                <div className="rounded-lg border border-stone-200 bg-white p-2 text-center">
+                  <p className="text-[10px] font-semibold text-red-600">Luminosidade</p>
+                  <p className="mt-1 text-sm font-semibold text-stone-800">{suggestion.soilMoisture?.min}–{suggestion.soilMoisture?.max} lx</p>
+                </div>
+              </div>
+              {suggestion.notes ? (
+                <p className="mt-2 text-xs italic text-stone-500">{suggestion.notes}</p>
+              ) : null}
+            </div>
+            <button
+              onClick={() => onUse(suggestion)}
+              className="w-full rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
+            >
+              Usar este perfil
+            </button>
+          </div>
+        ) : null}
+
+        <div className="border-t border-stone-100 px-5 py-3">
+          <button onClick={onClose} className="text-sm text-stone-500 transition hover:text-stone-700">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export const PresetsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const user = useAuthStore((state) => state.user);
@@ -382,6 +549,7 @@ export const PresetsPage = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [aiModalOpen, setAiModalOpen] = useState(false);
 
   const focusPresetId = (searchParams.get('presetId') || '').trim();
 
@@ -535,6 +703,22 @@ export const PresetsPage = () => {
     }
   };
 
+  const handleAIUse = async (suggestion) => {
+    setAiModalOpen(false);
+    setError(null);
+    try {
+      const response = await createCulturePreset(aiResponseToPreset(suggestion));
+      const normalized = deriveUiPreset(response);
+      setPresets((prev) => [normalized, ...prev]);
+      setActiveFilter('custom');
+      setSearch('');
+      setSelected(normalized);
+      setIsDetailOpen(true);
+    } catch (createError) {
+      setError(createError?.response?.data?.detail ?? 'Não foi possível criar perfil a partir da sugestão.');
+    }
+  };
+
   const handleConfirmDelete = async () => {
     if (!deleteTarget) {
       return;
@@ -579,12 +763,20 @@ export const PresetsPage = () => {
                   <p className="mt-1 text-sm text-slate-600">Escolha um perfil pronto ou crie o seu para definir temperatura, umidade e luz ideais.</p>
                 </div>
                 {!isReader ? (
-                  <button
-                    onClick={handleCreate}
-                    className="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
-                  >
-                    Novo perfil
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setAiModalOpen(true)}
+                      className="rounded-md border border-red-300 px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-50"
+                    >
+                      Criar com IA
+                    </button>
+                    <button
+                      onClick={handleCreate}
+                      className="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+                    >
+                      Novo perfil
+                    </button>
+                  </div>
                 ) : null}
               </div>
             </header>
@@ -748,6 +940,12 @@ export const PresetsPage = () => {
         cancelDisabled={saving}
         onConfirm={handleConfirmDelete}
         onCancel={() => setDeleteTarget(null)}
+      />
+
+      <AIModal
+        open={aiModalOpen}
+        onClose={() => setAiModalOpen(false)}
+        onUse={handleAIUse}
       />
     </div>
   );

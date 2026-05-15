@@ -15,6 +15,7 @@ import {
   listGreenhouses,
   updateGreenhouse,
   updateGreenhouseAlerts,
+  updateAlertThresholds,
   evaluateGreenhouseMetrics,
   deleteGreenhouse,
   listGreenhouseTeamMembers,
@@ -22,6 +23,8 @@ import {
   getGreenhouseExternalWeather
 } from '../api/greenhouseService.js';
 import { listCulturePresets } from '../api/presetService.js';
+import { listDevices, createDevice, updateDevice, deleteDevice } from '../api/deviceService.js';
+import { enviarTelemetria } from '../api/telemetriaService.js';
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
@@ -88,6 +91,16 @@ const buildEvaluationMetricsPayload = (telemetry, externalWeather) => {
     missingMetrics.push('soilMoisture');
   }
 
+  const internalLuminosidade = asFiniteNumber(telemetry?.luminosidade);
+  const externalLuminosidade = asFiniteNumber(externalWeather?.luminosidade_estimada);
+  if (internalLuminosidade !== null || externalLuminosidade !== null) {
+    const useInternal = internalLuminosidade !== null;
+    metrics.luminosity = useInternal ? internalLuminosidade : externalLuminosidade;
+    metricSources.luminosity = useInternal ? 'internal' : 'external';
+  } else {
+    missingMetrics.push('luminosity');
+  }
+
   return {
     metrics,
     metricSources,
@@ -104,7 +117,7 @@ const createInitialGreenhouseState = (name = 'Estufa Matriz') => ({
   temperature: null,
   humidity: null,
   soilMoisture: null,
-  co2: null,
+  luminosidade: null,
   irrigation: 'Integração IoT em implantação',
   ventilation: 'Integração IoT em implantação',
   lighting: 'Integração IoT em implantação',
@@ -116,12 +129,12 @@ const createInitialEventLog = () => ([]);
 const computeNextGreenhouseState = (prev) => {
   const temperature = clamp(prev.temperature + (Math.random() - 0.5) * 0.6, 22, 28);
   const humidity = clamp(prev.humidity + (Math.random() - 0.5) * 2.4, 55, 78);
-  const soilMoisture = clamp(prev.soilMoisture + (Math.random() - 0.5) * 4.2, 35, 68);
-  const co2 = clamp(prev.co2 + (Math.random() - 0.5) * 36, 380, 540);
+  const soilMoisture = clamp(prev.soilMoisture + (Math.random() - 0.5) * 4.2, 35, 75);
+  const luminosidade = clamp(prev.luminosidade + (Math.random() - 0.5) * 50, 80, 600);
 
   const irrigation = soilMoisture < 42
     ? 'Irrigação acionada automaticamente'
-    : soilMoisture > 60
+    : soilMoisture > 68
       ? 'Irrigação pausada'
       : 'Irrigação em stand-by';
 
@@ -131,10 +144,10 @@ const computeNextGreenhouseState = (prev) => {
       ? 'Ventilação mínima'
       : 'Ventilação modulada';
 
-  const lighting = humidity > 70
-    ? 'Iluminação reduzida'
-    : humidity < 58
-      ? 'Iluminação reforçada'
+  const lighting = luminosidade < 120
+    ? 'Iluminação suplementar ativa'
+    : luminosidade > 450
+      ? 'Sombreamento acionado'
       : 'Iluminação automática';
 
   return {
@@ -142,7 +155,7 @@ const computeNextGreenhouseState = (prev) => {
     temperature,
     humidity,
     soilMoisture,
-    co2,
+    luminosidade,
     irrigation,
     ventilation,
     lighting,
@@ -304,33 +317,122 @@ const normalizeProfile = (profile) => {
     return null;
   }
 
-  // formato legado (flower_profiles.py)
-  if (profile.temperature && profile.humidity && profile.soilMoisture) {
-    return {
-      id: profile.id,
-      name: profile.name,
-      summary: profile.summary ?? '',
-      temperature: normalizeProfileRange(profile.temperature),
-      humidity: normalizeProfileRange(profile.humidity),
-      soilMoisture: normalizeProfileRange(profile.soilMoisture)
-    };
-  }
-
-  // formato atual (presets da API)
-  if (profile.temperatura && profile.umidade && profile.luminosidade) {
+  // formato atual (presets da API — campos em português)
+  if (profile.temperatura && profile.umidade) {
     return {
       id: profile.id,
       name: profile.nome_cultura ?? 'Perfil sem nome',
       summary: profile.descricao ?? '',
       temperature: normalizeProfileRange(profile.temperatura),
       humidity: normalizeProfileRange(profile.umidade),
-      // a tela ainda espera "soilMoisture", então mapeamos luminosidade aqui
-      soilMoisture: normalizeProfileRange(profile.luminosidade)
+      soilMoisture: normalizeProfileRange(profile.umidade_solo) ?? null,
+      luminosity: normalizeProfileRange(profile.luminosidade) ?? null,
+    };
+  }
+
+  // formato mapeado (já convertido para chaves frontend)
+  if (profile.temperature && profile.humidity) {
+    return {
+      id: profile.id,
+      name: profile.name ?? profile.nome_cultura ?? 'Perfil sem nome',
+      summary: profile.summary ?? profile.descricao ?? '',
+      temperature: normalizeProfileRange(profile.temperature),
+      humidity: normalizeProfileRange(profile.humidity),
+      soilMoisture: normalizeProfileRange(profile.soilMoisture) ?? null,
+      luminosity: normalizeProfileRange(profile.luminosity) ?? null,
     };
   }
 
   return null;
 };
+
+// calcula posição percentual do valor dentro do intervalo ideal
+const pct = (valor, min, max) =>
+  Math.min(100, Math.max(0, ((valor - min) / (max - min)) * 100));
+
+// retorna 'ok', 'alerta' ou 'pending' para um valor vs intervalo ideal
+const sensorStatus = (value, ideal) => {
+  if (typeof value !== 'number' || !ideal) return 'pending';
+  if (value < ideal[0] || value > ideal[1]) return 'alerta';
+  return 'ok';
+};
+
+// gauge circular em SVG — mesmo design do protótipo v2
+function Gauge({ valor, unidade, ideal, cor, status }) {
+  const p = ideal ? pct(valor, ideal[0], ideal[1]) : 0;
+  const r = 28, cx = 36, cy = 36;
+  const circ = 2 * Math.PI * r;
+  const dash = (p / 100) * circ * 0.75;
+  const gap  = circ * 0.75 - dash;
+  const offset = circ * 0.125;
+
+  const trackColor = status === 'alerta' ? '#fef3c7' : '#f1f5f9';
+  const fillColor  = status === 'alerta' ? '#f59e0b' : status === 'pending' ? '#e2e8f0' : cor;
+
+  return (
+    <svg width="72" height="72" viewBox="0 0 72 72">
+      <circle cx={cx} cy={cy} r={r} fill="none"
+        stroke={trackColor} strokeWidth="6"
+        strokeDasharray={`${circ * 0.75} ${circ * 0.25}`}
+        strokeDashoffset={offset}
+        strokeLinecap="round" transform="rotate(135 36 36)"
+      />
+      <circle cx={cx} cy={cy} r={r} fill="none"
+        stroke={fillColor} strokeWidth="6"
+        strokeDasharray={`${dash} ${gap + circ * 0.25}`}
+        strokeDashoffset={offset}
+        strokeLinecap="round" transform="rotate(135 36 36)"
+        style={{ transition: 'stroke-dasharray 0.6s ease' }}
+      />
+      <text x="36" y="39" textAnchor="middle" fontSize="11" fontWeight="700"
+        fill={status === 'alerta' ? '#b45309' : status === 'pending' ? '#94a3b8' : '#1c1917'}>
+        {status === 'pending' ? '—' : valor}
+      </text>
+      <text x="36" y="50" textAnchor="middle" fontSize="7" fill="#a8a29e">
+        {unidade}
+      </text>
+    </svg>
+  );
+}
+
+// linha de sensor com barra de progresso e faixa ideal
+function SensorRow({ label, valor, unidade, ideal, faixa, cor, status }) {
+  const p = (ideal && typeof valor === 'number') ? pct(valor, ideal[0], ideal[1]) : 0;
+  const isAlert = status === 'alerta';
+  const isPending = status === 'pending';
+
+  return (
+    <div className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+      isAlert ? 'bg-amber-50 border-amber-200' : 'bg-white border-stone-100'
+    }`}>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-[10px] font-semibold tracking-widest uppercase text-slate-500">{label}</span>
+          {isPending ? (
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-stone-100 text-stone-400">Aguardando</span>
+          ) : (
+            <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${isAlert ? 'bg-amber-100 text-amber-700' : 'bg-stone-100 text-stone-500'}`}>
+              {isAlert ? '⚠ Fora' : '✓ OK'}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <span className={`text-lg font-bold leading-none ${isAlert ? 'text-amber-600' : isPending ? 'text-slate-300' : 'text-slate-900'}`}>
+            {isPending ? '—' : typeof valor === 'number' ? valor.toFixed(valor % 1 === 0 ? 0 : 1) : '—'}
+            <small className="text-[11px] font-normal text-slate-400 ml-0.5">{unidade}</small>
+          </span>
+          {faixa && <span className="text-[10px] text-slate-400 flex-shrink-0">ideal: {faixa}</span>}
+        </div>
+        <div className="mt-1.5 h-1.5 bg-stone-100 rounded-full overflow-hidden">
+          <div
+            className="h-full rounded-full transition-all duration-700"
+            style={{ width: `${p}%`, background: isAlert ? '#f59e0b' : isPending ? '#e2e8f0' : cor }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const GreenhousePanel = ({
   greenhouse,
@@ -352,6 +454,12 @@ const GreenhousePanel = ({
   onNotify,
   onSimulateHeat,
   onDeleteRequest,
+  onUpdateAlertThresholds,
+  devices = [],
+  devicesLoading = false,
+  onCreateDevice,
+  onDeleteDevice,
+  onToggleDevice,
   readOnly = false
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -360,6 +468,42 @@ const GreenhousePanel = ({
   const [draftResponsibleIds, setDraftResponsibleIds] = useState(greenhouse.responsibleUserIds ?? []);
   const [menuFeedback, setMenuFeedback] = useState(null);
   const [activeTopic, setActiveTopic] = useState('operacao');
+
+  const [thresholdDraft, setThresholdDraft] = useState(() => greenhouse.alertThresholds ?? {});
+  const [thresholdSaving, setThresholdSaving] = useState(false);
+  const [thresholdFeedback, setThresholdFeedback] = useState(null);
+
+  // estado local do formulário de cadastro de dispositivo
+  const [showAddDeviceForm, setShowAddDeviceForm] = useState(false);
+  const [deviceDraft, setDeviceDraft] = useState({ name: '', type: '', identifier: '' });
+  const [deviceFormBusy, setDeviceFormBusy] = useState(false);
+  const [deviceFormError, setDeviceFormError] = useState(null);
+  // credenciais IoT Hub retornadas após cadastro bem-sucedido
+  const [credentialsDevice, setCredentialsDevice] = useState(null);
+
+  // ── Leitura manual de sensores ────────────────────────────────────────────
+  const [leituraForm, setLeituraForm] = useState({ temperatura: '', umidade: '', umidadeSolo: '', luminosidade: '' });
+  const [leituraSaving, setLeituraSaving] = useState(false);
+  const [leituraFeedback, setLeituraFeedback] = useState(null);
+
+  const handleEnviarLeitura = async () => {
+    setLeituraSaving(true);
+    setLeituraFeedback(null);
+    try {
+      const parse = (v) => { const n = parseFloat(v); return isNaN(n) ? null : n; };
+      await enviarTelemetria(greenhouse.id, {
+        temperatura:  parse(leituraForm.temperatura),
+        umidade:      parse(leituraForm.umidade),
+        umidadeSolo:  parse(leituraForm.umidadeSolo),
+        luminosidade: parse(leituraForm.luminosidade),
+      });
+      setLeituraFeedback({ ok: true, text: 'Leitura gravada no histórico.' });
+    } catch {
+      setLeituraFeedback({ ok: false, text: 'Não foi possível gravar. Verifique se o InfluxDB está acessível.' });
+    } finally {
+      setLeituraSaving(false);
+    }
+  };
 
   const currentProfile = useMemo(() => {
     if (greenhouse.profile) {
@@ -382,6 +526,11 @@ const GreenhousePanel = ({
 
   useEffect(() => {
     setActiveTopic('operacao');
+    setShowAddDeviceForm(false);
+    setDeviceDraft({ name: '', type: '', identifier: '' });
+    setDeviceFormError(null);
+    setThresholdDraft(greenhouse.alertThresholds ?? {});
+    setThresholdFeedback(null);
   }, [greenhouse.id]);
 
   useEffect(() => {
@@ -415,15 +564,18 @@ const GreenhousePanel = ({
       return;
     }
 
-    const result = await onSave(greenhouse.id, {
-      name: trimmedName,
-      flowerProfileId: draftProfileId || null
-    });
+    // salva dados da estufa e equipe responsável ao mesmo tempo
+    const [resultEstufa, resultEquipe] = await Promise.all([
+      onSave(greenhouse.id, { name: trimmedName, flowerProfileId: draftProfileId || null }),
+      onUpdateTeam(greenhouse.id, draftResponsibleIds)
+    ]);
 
-    if (result.ok) {
-      setMenuFeedback({ type: 'success', text: 'Configurações atualizadas.' });
+    if (resultEstufa.ok && resultEquipe.ok) {
+      setMenuFeedback({ type: 'success', text: 'Alterações salvas com sucesso.' });
+      setTimeoutSafe(() => setMenuOpen(false), 1800);
     } else {
-      setMenuFeedback({ type: 'error', text: result.message });
+      const msg = !resultEstufa.ok ? resultEstufa.message : resultEquipe.message;
+      setMenuFeedback({ type: 'error', text: msg });
     }
   };
 
@@ -656,17 +808,6 @@ const GreenhousePanel = ({
                     <li className="text-[11px] text-slate-500">Nenhum colaborador disponível para delegação.</li>
                   )}
                 </ul>
-                <div className="mt-2 flex flex-wrap justify-end gap-2">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="h-9 px-3 text-xs"
-                    onClick={handleSaveTeam}
-                    disabled={teamSaving}
-                  >
-                    {teamSaving ? 'Salvando equipe...' : 'Salvar equipe responsável'}
-                  </Button>
-                </div>
               </div>
 
               {menuFeedback ? (
@@ -714,6 +855,9 @@ const GreenhousePanel = ({
         {[
           { id: 'operacao', label: 'Operação' },
           { id: 'monitoramento', label: 'Monitoramento' },
+          { id: 'leitura', label: 'Leitura manual' },
+          { id: 'dispositivos', label: 'Dispositivos' },
+          { id: 'controles', label: 'Controles' },
           { id: 'guia', label: 'Guia rápido' }
         ].map((topic) => (
           <button
@@ -733,90 +877,157 @@ const GreenhousePanel = ({
 
       {activeTopic === 'monitoramento' ? (
       <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
-        <article className="rounded-2xl border border-stone-300 bg-white p-5">
-          <header className="mb-4 flex items-center justify-between text-xs text-slate-500">
-            <span>Como está sua estufa agora</span>
-            <span>
+        <article className="rounded-2xl border border-stone-300 bg-white p-5 flex flex-col gap-4">
+
+          {/* cabeçalho com horário da última leitura e status IoT */}
+          <header className="flex items-center justify-between">
+            <span className="text-sm font-semibold text-slate-700">Como está sua estufa agora</span>
+            <span className={`text-[10px] px-2 py-1 rounded border font-medium ${
+              hasTelemetry
+                ? 'bg-green-50 border-green-200 text-green-700'
+                : 'bg-stone-100 border-stone-200 text-stone-500'
+            }`}>
               {hasTelemetry
                 ? `Atualizado às ${formatTimestamp(resolvedTelemetry.lastUpdate)}`
                 : 'Sem telemetria IoT disponível'}
             </span>
           </header>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 text-slate-800">
-            {hasTelemetry ? (
+
+          {(() => {
+            // monta a configuração de cada sensor a partir dos dados reais
+            const sensors = [
+              {
+                key: 'temperatura',
+                label: 'Temperatura',
+                valor: resolvedTelemetry.temperature,
+                unidade: '°C',
+                ideal: currentProfile?.temperature ? [currentProfile.temperature.min, currentProfile.temperature.max] : null,
+                faixa: currentProfile?.temperature ? `${currentProfile.temperature.min}–${currentProfile.temperature.max}°C` : null,
+                cor: '#d43a2a',
+              },
+              {
+                key: 'umidade',
+                label: 'Umidade do ar',
+                valor: resolvedTelemetry.humidity,
+                unidade: '%',
+                ideal: currentProfile?.humidity ? [currentProfile.humidity.min, currentProfile.humidity.max] : null,
+                faixa: currentProfile?.humidity ? `${currentProfile.humidity.min}–${currentProfile.humidity.max}%` : null,
+                cor: '#3b82f6',
+              },
+              {
+                key: 'umidade_solo',
+                label: 'Umidade do solo',
+                valor: resolvedTelemetry.soilMoisture,
+                unidade: '%',
+                ideal: currentProfile?.soilMoisture ? [currentProfile.soilMoisture.min, currentProfile.soilMoisture.max] : null,
+                faixa: currentProfile?.soilMoisture ? `${currentProfile.soilMoisture.min}–${currentProfile.soilMoisture.max}%` : null,
+                cor: '#10b981',
+              },
+              {
+                key: 'luminosidade',
+                label: 'Luminosidade',
+                valor: resolvedTelemetry.luminosidade,
+                unidade: 'lux',
+                ideal: currentProfile?.luminosity ? [currentProfile.luminosity.min, currentProfile.luminosity.max] : null,
+                faixa: currentProfile?.luminosity ? `${currentProfile.luminosity.min}–${currentProfile.luminosity.max} lux` : null,
+                cor: '#f59e0b',
+              },
+            ];
+
+            return (
               <>
+                {/* gauges circulares em miniatura — resumo visual rápido */}
                 <div className="rounded-xl border border-stone-200 bg-[#fcfaf7] p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Temperatura</p>
-                  <p className="text-2xl font-semibold text-slate-900">
-                    {typeof resolvedTelemetry.temperature === 'number' ? `${resolvedTelemetry.temperature.toFixed(1)}°C` : '—'}
+                  <p className="text-[10px] font-semibold tracking-widest uppercase text-slate-400 mb-3">
+                    Resumo dos sensores
                   </p>
-                  <p className="text-xs text-slate-500">{resolvedTelemetry.ventilation}</p>
+                  <div className="grid grid-cols-4 gap-2">
+                    {sensors.map(({ key, label, valor, unidade, ideal, cor }) => {
+                      const st = sensorStatus(valor, ideal);
+                      return (
+                        <div key={key} className="flex flex-col items-center gap-1">
+                          <Gauge valor={typeof valor === 'number' ? Number(valor.toFixed(valor % 1 === 0 ? 0 : 1)) : 0} unidade={unidade} ideal={ideal ?? [0, 100]} cor={cor} status={st} />
+                          <span className="text-[9px] text-slate-500 text-center leading-tight">{label}</span>
+                          <span className={`w-1.5 h-1.5 rounded-full ${st === 'ok' ? 'bg-green-500' : st === 'alerta' ? 'bg-amber-500' : 'bg-stone-300'}`} />
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-                <div className="rounded-xl border border-stone-200 bg-[#fcfaf7] p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Umidade do ambiente</p>
-                  <p className="text-2xl font-semibold text-slate-900">
-                    {typeof resolvedTelemetry.humidity === 'number' ? `${Math.round(resolvedTelemetry.humidity)}%` : '—'}
-                  </p>
-                  <p className="text-xs text-slate-500">Controle automático ativo</p>
+
+                {/* linhas detalhadas por sensor com barra de progresso */}
+                <div className="flex flex-col gap-2">
+                  {sensors.map(({ key, label, valor, unidade, ideal, faixa, cor }) => (
+                    <SensorRow
+                      key={key}
+                      label={label}
+                      valor={valor}
+                      unidade={unidade}
+                      ideal={ideal}
+                      faixa={faixa}
+                      cor={cor}
+                      status={sensorStatus(valor, ideal)}
+                    />
+                  ))}
                 </div>
-                <div className="rounded-xl border border-stone-200 bg-[#fcfaf7] p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Umidade do solo/substrato</p>
-                  <p className="text-2xl font-semibold text-slate-900">
-                    {typeof resolvedTelemetry.soilMoisture === 'number' ? `${Math.round(resolvedTelemetry.soilMoisture)}%` : '—'}
-                  </p>
-                  <p className="text-xs text-slate-500">{resolvedTelemetry.irrigation}</p>
-                </div>
-                <div className="rounded-xl border border-stone-200 bg-[#fcfaf7] p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">CO₂</p>
-                  <p className="text-2xl font-semibold text-slate-900">
-                    {typeof resolvedTelemetry.co2 === 'number' ? `${Math.round(resolvedTelemetry.co2)} ppm` : '—'}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {typeof resolvedTelemetry.co2 === 'number'
-                      ? `Fluxo ${resolvedTelemetry.co2 > 500 ? 'alto' : 'modulado'}`
-                      : 'Sem leitura de fluxo'}
-                  </p>
-                </div>
-                <div className="rounded-xl border border-stone-200 bg-[#fcfaf7] p-4 sm:col-span-2 xl:col-span-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Iluminação</p>
-                  <p className="text-sm font-semibold text-slate-800">{resolvedTelemetry.lighting}</p>
-                </div>
+
+                {/* status de iluminação e ventilação — texto descritivo */}
+                {hasTelemetry && (
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <div className="rounded-lg border border-stone-200 bg-[#fcfaf7] px-3 py-2">
+                      <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Ventilação</p>
+                      <p className="text-sm font-medium text-slate-700 mt-0.5">{resolvedTelemetry.ventilation}</p>
+                    </div>
+                    <div className="rounded-lg border border-stone-200 bg-[#fcfaf7] px-3 py-2">
+                      <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Iluminação</p>
+                      <p className="text-sm font-medium text-slate-700 mt-0.5">{resolvedTelemetry.lighting}</p>
+                    </div>
+                  </div>
+                )}
               </>
-            ) : (
-              <div className="rounded-xl border border-dashed border-stone-300 bg-[#fcfaf7] p-4 text-sm text-slate-600 sm:col-span-2 xl:col-span-4">
-                Telemetria interna oculta por enquanto. Este bloco será habilitado automaticamente quando os dispositivos IoT estiverem conectados.
-              </div>
-            )}
-            <div className="rounded-xl border border-stone-200 bg-[#fcfaf7] p-4 sm:col-span-2 xl:col-span-4">
-              <p className="text-xs uppercase tracking-wide text-slate-500">Clima da cidade (OpenWeather)</p>
-              {externalWeatherLoading ? (
-                <p className="text-sm text-slate-600">Consultando clima externo...</p>
-              ) : externalWeather ? (
-                <div className="mt-2 grid gap-2 text-sm text-slate-700 sm:grid-cols-4">
-                  <p>
-                    <span className="text-xs text-slate-500">Local</span>
-                    <span className="block font-semibold">{externalWeather.cidade}/{externalWeather.estado}</span>
-                  </p>
-                  <p>
-                    <span className="text-xs text-slate-500">Temperatura</span>
-                    <span className="block font-semibold">{externalWeather.temperatura}°C</span>
-                  </p>
-                  <p>
-                    <span className="text-xs text-slate-500">Umidade</span>
-                    <span className="block font-semibold">{externalWeather.umidade}%</span>
-                  </p>
-                  <p>
-                    <span className="text-xs text-slate-500">Condição</span>
-                    <span className="block font-semibold">{externalWeather.descricao}</span>
-                  </p>
-                </div>
-              ) : (
-                <p className="text-sm text-slate-500">
-                  Sem dados climáticos externos no momento. Verifique se cidade/estado da estufa estão válidos.
+            );
+          })()}
+
+          {/* clima externo via OpenWeather */}
+          <div className="rounded-xl border border-stone-200 bg-[#fcfaf7] p-4">
+            <p className="text-[10px] font-semibold tracking-widest uppercase text-slate-400 mb-2">
+              Clima da cidade (OpenWeather)
+            </p>
+            {externalWeatherLoading ? (
+              <p className="text-sm text-slate-500">Consultando clima externo...</p>
+            ) : externalWeather ? (
+              <div className="grid gap-2 text-sm text-slate-700 sm:grid-cols-4">
+                <p>
+                  <span className="text-[10px] text-slate-400 block">Local</span>
+                  <span className="font-semibold">{externalWeather.cidade}/{externalWeather.estado}</span>
                 </p>
-              )}
-            </div>
+                <p>
+                  <span className="text-[10px] text-slate-400 block">Temperatura</span>
+                  <span className="font-semibold">{externalWeather.temperatura}°C</span>
+                </p>
+                <p>
+                  <span className="text-[10px] text-slate-400 block">Umidade</span>
+                  <span className="font-semibold">{externalWeather.umidade}%</span>
+                </p>
+                <p>
+                  <span className="text-[10px] text-slate-400 block">Luminosidade estimada</span>
+                  <span className="font-semibold">
+                    {externalWeather.luminosidade_estimada != null
+                      ? `${externalWeather.luminosidade_estimada.toLocaleString('pt-BR')} lux`
+                      : externalWeather.descricao}
+                  </span>
+                  {externalWeather.nuvens != null && (
+                    <span className="block text-[10px] text-slate-400">{externalWeather.nuvens}% nuvens</span>
+                  )}
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500">
+                Sem dados climáticos externos. Verifique se cidade/estado da estufa estão preenchidos.
+              </p>
+            )}
           </div>
+
         </article>
 
         <article className="rounded-2xl border border-stone-300 bg-white p-5">
@@ -865,8 +1076,8 @@ const GreenhousePanel = ({
             <p className="mt-1 text-xs text-slate-600">Indica se precisa molhar mais ou menos o meio de cultivo.</p>
           </div>
           <div className="rounded border border-stone-200 bg-[#fcfaf7] p-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600">CO₂ e iluminação</p>
-            <p className="mt-1 text-xs text-slate-600">Mostra se a qualidade do ar e a luz estão adequadas.</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600">Luminosidade</p>
+            <p className="mt-1 text-xs text-slate-600">Nível de luz medido em lux. Cogumelos precisam de pouca luz — excesso prejudica o crescimento.</p>
           </div>
           <div className="rounded border border-stone-200 bg-[#fcfaf7] p-3">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600">Perfil de cultivo</p>
@@ -899,19 +1110,19 @@ const GreenhousePanel = ({
                 <div className="rounded border border-stone-200 bg-[#fcfaf7] p-3">
                   <dt className="text-[11px] uppercase tracking-widest text-slate-500">Temperatura</dt>
                   <dd>
-                    {currentProfile.temperature.min}°C — {currentProfile.temperature.max}°C
+                    {currentProfile.temperature?.min ?? '—'}°C — {currentProfile.temperature?.max ?? '—'}°C
                   </dd>
                 </div>
                 <div className="rounded border border-stone-200 bg-[#fcfaf7] p-3">
                   <dt className="text-[11px] uppercase tracking-widest text-slate-500">Umidade do ambiente</dt>
                   <dd>
-                    {currentProfile.humidity.min}% — {currentProfile.humidity.max}%
+                    {currentProfile.humidity?.min ?? '—'}% — {currentProfile.humidity?.max ?? '—'}%
                   </dd>
                 </div>
                 <div className="rounded border border-stone-200 bg-[#fcfaf7] p-3">
-                  <dt className="text-[11px] uppercase tracking-widest text-slate-500">Umidade do solo/substrato</dt>
+                  <dt className="text-[11px] uppercase tracking-widest text-slate-500">Umidade do solo</dt>
                   <dd>
-                    {currentProfile.soilMoisture.min}% — {currentProfile.soilMoisture.max}%
+                    {currentProfile.soilMoisture?.min ?? '—'}% — {currentProfile.soilMoisture?.max ?? '—'}%
                   </dd>
                 </div>
                 <div className="rounded border border-stone-200 bg-[#fcfaf7] p-3">
@@ -989,18 +1200,20 @@ const GreenhousePanel = ({
                   Esta avaliação é parcial. Nesta fase de implantação, o sistema analisa principalmente o clima da cidade e apenas os sensores que já estão ativos na estufa.
                 </p>
               ) : null}
-              <div className="mt-3 grid gap-3 text-xs text-slate-700 sm:grid-cols-3">
-                {['temperature', 'humidity', 'soilMoisture'].map((metricKey) => {
+              <div className="mt-3 grid gap-3 text-xs text-slate-700 sm:grid-cols-4">
+                {['temperature', 'humidity', 'soilMoisture', 'luminosity'].map((metricKey) => {
                   const metric = resolvedEvaluation.metrics[metricKey] ?? {};
                   const labelMap = {
                     temperature: 'Temperatura',
-                    humidity: 'Umidade relativa',
-                    soilMoisture: 'Umidade do substrato'
+                    humidity: 'Umidade do ar',
+                    soilMoisture: 'Umidade do solo',
+                    luminosity: 'Luminosidade'
                   };
                   const unitMap = {
                     temperature: '°C',
                     humidity: '%',
-                    soilMoisture: '%'
+                    soilMoisture: '%',
+                    luminosity: ' lux'
                   };
                   const sourceLabel =
                     resolvedEvaluation.metricSources?.[metricKey] === 'external'
@@ -1091,10 +1304,537 @@ const GreenhousePanel = ({
             </p>
           ) : null}
         </article>
+        {!readOnly ? (
+          <article className="col-span-full mt-4 rounded-2xl border border-stone-300 bg-white p-5 text-sm text-slate-700">
+            <h3 className="text-base font-semibold text-slate-800">Faixas de alerta personalizadas</h3>
+            <p className="mt-1 text-xs text-slate-500">
+              Defina o mínimo e o máximo de cada parâmetro. O sistema usa esses valores para gerar avaliações e notificações automáticas.
+            </p>
+            <div className="mt-4 grid gap-4 sm:grid-cols-4">
+              {[
+                { key: 'temperatura', label: 'Temperatura', unit: '°C' },
+                { key: 'umidade', label: 'Umidade do ar', unit: '%' },
+                { key: 'umidade_solo', label: 'Umidade do solo', unit: '%' },
+                { key: 'luminosidade', label: 'Luminosidade', unit: 'lux' }
+              ].map(({ key, label, unit }) => (
+                <div key={key} className="rounded-xl border border-stone-200 bg-[#fcfaf7] p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-red-700">{label}</p>
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] text-slate-500">Mínimo</label>
+                      <input
+                        type="number"
+                        value={thresholdDraft[key]?.min ?? ''}
+                        onChange={(event) => setThresholdDraft((prev) => ({
+                          ...prev,
+                          [key]: { ...prev[key], min: event.target.value === '' ? undefined : Number(event.target.value) }
+                        }))}
+                        className="mt-0.5 w-full rounded border border-stone-300 bg-white px-2 py-1.5 text-sm text-slate-800 outline-none focus:border-red-400"
+                        placeholder={`min ${unit}`}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-slate-500">Máximo</label>
+                      <input
+                        type="number"
+                        value={thresholdDraft[key]?.max ?? ''}
+                        onChange={(event) => setThresholdDraft((prev) => ({
+                          ...prev,
+                          [key]: { ...prev[key], max: event.target.value === '' ? undefined : Number(event.target.value) }
+                        }))}
+                        className="mt-0.5 w-full rounded border border-stone-300 bg-white px-2 py-1.5 text-sm text-slate-800 outline-none focus:border-red-400"
+                        placeholder={`max ${unit}`}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 flex items-center gap-4">
+              <button
+                type="button"
+                disabled={thresholdSaving}
+                onClick={async () => {
+                  if (!onUpdateAlertThresholds) return;
+                  setThresholdSaving(true);
+                  setThresholdFeedback(null);
+                  try {
+                    await onUpdateAlertThresholds(greenhouse.id, thresholdDraft);
+                    setThresholdFeedback({ type: 'success', text: 'Faixas salvas com sucesso.' });
+                  } catch (_err) {
+                    setThresholdFeedback({ type: 'error', text: 'Não foi possível salvar as faixas.' });
+                  } finally {
+                    setThresholdSaving(false);
+                  }
+                }}
+                className="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {thresholdSaving ? 'Salvando...' : 'Salvar faixas'}
+              </button>
+              {thresholdFeedback ? (
+                <p className={`text-xs ${thresholdFeedback.type === 'success' ? 'text-emerald-700' : 'text-rose-700'}`}>
+                  {thresholdFeedback.text}
+                </p>
+              ) : null}
+            </div>
+          </article>
+        ) : null}
       </div>
       ) : null}
+
+      {/* aba leitura manual */}
+      {activeTopic === 'leitura' ? (
+      <div className="mt-5">
+        <article className="rounded-2xl border border-stone-300 bg-white p-5 flex flex-col gap-5">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-red-600">Leitura manual</p>
+            <h3 className="mt-1 text-lg font-semibold text-slate-800">Enviar dados dos sensores</h3>
+            <p className="mt-1 text-sm text-slate-500">
+              Registre uma leitura agora. Os dados são gravados no histórico e ficam disponíveis para o cálculo automático dos relatórios.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            {[
+              { field: 'temperatura',  label: 'Temperatura',     unit: '°C',  placeholder: 'Ex: 22.5' },
+              { field: 'umidade',      label: 'Umidade do ar',   unit: '%',   placeholder: 'Ex: 78' },
+              { field: 'umidadeSolo',  label: 'Umidade do solo', unit: '%',   placeholder: 'Ex: 63' },
+              { field: 'luminosidade', label: 'Luminosidade',    unit: 'lux', placeholder: 'Ex: 350' },
+            ].map(({ field, label, unit, placeholder }) => (
+              <div key={field} className="flex flex-col gap-1">
+                <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  {label} <span className="font-normal normal-case text-slate-400">({unit})</span>
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={leituraForm[field]}
+                  onChange={(e) => setLeituraForm((prev) => ({ ...prev, [field]: e.target.value }))}
+                  placeholder={placeholder}
+                  className="rounded border border-stone-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-red-400"
+                />
+              </div>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-3 border-t border-stone-100 pt-4">
+            <button
+              type="button"
+              onClick={handleEnviarLeitura}
+              disabled={leituraSaving}
+              className="rounded-md bg-red-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
+            >
+              {leituraSaving ? 'Enviando...' : 'Gravar leitura'}
+            </button>
+            {leituraFeedback && (
+              <p className={`text-sm ${leituraFeedback.ok ? 'text-emerald-700' : 'text-rose-600'}`}>
+                {leituraFeedback.text}
+              </p>
+            )}
+          </div>
+
+          <div className="rounded-md border border-stone-100 bg-stone-50 px-4 py-3 text-[11px] text-slate-500">
+            <strong className="font-semibold text-slate-600">Dica:</strong> Para gerar um relatório com médias automáticas, acesse a página de Relatórios, escolha o período e clique em "Calcular do sensor" — o sistema busca as médias de todas as leituras gravadas aqui.
+          </div>
+        </article>
+      </div>
+      ) : null}
+
+      {/* aba dispositivos */}
+      {activeTopic === 'dispositivos' ? (
+      <div className="mt-6 flex flex-col gap-4">
+
+        {/* cabeçalho com botão de adicionar */}
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-semibold text-slate-800">Dispositivos cadastrados</p>
+            <p className="text-xs text-slate-500 mt-0.5">Sensores e atuadores vinculados a esta estufa.</p>
+          </div>
+          {!readOnly && (
+            <button
+              type="button"
+              onClick={() => {
+                setShowAddDeviceForm((prev) => !prev);
+                setDeviceFormError(null);
+              }}
+              className="rounded-md border border-stone-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-red-400 hover:text-red-700"
+            >
+              {showAddDeviceForm ? 'Cancelar' : '+ Adicionar dispositivo'}
+            </button>
+          )}
+        </div>
+
+        {/* instruções e ID da estufa — fixo, sempre visível */}
+        <div className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 flex flex-col gap-2">
+          <p className="text-xs font-semibold text-blue-800">Como conectar seu ESP32 a esta estufa</p>
+          <ol className="text-[11px] text-blue-700 list-decimal list-inside space-y-1">
+            <li>Clique em <strong>+ Adicionar dispositivo</strong>, preencha nome e tipo e salve.</li>
+            <li>O sistema cria o dispositivo no Azure IoT Hub automaticamente e exibe as credenciais.</li>
+            <li>Copie os 4 valores exibidos para o <strong>boot.py</strong> do ESP32 — incluindo o ID da estufa abaixo.</li>
+          </ol>
+          <div className="mt-1 flex items-center gap-2 rounded-lg border border-blue-200 bg-white px-3 py-2">
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">ID desta estufa (ESTUFA_ID)</p>
+              <p className="text-xs font-mono text-slate-700 mt-0.5 truncate">{greenhouse.id}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigator.clipboard?.writeText(greenhouse.id)}
+              className="shrink-0 rounded border border-blue-200 bg-blue-50 px-3 py-1 text-[11px] font-semibold text-blue-700 transition hover:bg-blue-100"
+            >
+              Copiar
+            </button>
+          </div>
+        </div>
+
+        {/* painel de credenciais IoT Hub após cadastro bem-sucedido */}
+        {credentialsDevice && (
+          <div className="rounded-2xl border border-emerald-300 bg-emerald-50 p-5 flex flex-col gap-4">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-emerald-700">Dispositivo registrado no Azure IoT Hub</p>
+                <h4 className="mt-1 text-base font-semibold text-slate-800">{credentialsDevice.name}</h4>
+                <p className="text-xs text-slate-500 mt-0.5">Copie os valores abaixo para o <strong>boot.py</strong> do seu ESP32. O token expira em 1 ano.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCredentialsDevice(null)}
+                className="shrink-0 text-slate-400 hover:text-slate-600 text-lg leading-none"
+                title="Fechar"
+              >×</button>
+            </div>
+            <div className="flex flex-col gap-2 font-mono text-xs bg-white rounded-xl border border-emerald-200 p-4 select-all">
+              <div><span className="text-slate-400">HUB_HOST  = </span><span className="text-slate-800">"{credentialsDevice.mqttServer}"</span></div>
+              <div><span className="text-slate-400">DEVICE_ID = </span><span className="text-slate-800">"{credentialsDevice.iothubDeviceId}"</span></div>
+              <div><span className="text-slate-400">SAS_TOKEN = </span><span className="text-slate-800 break-all">"{credentialsDevice.iothubSasToken}"</span></div>
+              <div><span className="text-slate-400">ESTUFA_ID = </span><span className="text-slate-800">"{greenhouse.id}"</span></div>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={() => {
+                  const text = [
+                    `HUB_HOST  = "${credentialsDevice.mqttServer}"`,
+                    `DEVICE_ID = "${credentialsDevice.iothubDeviceId}"`,
+                    `SAS_TOKEN = "${credentialsDevice.iothubSasToken}"`,
+                    `ESTUFA_ID = "${greenhouse.id}"`,
+                  ].join('\n');
+                  navigator.clipboard?.writeText(text);
+                }}
+                className="rounded border border-emerald-400 bg-white px-4 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50"
+              >
+                Copiar tudo
+              </button>
+              <p className="text-[10px] text-slate-400 self-center">Salve agora — o token não será exibido novamente. Você pode regenerá-lo se perder.</p>
+            </div>
+          </div>
+        )}
+
+        {/* formulário de cadastro */}
+        {showAddDeviceForm && !readOnly && (
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setDeviceFormBusy(true);
+              setDeviceFormError(null);
+              try {
+                const created = await onCreateDevice?.(greenhouse.id, deviceDraft);
+                setDeviceDraft({ name: '', type: '', identifier: '' });
+                setShowAddDeviceForm(false);
+                if (created?.iothubDeviceId) {
+                  setCredentialsDevice(created);
+                }
+              } catch (err) {
+                setDeviceFormError(getFriendlyErrorMessage(err, 'Não foi possível cadastrar o dispositivo.'));
+              } finally {
+                setDeviceFormBusy(false);
+              }
+            }}
+            className="rounded-2xl border border-stone-300 bg-white p-5 flex flex-col gap-3"
+          >
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Novo dispositivo</p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="flex flex-col gap-1">
+                <label className="text-xs text-slate-600">Nome</label>
+                <input
+                  type="text"
+                  value={deviceDraft.name}
+                  onChange={(e) => setDeviceDraft((prev) => ({ ...prev, name: e.target.value }))}
+                  placeholder="Ex: Sensor de temperatura 1"
+                  className="rounded border border-stone-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-red-400"
+                  required
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs text-slate-600">Tipo</label>
+                <select
+                  value={deviceDraft.type}
+                  onChange={(e) => setDeviceDraft((prev) => ({ ...prev, type: e.target.value }))}
+                  className="rounded border border-stone-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-red-400"
+                  required
+                >
+                  <option value="">Selecione...</option>
+                  <option value="sensor-temperatura">Sensor de temperatura</option>
+                  <option value="sensor-umidade">Sensor de umidade do ar</option>
+                  <option value="sensor-umidade-solo">Sensor de umidade do solo</option>
+                  <option value="sensor-luminosidade">Sensor de luminosidade</option>
+                  <option value="atuador-ventilacao">Atuador — ventilação</option>
+                  <option value="atuador-irrigacao">Atuador — irrigação</option>
+                  <option value="atuador-iluminacao">Atuador — iluminação</option>
+                </select>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs text-slate-600">Identificador <span className="font-normal text-slate-400">(opcional — gerado automaticamente)</span></label>
+                <input
+                  type="text"
+                  value={deviceDraft.identifier}
+                  onChange={(e) => setDeviceDraft((prev) => ({ ...prev, identifier: e.target.value }))}
+                  placeholder="Ex: ESP32-001 (deixe vazio para gerar)"
+                  className="rounded border border-stone-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-red-400"
+                />
+              </div>
+            </div>
+            {deviceFormError && (
+              <p className="text-xs text-rose-600">{deviceFormError}</p>
+            )}
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={deviceFormBusy}
+                className="rounded-md bg-red-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
+              >
+                {deviceFormBusy ? 'Salvando...' : 'Cadastrar dispositivo'}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* lista de dispositivos */}
+        {devicesLoading ? (
+          <p className="text-sm text-slate-500 py-4">Carregando dispositivos...</p>
+        ) : devices.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-stone-300 bg-[#fcfaf7] p-8 text-center">
+            <p className="text-sm text-slate-600">Nenhum dispositivo cadastrado nesta estufa.</p>
+            <p className="mt-1 text-xs text-slate-400">Adicione um dispositivo para começar o monitoramento.</p>
+          </div>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {devices.map((device) => (
+              <div key={device.id} className="rounded-2xl border border-stone-300 bg-white p-4 flex flex-col gap-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">{device.name}</p>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {DEVICE_TYPE_LABELS[device.type] ?? device.type}
+                    </p>
+                  </div>
+                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold border ${
+                    device.active
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : 'bg-stone-100 text-stone-500 border-stone-200'
+                  }`}>
+                    {device.active ? 'Ativo' : 'Inativo'}
+                  </span>
+                </div>
+
+                {/* identificador do dispositivo (serial / nome do ESP32) */}
+                <p className="text-[11px] text-slate-400 font-mono truncate">{device.identifier}</p>
+
+                {/* status do registro no Azure IoT Hub */}
+                {device.iothubDeviceId ? (
+                  <div className="rounded border border-emerald-200 bg-emerald-50 px-3 py-2">
+                    <p className="text-[10px] font-semibold text-emerald-700">Registrado no IoT Hub</p>
+                    <p className="text-[10px] text-emerald-600 font-mono truncate mt-0.5">{device.iothubDeviceId}</p>
+                  </div>
+                ) : (
+                  <div className="rounded border border-dashed border-stone-200 bg-stone-50 px-3 py-2">
+                    <p className="text-[10px] text-slate-400">Aguardando registro no IoT Hub</p>
+                  </div>
+                )}
+
+                {!readOnly && (
+                  <div className="flex gap-2 mt-1">
+                    <button
+                      type="button"
+                      onClick={() => onToggleDevice?.(greenhouse.id, device.id, !device.active)}
+                      className="flex-1 rounded border border-stone-300 py-1.5 text-[11px] font-medium text-slate-600 transition hover:border-red-300 hover:text-red-700"
+                    >
+                      {device.active ? 'Desativar' : 'Ativar'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onDeleteDevice?.(greenhouse.id, device.id)}
+                      className="rounded border border-stone-200 px-3 py-1.5 text-[11px] text-slate-400 transition hover:border-rose-300 hover:text-rose-600"
+                    >
+                      Remover
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* nota sobre o que já funciona e o que ainda depende de ESP32 físico */}
+        <p className="text-xs text-slate-400">
+          O registro do dispositivo no Azure IoT Hub já está funcionando. A leitura de telemetria em tempo real requer um ESP32 físico conectado.
+        </p>
+      </div>
+      ) : null}
+
+      {/* aba controles — atuadores cadastrados com painel de comando */}
+      {activeTopic === 'controles' ? (() => {
+        const atuadores = devices.filter((d) => d.type?.startsWith('atuador-'));
+        const sensores  = devices.filter((d) => d.type?.startsWith('sensor-'));
+
+        // ícone representativo por tipo de atuador
+        const iconByType = {
+          'atuador-ventilacao': '💨',
+          'atuador-irrigacao':  '💧',
+          'atuador-iluminacao': '💡',
+        };
+
+        return (
+          <div className="mt-6 flex flex-col gap-5">
+
+            {/* cabeçalho da aba */}
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <p className="text-sm font-semibold text-slate-800">Painel de controle</p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Aqui você verá os atuadores cadastrados e poderá acioná-los manualmente.
+                </p>
+              </div>
+              <span className="rounded border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-semibold text-amber-700">
+                Comandos IoT — em breve
+              </span>
+            </div>
+
+            {/* grade de atuadores */}
+            {devicesLoading ? (
+              <p className="text-sm text-slate-500 py-4">Carregando dispositivos...</p>
+            ) : atuadores.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-stone-300 bg-[#fcfaf7] p-8 text-center">
+                <p className="text-sm text-slate-600">Nenhum atuador cadastrado nesta estufa.</p>
+                <p className="mt-1 text-xs text-slate-400">
+                  Vá até a aba Dispositivos e adicione um atuador (ventilação, irrigação ou iluminação).
+                </p>
+              </div>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {atuadores.map((device) => (
+                  <div
+                    key={device.id}
+                    className={`rounded-2xl border p-5 flex flex-col gap-3 transition-colors ${
+                      device.active
+                        ? 'bg-white border-stone-300'
+                        : 'bg-stone-50 border-stone-200'
+                    }`}
+                  >
+                    {/* cabeçalho do card */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl leading-none" aria-hidden="true">
+                          {iconByType[device.type] ?? '⚙️'}
+                        </span>
+                        <div>
+                          <p className="text-sm font-semibold text-slate-800">{device.name}</p>
+                          <p className="text-xs text-slate-400 mt-0.5">{DEVICE_TYPE_LABELS[device.type] ?? device.type}</p>
+                        </div>
+                      </div>
+                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold border ${
+                        device.active
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : 'bg-stone-100 text-stone-500 border-stone-200'
+                      }`}>
+                        {device.active ? 'Ativo' : 'Inativo'}
+                      </span>
+                    </div>
+
+                    {/* identificador */}
+                    <p className="text-[11px] text-slate-400 font-mono truncate">{device.identifier}</p>
+
+                    {/* estado do atuador — real-time ainda não disponível */}
+                    <div className="rounded-lg border border-dashed border-stone-200 bg-stone-50 px-3 py-2.5 flex items-center justify-between gap-2">
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Estado atual</p>
+                        <p className="text-xs text-slate-500 mt-0.5">Telemetria em tempo real — em breve</p>
+                      </div>
+                      <span className="text-[10px] font-semibold text-amber-600 border border-amber-200 bg-amber-50 rounded px-2 py-1">
+                        Aguardando IoT
+                      </span>
+                    </div>
+
+                    {/* botões de ação */}
+                    {!readOnly && (
+                      <div className="flex gap-2 mt-1">
+                        <button
+                          type="button"
+                          title="Ativar/desativar registro do dispositivo"
+                          onClick={() => onToggleDevice?.(greenhouse.id, device.id, !device.active)}
+                          className="flex-1 rounded border border-stone-300 py-2 text-xs font-medium text-slate-600 transition hover:border-red-300 hover:text-red-700"
+                        >
+                          {device.active ? 'Desativar' : 'Ativar'}
+                        </button>
+                        <button
+                          type="button"
+                          disabled
+                          title="Disponível após integração com IoT Hub"
+                          className="flex-1 rounded border border-stone-200 py-2 text-xs font-medium text-slate-400 cursor-not-allowed bg-stone-50"
+                        >
+                          Acionar
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* sensores cadastrados — lista resumida de leitura */}
+            {sensores.length > 0 && (
+              <div className="rounded-2xl border border-stone-200 bg-white p-5">
+                <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">
+                  Sensores vinculados
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {sensores.map((s) => (
+                    <span
+                      key={s.id}
+                      className={`rounded-full border px-3 py-1 text-[11px] font-medium ${
+                        s.active
+                          ? 'border-stone-200 bg-stone-50 text-slate-600'
+                          : 'border-stone-100 text-stone-400'
+                      }`}
+                    >
+                      {DEVICE_TYPE_LABELS[s.type] ?? s.type} — {s.name}
+                      {!s.active && <span className="ml-1 text-[10px] text-stone-300">(inativo)</span>}
+                    </span>
+                  ))}
+                </div>
+                <p className="mt-3 text-[10px] text-slate-400">
+                  Leitura em tempo real dos sensores será exibida aqui após a integração com Azure IoT Hub.
+                </p>
+              </div>
+            )}
+
+          </div>
+        );
+      })() : null}
+
     </section>
   );
+};
+
+// rótulos legíveis para os tipos de dispositivo cadastrados
+const DEVICE_TYPE_LABELS = {
+  'sensor-temperatura': 'Sensor de temperatura',
+  'sensor-umidade': 'Sensor de umidade do ar',
+  'sensor-umidade-solo': 'Sensor de umidade do solo',
+  'sensor-luminosidade': 'Sensor de luminosidade',
+  'atuador-ventilacao': 'Atuador — ventilação',
+  'atuador-irrigacao': 'Atuador — irrigação',
+  'atuador-iluminacao': 'Atuador — iluminação',
 };
 
 export const DashboardPage = () => {
@@ -1121,6 +1861,10 @@ export const DashboardPage = () => {
   const [error, setError] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
+
+  // dispositivos da estufa selecionada
+  const [devicesById, setDevicesById] = useState({});
+  const [devicesLoadingById, setDevicesLoadingById] = useState({});
 
   const lastAlertFingerprintRef = useRef({});
   const simulationTimersRef = useRef({});
@@ -1434,6 +2178,27 @@ export const DashboardPage = () => {
     };
   }, [selectedGreenhouse?.id]);
 
+  // carrega os dispositivos sempre que a estufa selecionada muda
+  useEffect(() => {
+    if (!selectedGreenhouse?.id) {
+      return;
+    }
+
+    const id = selectedGreenhouse.id;
+    setDevicesLoadingById((prev) => ({ ...prev, [id]: true }));
+
+    listDevices(id)
+      .then(({ devices }) => {
+        setDevicesById((prev) => ({ ...prev, [id]: devices }));
+      })
+      .catch(() => {
+        setDevicesById((prev) => ({ ...prev, [id]: [] }));
+      })
+      .finally(() => {
+        setDevicesLoadingById((prev) => ({ ...prev, [id]: false }));
+      });
+  }, [selectedGreenhouse?.id]);
+
   useEffect(() => {
     if (loading) {
       return;
@@ -1540,6 +2305,34 @@ export const DashboardPage = () => {
     setDeleteTarget(null);
   }, [deleteBusy]);
 
+  // adiciona o dispositivo no banco e atualiza o estado local
+  const handleCreateDevice = useCallback(async (estufaId, payload) => {
+    const { device } = await createDevice(estufaId, payload);
+    setDevicesById((prev) => ({
+      ...prev,
+      [estufaId]: [...(prev[estufaId] ?? []), device],
+    }));
+    return device;
+  }, []);
+
+  // remove o dispositivo do banco e do estado local
+  const handleDeleteDevice = useCallback(async (estufaId, deviceId) => {
+    await deleteDevice(estufaId, deviceId);
+    setDevicesById((prev) => ({
+      ...prev,
+      [estufaId]: (prev[estufaId] ?? []).filter((d) => d.id !== deviceId),
+    }));
+  }, []);
+
+  // ativa ou desativa o dispositivo e reflete no estado local
+  const handleToggleDevice = useCallback(async (estufaId, deviceId, active) => {
+    const { device } = await updateDevice(estufaId, deviceId, { active });
+    setDevicesById((prev) => ({
+      ...prev,
+      [estufaId]: (prev[estufaId] ?? []).map((d) => (d.id === deviceId ? device : d)),
+    }));
+  }, []);
+
   const handleSaveGreenhouse = useCallback(async (greenhouseId, payload) => {
     setSavingById((prev) => ({
       ...prev,
@@ -1639,6 +2432,16 @@ export const DashboardPage = () => {
         ...prev,
         [greenhouseId]: false
       }));
+    }
+  }, []);
+
+  const handleUpdateAlertThresholds = useCallback(async (greenhouseId, thresholds) => {
+    const response = await updateAlertThresholds(greenhouseId, thresholds);
+    const updated = response?.greenhouse ?? response;
+    if (updated) {
+      setGreenhouses((prev) =>
+        prev.map((greenhouse) => (greenhouse.id === greenhouseId ? { ...greenhouse, ...updated } : greenhouse))
+      );
     }
   }, []);
 
@@ -2286,9 +3089,15 @@ export const DashboardPage = () => {
             onSave={handleSaveGreenhouse}
             onUpdateTeam={handleUpdateTeam}
             onToggleAlerts={handleToggleAlerts}
+            onUpdateAlertThresholds={handleUpdateAlertThresholds}
             onNotify={handleNotifyTeam}
             onSimulateHeat={handleSimulateHeat}
             onDeleteRequest={handleRequestDeleteGreenhouse}
+            devices={devicesById[selectedGreenhouse.id] ?? []}
+            devicesLoading={Boolean(devicesLoadingById[selectedGreenhouse.id])}
+            onCreateDevice={handleCreateDevice}
+            onDeleteDevice={handleDeleteDevice}
+            onToggleDevice={handleToggleDevice}
             readOnly={isReader}
           />
         </div>

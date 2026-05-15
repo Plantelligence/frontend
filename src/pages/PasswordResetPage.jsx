@@ -6,6 +6,7 @@ import {
   confirmPasswordReset
 } from '../api/authService.js';
 import { getFriendlyErrorMessage } from '../utils/errorMessages.js';
+import { useEmailCooldown } from '../hooks/useEmailCooldown.js';
 
 export const PasswordResetPage = () => {
   const [email, setEmail] = useState('');
@@ -14,12 +15,15 @@ export const PasswordResetPage = () => {
   const [newPassword, setNewPassword] = useState('');
   const [resetFeedback, setResetFeedback] = useState(null);
   const [loading, setLoading] = useState(false);
+  const { canSend, secondsLeft, recordSend } = useEmailCooldown();
 
   const handleRequest = async (event) => {
     event.preventDefault();
+    if (!canSend) return;
     setLoading(true);
     try {
       const result = await requestPasswordReset({ email });
+      recordSend();
       setRequestFeedback({
         message: result.message ?? 'Se o e-mail existir, enviaremos instruções de recuperação.'
       });
@@ -64,8 +68,12 @@ export const PasswordResetPage = () => {
             onChange={(event) => setEmail(event.target.value)}
             required
           />
-          <Button type="submit" disabled={loading}>
-            {loading ? 'Processando...' : 'Solicitar token de recuperação'}
+          <Button type="submit" disabled={loading || !canSend}>
+            {loading
+              ? 'Processando...'
+              : !canSend
+              ? `Aguarde ${secondsLeft}s para reenviar`
+              : 'Solicitar token de recuperação'}
           </Button>
         </form>
         {requestFeedback && (
