@@ -23,8 +23,10 @@ export function CookiesPage() {
         <h2 className="mb-3 text-lg font-semibold text-red-400">2. Tipos de cookies que usamos</h2>
         <ul className={`${textClassName} ml-5 list-disc space-y-2`}>
           <li>
-            <strong>Estritamente necessários:</strong> essenciais para autenticação, sessão do usuário
-            e operação dos painéis (preferências básicas e segurança).
+            <strong>Estritamente necessários:</strong> essenciais para autenticação, sessão do
+            usuário e operação dos painéis (preferências básicas e segurança). Eles garantem que
+            os tokens criptográficos de sessão permaneçam válidos enquanto o operador gerencia a
+            estufa.
           </li>
         </ul>
         <p className={`${textClassName} mt-3`}>
@@ -40,7 +42,8 @@ export function CookiesPage() {
         </p>
         <p className={`${textClassName} mt-2`}>
           Desativar cookies estritamente necessários pode comprometer funcionalidades críticas da
-          plataforma.
+          plataforma, impossibilitando a validação de acesso e a atualização contínua de
+          telemetria.
         </p>
       </section>
 

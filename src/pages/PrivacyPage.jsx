@@ -21,15 +21,19 @@ export function PrivacyPage() {
 
       <section className={cardClassName}>
         <h2 className="mb-3 text-lg font-semibold text-red-400">1. Quais dados coletamos</h2>
-        <p className={textClassName}>Coletamos apenas:</p>
+        <p className={textClassName}>
+          Coletamos as seguintes informações fornecidas ativamente para a prestação do serviço:
+        </p>
         <ul className={`${textClassName} ml-5 mt-2 list-disc space-y-2`}>
           <li>Nome completo</li>
           <li>E-mail</li>
           <li>Consentimento LGPD</li>
+          <li>Dados de Localização e Propriedade (CEP, Cidade e Estado informados no cadastro de estufas)</li>
+          <li>
+            Registros de Acesso coletados automaticamente (Endereço IP, credenciais de sessão,
+            logs de data e hora)
+          </li>
         </ul>
-        <p className={`${textClassName} mt-3`}>
-          Esses dados são informados durante o cadastro para criação e proteção da conta.
-        </p>
         <p className={`${textClassName} mt-3`}>
           O telefone não é coletado no cadastro inicial. Caso exista campo de telefone em
           configurações de conta, o preenchimento é opcional.
@@ -41,6 +45,11 @@ export function PrivacyPage() {
         <p className={textClassName}>Utilizamos os dados coletados exclusivamente para:</p>
         <ul className={`${textClassName} ml-5 mt-2 list-disc space-y-2`}>
           <li>Gerenciar o acesso seguro ao painel de telemetria das estufas.</li>
+          <li>Operar as rotinas de automação com base nos limites definidos pelos sensores.</li>
+          <li>
+            Consultar informações meteorológicas locais com base no CEP para emitir alertas e
+            recomendações preditivas.
+          </li>
           <li>Responder dúvidas e solicitações técnicas relacionadas à operação da plataforma.</li>
         </ul>
         <p className={`${textClassName} mt-3`}>
@@ -49,19 +58,45 @@ export function PrivacyPage() {
       </section>
 
       <section className={cardClassName}>
-        <h2 className="mb-3 text-lg font-semibold text-red-400">3. Compartilhamento</h2>
+        <h2 className="mb-3 text-lg font-semibold text-red-400">3. Compartilhamento e Transferência Internacional</h2>
         <p className={textClassName}>
-          A Plantelligence não comercializa e não compartilha seus dados com terceiros, salvo
-          quando necessário para cumprimento de obrigação legal.
+          A Plantelligence não comercializa e não compartilha seus dados com terceiros para fins
+          publicitários. O tráfego e armazenamento de dados ocorrem de forma integrada com
+          provedores de infraestrutura e serviços estritamente necessários para a execução da
+          plataforma, compreendendo:
+        </p>
+        <ul className={`${textClassName} ml-5 mt-2 list-disc space-y-2`}>
+          <li>Serviços de hospedagem em nuvem e centrais de mensageria (Microsoft Azure e Azure IoT Hub)</li>
+          <li>Provedores de API para o assistente virtual de Inteligência Artificial (Groq)</li>
+          <li>Provedores de API para previsões climáticas locais (OpenWeatherMap)</li>
+        </ul>
+        <p className={`${textClassName} mt-3`}>
+          Considerando a natureza dos serviços globais em nuvem fornecidos por parceiros como a
+          Microsoft, os dados operacionais podem ser objeto de transferência internacional de
+          dados, mantendo os critérios rigorosos de segurança técnica exigidos pela legislação.
         </p>
       </section>
 
       <section className={cardClassName}>
-        <h2 className="mb-3 text-lg font-semibold text-red-400">4. Retenção</h2>
+        <h2 className="mb-3 text-lg font-semibold text-red-400">4. Retenção e Legislação Soberana</h2>
         <p className={textClassName}>
           Os dados serão armazenados em ambiente seguro pelo tempo necessário para atender à
-          finalidade informada ou conforme exigido por lei.
+          finalidade informada ou conforme exigido por lei. Em caso de pedido de exclusão da conta
+          pelo titular, critérios regulatórios específicos se sobrepõem à eliminação imediata:
         </p>
+        <ul className={`${textClassName} ml-5 mt-3 list-disc space-y-3`}>
+          <li>
+            <strong className="text-slate-100">Registros de Acesso e IPs:</strong> Mantidos pelo
+            período obrigatório de 6 (seis) meses para o estrito cumprimento de dever legal
+            estabelecido pelo Marco Civil da Internet (Lei nº 12.965/2014).
+          </li>
+          <li>
+            <strong className="text-slate-100">Dados Fiscais e Financeiros:</strong> Caso existam
+            transações ou assinaturas de planos de contratação, as informações de faturamento e
+            dados comerciais correlatos serão guardados pelo prazo mínimo de 5 (cinco) anos, em
+            conformidade com as exigências de fiscalização do Código Tributário Nacional.
+          </li>
+        </ul>
       </section>
 
       <section className={cardClassName}>
@@ -70,17 +105,18 @@ export function PrivacyPage() {
           Adotamos medidas técnicas e organizacionais para proteger seus dados, incluindo:
         </p>
         <ul className={`${textClassName} ml-5 mt-2 list-disc space-y-2`}>
-          <li>Criptografia em trânsito.</li>
-          <li>Controle de acesso restrito.</li>
-          <li>Monitoramento de segurança.</li>
+          <li>Criptografia em trânsito (HTTPS/TLS) e criptografia de ponta a ponta na comunicação IoT (MQTTS).</li>
+          <li>Controle de acesso restrito baseado em regras de perfis (RBAC).</li>
+          <li>Monitoramento de segurança e auditoria interna de logs.</li>
         </ul>
       </section>
 
       <section className={cardClassName}>
         <h2 className="mb-3 text-lg font-semibold text-red-400">6. Cookies</h2>
         <p className={textClassName}>
-          Utilizamos apenas cookies estritamente necessários para funcionamento da plataforma. Não
-          armazenamos dados pessoais em cookies.
+          Utilizamos apenas cookies estritamente necessários para o funcionamento e estabilidade
+          da plataforma, garantindo a manutenção da sessão de login ativa e proteção do tráfego.
+          Não armazenamos dados pessoais em cookies.
         </p>
       </section>
 
@@ -103,7 +139,21 @@ export function PrivacyPage() {
       </section>
 
       <section className={cardClassName}>
-        <h2 className="mb-3 text-lg font-semibold text-red-400">8. Atualizações</h2>
+        <h2 className="mb-3 text-lg font-semibold text-red-400">8. Encarregado de Proteção de Dados (DPO)</h2>
+        <p className={textClassName}>
+          Em conformidade com as diretrizes legais estabelecidas no Artigo 41 da LGPD, o titular
+          de dados pode acionar diretamente o Encarregado de Proteção de Dados (DPO) da
+          organização Plantelligence para dirimir dúvidas estruturais, realizar requisições de
+          direitos ou reportar incidentes através do e-mail dedicado:{' '}
+          <a className="text-red-400 hover:underline" href="mailto:privacidade@plantelligence.cloud">
+            privacidade@plantelligence.cloud
+          </a>
+          .
+        </p>
+      </section>
+
+      <section className={cardClassName}>
+        <h2 className="mb-3 text-lg font-semibold text-red-400">9. Atualizações</h2>
         <p className={textClassName}>
           Este Aviso poderá ser atualizado a qualquer momento. A versão mais recente estará sempre
           disponível na plataforma.
