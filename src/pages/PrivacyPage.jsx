@@ -144,12 +144,17 @@ export function PrivacyPage() {
           Em conformidade com as diretrizes legais estabelecidas no Artigo 41 da LGPD, o titular
           de dados pode acionar diretamente o Encarregado de Proteção de Dados (DPO) da
           organização Plantelligence para dirimir dúvidas estruturais, realizar requisições de
-          direitos ou reportar incidentes através do e-mail dedicado:{' '}
-          <a className="text-red-400 hover:underline" href="mailto:privacidade@plantelligence.cloud">
-            privacidade@plantelligence.cloud
-          </a>
-          .
+          direitos ou reportar incidentes:
         </p>
+        <ul className={`${textClassName} ml-5 mt-2 list-disc space-y-2`}>
+          <li><strong className="text-slate-100">Responsável:</strong> Fillipe Mateus Pereira</li>
+          <li>
+            <strong className="text-slate-100">E-mail:</strong>{' '}
+            <a className="text-red-400 hover:underline" href="mailto:privacidade@plantelligence.cloud">
+              privacidade@plantelligence.cloud
+            </a>
+          </li>
+        </ul>
       </section>
 
       <section className={cardClassName}>
