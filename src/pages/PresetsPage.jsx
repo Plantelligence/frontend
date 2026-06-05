@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
-import { DashboardSideNav } from '../components/DashboardSideNav.jsx';
 import { ConfirmDialog } from '../components/ConfirmDialog.jsx';
 import { useAuthStore } from '../store/authStore.js';
 import {
@@ -151,7 +151,7 @@ function MetricInput({ label, value, unit, min, max, range, onChange }) {
   };
 
   return (
-    <div className="rounded-lg border border-stone-200 bg-[#f5f2ec] p-3">
+    <div className="rounded-lg border border-stone-200 dark:border-stone-700/40 bg-stone-50 dark:bg-stone-800/40 p-3">
       <span className="block text-[11px] font-semibold leading-snug text-red-700">{label}</span>
       <div className="mt-1 flex items-baseline gap-1">
         <input
@@ -162,7 +162,7 @@ function MetricInput({ label, value, unit, min, max, range, onChange }) {
           step={1}
           onChange={(event) => setLocalVal(event.target.value)}
           onBlur={handleBlur}
-          className="w-24 border-b border-stone-300 bg-transparent text-center text-lg font-semibold text-stone-900 outline-none focus:border-red-500"
+          className="w-24 border-b border-stone-300 dark:border-stone-600 bg-transparent text-center text-lg font-semibold text-stone-900 dark:text-stone-100 outline-none focus:border-red-500"
         />
         <span className="text-xs text-stone-500">{unit}</span>
       </div>
@@ -182,7 +182,7 @@ function PresetCard({ preset, selected, onSelect, onEdit, onDuplicate, onDelete,
   return (
     <article
       onClick={() => onSelect(preset)}
-      className={`h-full cursor-pointer overflow-hidden rounded-lg border bg-white transition hover:-translate-y-0.5 hover:shadow-md ${
+      className={`h-full cursor-pointer overflow-hidden rounded-lg border bg-white dark:bg-stone-900/35 transition hover:-translate-y-0.5 hover:shadow-md ${
         selected ? 'border-red-500 shadow-[0_0_0_3px_rgba(212,58,42,0.1)]' : 'border-stone-200 hover:border-stone-300'
       }`}
     >
@@ -190,7 +190,7 @@ function PresetCard({ preset, selected, onSelect, onEdit, onDuplicate, onDelete,
       <div className="p-4">
         <div className="mb-3 flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-stone-900" title={preset.nome_cultura}>{preset.nome_cultura}</p>
+            <p className="truncate text-sm font-semibold text-stone-900 dark:text-stone-100" title={preset.nome_cultura}>{preset.nome_cultura}</p>
             <p className="mt-0.5 truncate text-[10px] italic text-stone-400" title={preset.tipo_cultura}>{preset.tipo_cultura}</p>
           </div>
           <span className={`whitespace-nowrap rounded border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider ${badgeClassByType[badgeType]}`}>
@@ -199,24 +199,24 @@ function PresetCard({ preset, selected, onSelect, onEdit, onDuplicate, onDelete,
         </div>
 
         <div className="mb-3 grid grid-cols-2 gap-2">
-          <div className="flex min-h-[80px] flex-col justify-between rounded-md border border-stone-200 bg-[#f5f2ec] p-3">
+          <div className="flex min-h-[80px] flex-col justify-between rounded-md border border-stone-200 dark:border-stone-700/40 bg-stone-50 dark:bg-stone-800/40 p-3">
             <p className="text-[10px] font-semibold leading-tight text-red-700">Temperatura</p>
-            <p className="text-lg font-semibold leading-none text-stone-900">{preset.ui.temperature}<span className="ml-0.5 text-[10px] font-normal text-stone-400">°C</span></p>
+            <p className="text-lg font-semibold leading-none text-stone-900 dark:text-stone-100">{preset.ui.temperature}<span className="ml-0.5 text-[10px] font-normal text-stone-400">°C</span></p>
             <p className="text-[10px] font-mono text-stone-400">{preset.ui.tempRange}°C</p>
           </div>
-          <div className="flex min-h-[80px] flex-col justify-between rounded-md border border-stone-200 bg-[#f5f2ec] p-3">
+          <div className="flex min-h-[80px] flex-col justify-between rounded-md border border-stone-200 dark:border-stone-700/40 bg-stone-50 dark:bg-stone-800/40 p-3">
             <p className="text-[10px] font-semibold leading-tight text-red-700">Umidade do ar</p>
-            <p className="text-lg font-semibold leading-none text-stone-900">{preset.ui.humidity}<span className="ml-0.5 text-[10px] font-normal text-stone-400">%</span></p>
+            <p className="text-lg font-semibold leading-none text-stone-900 dark:text-stone-100">{preset.ui.humidity}<span className="ml-0.5 text-[10px] font-normal text-stone-400">%</span></p>
             <p className="text-[10px] font-mono text-stone-400">{preset.ui.humidityRange}%</p>
           </div>
-          <div className="flex min-h-[80px] flex-col justify-between rounded-md border border-stone-200 bg-[#f5f2ec] p-3">
+          <div className="flex min-h-[80px] flex-col justify-between rounded-md border border-stone-200 dark:border-stone-700/40 bg-stone-50 dark:bg-stone-800/40 p-3">
             <p className="text-[10px] font-semibold leading-tight text-red-700">Umidade do solo</p>
-            <p className="text-lg font-semibold leading-none text-stone-900">{preset.ui.soilMoisture || '—'}<span className="ml-0.5 text-[10px] font-normal text-stone-400">%</span></p>
+            <p className="text-lg font-semibold leading-none text-stone-900 dark:text-stone-100">{preset.ui.soilMoisture || '—'}<span className="ml-0.5 text-[10px] font-normal text-stone-400">%</span></p>
             <p className="text-[10px] font-mono text-stone-400">{preset.ui.soilRange}</p>
           </div>
-          <div className="flex min-h-[80px] flex-col justify-between rounded-md border border-stone-200 bg-[#f5f2ec] p-3">
+          <div className="flex min-h-[80px] flex-col justify-between rounded-md border border-stone-200 dark:border-stone-700/40 bg-stone-50 dark:bg-stone-800/40 p-3">
             <p className="text-[10px] font-semibold leading-tight text-red-700">Luminosidade</p>
-            <p className="text-lg font-semibold leading-none text-stone-900">{preset.ui.luminosity}<span className="ml-0.5 text-[10px] font-normal text-stone-400">lux</span></p>
+            <p className="text-lg font-semibold leading-none text-stone-900 dark:text-stone-100">{preset.ui.luminosity}<span className="ml-0.5 text-[10px] font-normal text-stone-400">lux</span></p>
             <p className="text-[10px] font-mono text-stone-400">{preset.ui.lightRange}</p>
           </div>
         </div>
@@ -230,7 +230,7 @@ function PresetCard({ preset, selected, onSelect, onEdit, onDuplicate, onDelete,
               {!preset.sistema ? (
                 <button
                   onClick={() => onEdit(preset)}
-                  className="rounded border border-stone-200 px-2 py-1.5 text-[10px] text-stone-600 transition hover:bg-stone-100"
+                  className="rounded border border-stone-200 dark:border-stone-700 px-2 py-1.5 text-[10px] text-stone-600 dark:text-stone-400 transition hover:bg-stone-100 dark:hover:bg-stone-800"
                   title="Editar"
                 >
                   Editar
@@ -238,7 +238,7 @@ function PresetCard({ preset, selected, onSelect, onEdit, onDuplicate, onDelete,
               ) : null}
               <button
                 onClick={() => onDuplicate(preset)}
-                className="rounded border border-stone-200 px-2 py-1.5 text-[10px] text-stone-600 transition hover:bg-stone-100"
+                className="rounded border border-stone-200 dark:border-stone-700 px-2 py-1.5 text-[10px] text-stone-600 dark:text-stone-400 transition hover:bg-stone-100 dark:hover:bg-stone-800"
                 title="Criar cópia"
               >
                 Copiar
@@ -246,7 +246,7 @@ function PresetCard({ preset, selected, onSelect, onEdit, onDuplicate, onDelete,
               {!preset.sistema ? (
                 <button
                   onClick={() => onDelete(preset)}
-                  className="rounded border border-stone-200 px-2 py-1.5 text-[10px] text-stone-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                  className="rounded border border-stone-200 dark:border-stone-700 px-2 py-1.5 text-[10px] text-stone-600 dark:text-stone-400 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
                   title="Excluir"
                 >
                   Excluir
@@ -254,7 +254,7 @@ function PresetCard({ preset, selected, onSelect, onEdit, onDuplicate, onDelete,
               ) : null}
             </div>
           ) : (
-            <span className="text-[11px] text-slate-500">Somente consulta</span>
+            <span className="text-[11px] text-slate-500 dark:text-stone-400">Somente consulta</span>
           )}
         </div>
       </div>
@@ -283,10 +283,11 @@ function DetailPanel({ preset, open, saving, onSave, onClose, readOnly = false }
     }));
   };
 
-  return (
-    <div className="absolute inset-0 z-[70] flex items-center justify-center bg-white/60 p-4 backdrop-blur-[1px]" onClick={onClose}>
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto bg-black/50 px-4 py-6 backdrop-blur-sm" onClick={onClose}>
       <aside
-        className="w-full max-w-3xl overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-2xl"
+        className="w-full max-w-3xl rounded-2xl my-auto border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 shadow-2xl"
+        style={{ maxHeight: '90vh', overflowY: 'auto' }}
         onClick={(event) => event.stopPropagation()}
       >
       <div className="border-b border-stone-200 px-5 py-4">
@@ -298,19 +299,19 @@ function DetailPanel({ preset, open, saving, onSave, onClose, readOnly = false }
           value={form.nome_cultura}
           disabled={preset.sistema || readOnly}
           onChange={(event) => setForm((prev) => ({ ...prev, nome_cultura: event.target.value.slice(0, 80) }))}
-          placeholder="Ex.: Shiitake - Frutificacao inverno"
-          className="mt-2 w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-base font-semibold text-stone-900 outline-none focus:border-red-400 disabled:bg-stone-100"
+          placeholder="Ex.: Shiitake - Frutificação inverno"
+          className="mt-2 w-full rounded-md border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 px-3 py-2 text-base font-semibold text-stone-900 dark:text-stone-100 outline-none focus:border-red-400 disabled:bg-stone-100 dark:disabled:bg-stone-700"
         />
         <label className="mt-3 block text-[11px] font-semibold uppercase tracking-wide text-stone-500">
-          Descricao do perfil
+          Descrição do perfil
         </label>
         <textarea
           value={form.descricao ?? ''}
           disabled={preset.sistema || readOnly}
           onChange={(event) => setForm((prev) => ({ ...prev, descricao: event.target.value.slice(0, 400) }))}
-          placeholder="Ex.: Perfil focado em frutificacao com maior umidade e ventilacao moderada."
+          placeholder="Ex.: Perfil focado em frutificação com maior umidade e ventilação moderada."
           rows={2}
-          className="mt-2 w-full resize-none rounded-md border border-stone-300 bg-white px-3 py-2 text-xs text-stone-700 outline-none focus:border-red-400 disabled:bg-stone-100"
+          className="mt-2 w-full resize-none rounded-md border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 px-3 py-2 text-xs text-stone-700 dark:text-stone-300 outline-none focus:border-red-400 disabled:bg-stone-100 dark:disabled:bg-stone-700"
         />
         <p className="mt-1 text-[11px] text-stone-500">
           Descreva o objetivo desse perfil para facilitar o uso pela equipe.
@@ -321,7 +322,7 @@ function DetailPanel({ preset, open, saving, onSave, onClose, readOnly = false }
         <section>
           <p className="mb-1 border-b border-stone-100 pb-2 text-[10px] font-semibold uppercase tracking-widest text-stone-400">Faixa ideal para o cultivo</p>
           <p className="mb-3 text-xs text-stone-500">Ajuste os valores mínimo e máximo recomendados para cada parâmetro.</p>
-          <p className="mb-3 rounded-md border border-stone-200 bg-stone-50 px-3 py-2 text-[11px] text-stone-600">
+          <p className="mb-3 rounded-md border border-stone-200 dark:border-stone-700/40 bg-stone-50 dark:bg-stone-800/40 px-3 py-2 text-[11px] text-stone-600 dark:text-stone-400">
             Limites: temperatura -5 a 45 °C, umidade 0 a 100%, umidade do solo 0 a 100% e luminosidade 0 a 3000 lux.
           </p>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-4">
@@ -406,7 +407,7 @@ function DetailPanel({ preset, open, saving, onSave, onClose, readOnly = false }
       <div className="flex gap-2 border-t border-stone-200 px-5 py-3">
         <button
           onClick={onClose}
-          className="flex-1 rounded border border-stone-200 px-3 py-2 text-sm text-stone-700 transition hover:bg-stone-50"
+          className="flex-1 rounded border border-stone-200 dark:border-stone-700 px-3 py-2 text-sm text-stone-700 dark:text-stone-300 transition hover:bg-stone-50 dark:hover:bg-stone-800"
         >
           Fechar painel
         </button>
@@ -419,7 +420,8 @@ function DetailPanel({ preset, open, saving, onSave, onClose, readOnly = false }
         </button>
       </div>
       </aside>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -459,15 +461,16 @@ function AIModal({ open, onClose, onUse }) {
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto bg-black/60 px-4 py-6 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="w-full max-w-lg overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-2xl"
+        className="w-full max-w-lg rounded-2xl my-auto border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 shadow-2xl"
+        style={{ maxHeight: '90vh', overflowY: 'auto' }}
         onClick={(event) => event.stopPropagation()}
       >
         <div className="border-b border-stone-200 px-5 py-4">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-red-600">Inteligência Artificial</p>
-          <h2 className="mt-1 text-lg font-semibold text-stone-900">Criar perfil com IA</h2>
+          <h2 className="mt-1 text-lg font-semibold text-stone-900 dark:text-stone-100">Criar perfil com IA</h2>
           <p className="mt-1 text-sm text-stone-500">Descreva a cultura ou condições de cultivo e a IA irá sugerir os parâmetros ideais.</p>
         </div>
 
@@ -478,7 +481,7 @@ function AIModal({ open, onClose, onUse }) {
             placeholder="Ex.: Shiitake em clima frio, alta umidade, pouca luz..."
             rows={3}
             disabled={loading}
-            className="w-full resize-none rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-800 outline-none focus:border-red-400 disabled:bg-stone-50"
+            className="w-full resize-none rounded-md border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 px-3 py-2 text-sm text-stone-800 dark:text-stone-100 outline-none focus:border-red-400 disabled:bg-stone-50 dark:disabled:bg-stone-700"
           />
           {error ? (
             <p className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>
@@ -495,21 +498,21 @@ function AIModal({ open, onClose, onUse }) {
         {suggestion ? (
           <div className="space-y-3 border-t border-stone-200 px-5 pb-5 pt-4">
             <p className="text-[10px] font-semibold uppercase tracking-widest text-emerald-700">Sugestão gerada</p>
-            <div className="space-y-2 rounded-xl border border-stone-200 bg-stone-50 p-4">
-              <p className="font-semibold text-stone-900">{suggestion.name}</p>
-              {suggestion.summary ? <p className="text-sm text-stone-600">{suggestion.summary}</p> : null}
+            <div className="space-y-2 rounded-xl border border-stone-200 bg-stone-50 dark:border-stone-700/40 dark:bg-stone-800/40 p-4">
+              <p className="font-semibold text-stone-900 dark:text-stone-100">{suggestion.name}</p>
+              {suggestion.summary ? <p className="text-sm text-stone-600 dark:text-stone-400">{suggestion.summary}</p> : null}
               <div className="mt-2 grid grid-cols-3 gap-2">
-                <div className="rounded-lg border border-stone-200 bg-white p-2 text-center">
+                <div className="rounded-lg border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-2 text-center">
                   <p className="text-[10px] font-semibold text-red-600">Temperatura</p>
-                  <p className="mt-1 text-sm font-semibold text-stone-800">{suggestion.temperature?.min}–{suggestion.temperature?.max}°C</p>
+                  <p className="mt-1 text-sm font-semibold text-stone-800 dark:text-stone-200">{suggestion.temperature?.min}–{suggestion.temperature?.max}°C</p>
                 </div>
-                <div className="rounded-lg border border-stone-200 bg-white p-2 text-center">
+                <div className="rounded-lg border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-2 text-center">
                   <p className="text-[10px] font-semibold text-red-600">Umidade</p>
-                  <p className="mt-1 text-sm font-semibold text-stone-800">{suggestion.humidity?.min}–{suggestion.humidity?.max}%</p>
+                  <p className="mt-1 text-sm font-semibold text-stone-800 dark:text-stone-200">{suggestion.humidity?.min}–{suggestion.humidity?.max}%</p>
                 </div>
-                <div className="rounded-lg border border-stone-200 bg-white p-2 text-center">
+                <div className="rounded-lg border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-2 text-center">
                   <p className="text-[10px] font-semibold text-red-600">Luminosidade</p>
-                  <p className="mt-1 text-sm font-semibold text-stone-800">{suggestion.soilMoisture?.min}–{suggestion.soilMoisture?.max} lx</p>
+                  <p className="mt-1 text-sm font-semibold text-stone-800 dark:text-stone-200">{suggestion.soilMoisture?.min}–{suggestion.soilMoisture?.max} lx</p>
                 </div>
               </div>
               {suggestion.notes ? (
@@ -526,12 +529,13 @@ function AIModal({ open, onClose, onUse }) {
         ) : null}
 
         <div className="border-t border-stone-100 px-5 py-3">
-          <button onClick={onClose} className="text-sm text-stone-500 transition hover:text-stone-700">
+          <button onClick={onClose} className="text-sm text-stone-500 transition hover:text-stone-700 dark:text-stone-300">
             Cancelar
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -741,26 +745,17 @@ export const PresetsPage = () => {
   };
 
   return (
-    <div className="mx-auto w-full max-w-[1400px] px-4 py-6">
-      <div className="rounded-[30px] bg-[#181415] p-4 shadow-[0_24px_60px_rgba(0,0,0,0.35)] md:p-6">
-        <div className="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
-          <DashboardSideNav
-            active="presets"
-            footerText={isReader
-              ? 'Perfil Leitor: apenas consulta dos perfis de cultivo utilizados nas estufas delegadas.'
-              : 'Você pode criar, copiar e ajustar perfis de cultivo personalizados para cada estufa.'}
-          />
-
+    <>
           <section
             ref={contentSectionRef}
-            className={`relative rounded-[26px] bg-[#f5f1eb] p-4 md:p-6 lg:h-[calc(100vh-160px)] lg:min-h-[640px] lg:max-h-[820px] ${isDetailOpen ? 'overflow-hidden' : 'overflow-y-auto'}`}
+            className={`relative rounded-[26px] dark:bg-[#0f0c0c] p-4 md:p-6 ${isDetailOpen ? 'overflow-hidden' : 'overflow-y-auto'}`}
           >
-            <header className="mb-4 rounded-2xl border border-stone-300 bg-[#fcfaf7] p-4">
+            <header className="mb-4 rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-red-700">Perfis de cultivo</p>
-                  <h1 className="mt-1 text-2xl font-semibold text-slate-800">Perfis de cultivo da estufa</h1>
-                  <p className="mt-1 text-sm text-slate-600">Escolha um perfil pronto ou crie o seu para definir temperatura, umidade e luz ideais.</p>
+                  <h1 className="mt-1 text-2xl font-semibold text-slate-800 dark:text-stone-100">Perfis de cultivo da estufa</h1>
+                  <p className="mt-1 text-sm text-slate-600 dark:text-stone-400">Escolha um perfil pronto ou crie o seu para definir temperatura, umidade e luz ideais.</p>
                 </div>
                 {!isReader ? (
                   <div className="flex gap-2">
@@ -781,39 +776,39 @@ export const PresetsPage = () => {
               </div>
             </header>
 
-            <section className="mb-4 rounded-2xl border border-stone-200 bg-white p-4">
-              <h2 className="text-sm font-semibold text-slate-800">Como usar este painel</h2>
-              <p className="mt-2 text-sm text-slate-600">
+            <section className="mb-4 rounded-2xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
+              <h2 className="text-sm font-semibold text-slate-800 dark:text-stone-100">Como usar este painel</h2>
+              <p className="mt-2 text-sm text-slate-600 dark:text-stone-400">
                 1. Comece escolhendo um perfil padrão para usar como referência inicial.
               </p>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-sm text-slate-600 dark:text-stone-400">
                 2. Se precisar adaptar à sua operação, use Copiar para criar um perfil personalizado.
               </p>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-sm text-slate-600 dark:text-stone-400">
                 3. Ajuste os valores no painel lateral e clique em Salvar alterações.
               </p>
-              <p className="mt-1 text-sm text-slate-600">4. Perfis em uso já estão vinculados a estufas.</p>
+              <p className="mt-1 text-sm text-slate-600 dark:text-stone-400">4. Perfis em uso já estão vinculados a estufas.</p>
             </section>
 
-            <section className="mb-4 grid gap-3 md:grid-cols-3">
-              <article className="rounded-2xl border border-stone-200 bg-white p-4">
+            <section className="mb-4 grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+              <article className="rounded-2xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
                 <p className="text-xs uppercase tracking-wide text-red-600">Total de perfis</p>
-                <p className="mt-1 text-3xl font-semibold text-slate-800">{counts.all}</p>
-                <p className="text-xs text-slate-500">Perfis padrão e personalizados</p>
+                <p className="mt-1 text-3xl font-semibold text-slate-800 dark:text-stone-100">{counts.all}</p>
+                <p className="text-xs text-slate-500 dark:text-stone-400">Perfis padrão e personalizados</p>
               </article>
-              <article className="rounded-2xl border border-stone-200 bg-white p-4">
+              <article className="rounded-2xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
                 <p className="text-xs uppercase tracking-wide text-red-600">Perfis em uso</p>
-                <p className="mt-1 text-3xl font-semibold text-slate-800">{counts.inUse}</p>
-                <p className="text-xs text-slate-500">Já aplicados em estufas</p>
+                <p className="mt-1 text-3xl font-semibold text-slate-800 dark:text-stone-100">{counts.inUse}</p>
+                <p className="text-xs text-slate-500 dark:text-stone-400">Já aplicados em estufas</p>
               </article>
-              <article className="rounded-2xl border border-stone-200 bg-white p-4">
+              <article className="rounded-2xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
                 <p className="text-xs uppercase tracking-wide text-red-600">Perfis personalizados</p>
-                <p className="mt-1 text-3xl font-semibold text-slate-800">{counts.custom}</p>
-                <p className="text-xs text-slate-500">Criados para sua operação</p>
+                <p className="mt-1 text-3xl font-semibold text-slate-800 dark:text-stone-100">{counts.custom}</p>
+                <p className="text-xs text-slate-500 dark:text-stone-400">Criados para sua operação</p>
               </article>
             </section>
 
-            <div className="mb-4 flex flex-col gap-3 rounded-lg border border-stone-200 bg-white px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="mb-4 flex flex-col gap-3 rounded-lg border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex flex-wrap gap-1">
                 {FILTERS.map((filter) => (
                   <button
@@ -835,13 +830,13 @@ export const PresetsPage = () => {
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Buscar por nome do perfil..."
-                className="w-full rounded border border-stone-200 bg-stone-50 px-3 py-2 text-sm text-stone-700 outline-none focus:border-red-400 lg:w-64"
+                className="w-full rounded border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 px-3 py-2 text-sm text-stone-700 dark:text-stone-300 outline-none focus:border-red-400 lg:w-64"
               />
             </div>
 
-            <section className="mb-4 rounded-lg border border-stone-200 bg-white px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Legenda dos indicadores</p>
-              <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-600">
+            <section className="mb-4 rounded-lg border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-stone-400">Legenda dos indicadores</p>
+              <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-600 dark:text-stone-400">
                 <span className="rounded-full border border-red-200 bg-red-50 px-2.5 py-1">Temperatura: valor em °C</span>
                 <span className="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1">Umidade: valor em %</span>
                 <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1">Luminosidade: valor em lux</span>
@@ -855,19 +850,19 @@ export const PresetsPage = () => {
                 {loading ? (
                   <div className="grid gap-4 md:grid-cols-2">
                     {[0, 1, 2].map((item) => (
-                      <div key={item} className="h-60 animate-pulse rounded-lg border border-stone-300 bg-white" />
+                      <div key={item} className="h-60 animate-pulse rounded-lg border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35" />
                     ))}
                   </div>
                 ) : (
                   <>
                     {activeFilter !== 'custom' ? (
-                      <section className="rounded-2xl border border-stone-200 bg-white p-4">
+                      <section className="rounded-2xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
                         <div className="mb-3 flex items-center justify-between gap-2 border-b border-stone-100 pb-2">
-                          <h3 className="text-sm font-semibold text-slate-800">Perfis padrão (modelos prontos)</h3>
-                          <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs text-slate-600">{segmented.defaults.length}</span>
+                          <h3 className="text-sm font-semibold text-slate-800 dark:text-stone-100">Perfis padrão (modelos prontos)</h3>
+                          <span className="rounded-full bg-stone-100 dark:bg-stone-800 px-2 py-0.5 text-xs text-slate-600 dark:text-stone-400">{segmented.defaults.length}</span>
                         </div>
                         {segmented.defaults.length === 0 ? (
-                          <p className="text-sm text-slate-500">Nenhum perfil padrão encontrado para este filtro.</p>
+                          <p className="text-sm text-slate-500 dark:text-stone-400">Nenhum perfil padrão encontrado para este filtro.</p>
                         ) : (
                           <div className="grid items-start gap-4 md:grid-cols-2">
                             {segmented.defaults.map((preset) => (
@@ -888,13 +883,13 @@ export const PresetsPage = () => {
                     ) : null}
 
                     {activeFilter !== 'default' ? (
-                      <section className="rounded-2xl border border-stone-200 bg-white p-4">
+                      <section className="rounded-2xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
                         <div className="mb-3 flex items-center justify-between gap-2 border-b border-stone-100 pb-2">
-                          <h3 className="text-sm font-semibold text-slate-800">Perfis personalizados (criados por você)</h3>
-                          <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs text-slate-600">{segmented.customs.length}</span>
+                          <h3 className="text-sm font-semibold text-slate-800 dark:text-stone-100">Perfis personalizados (criados por você)</h3>
+                          <span className="rounded-full bg-stone-100 dark:bg-stone-800 px-2 py-0.5 text-xs text-slate-600 dark:text-stone-400">{segmented.customs.length}</span>
                         </div>
                         {segmented.customs.length === 0 ? (
-                          <p className="text-sm text-slate-500">Nenhum perfil personalizado encontrado para este filtro.</p>
+                          <p className="text-sm text-slate-500 dark:text-stone-400">Nenhum perfil personalizado encontrado para este filtro.</p>
                         ) : (
                           <div className="grid items-start gap-4 md:grid-cols-2">
                             {segmented.customs.map((preset) => (
@@ -914,39 +909,35 @@ export const PresetsPage = () => {
                       </section>
                     ) : null}
                   </>
-                )}
-              </div>
-
+              )}
             </div>
+          </div>
 
-            <DetailPanel
-              preset={selected}
-              open={isDetailOpen}
-              saving={saving}
-              onSave={handleSave}
-              onClose={() => setIsDetailOpen(false)}
-              readOnly={isReader}
-            />
-          </section>
-        </div>
-      </div>
+          <DetailPanel
+            preset={selected}
+            open={isDetailOpen}
+            saving={saving}
+            onSave={handleSave}
+            onClose={() => setIsDetailOpen(false)}
+            readOnly={isReader || selected?.sistema}
+          />
 
-      <ConfirmDialog
-        open={Boolean(deleteTarget)}
-        title="Remover perfil"
-        description={deleteTarget ? `Deseja remover o perfil ${deleteTarget.nome_cultura}?` : ''}
-        confirmLabel={saving ? 'Removendo...' : 'Remover'}
-        confirmDisabled={saving}
-        cancelDisabled={saving}
-        onConfirm={handleConfirmDelete}
-        onCancel={() => setDeleteTarget(null)}
-      />
+          <AIModal
+            open={aiModalOpen}
+            onClose={() => setAiModalOpen(false)}
+            onUse={handleAIUse}
+          />
 
-      <AIModal
-        open={aiModalOpen}
-        onClose={() => setAiModalOpen(false)}
-        onUse={handleAIUse}
-      />
-    </div>
+          <ConfirmDialog
+            open={!!deleteTarget}
+            title="Remover perfil de cultivo"
+            description={deleteTarget ? `Deseja remover o perfil ${deleteTarget.nome_cultura}?` : ''}
+            onConfirm={handleConfirmDelete}
+            onCancel={() => setDeleteTarget(null)}
+            confirmDisabled={saving}
+            cancelDisabled={saving}
+          />
+        </section>
+    </>
   );
 };

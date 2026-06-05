@@ -41,19 +41,19 @@ const cropOptions = [
     id: 'shimeji',
     title: 'Shimeji',
     description: 'Shimeji com boa ventilação e umidade alta.',
-    style: 'border-orange-200 bg-orange-50/70'
+    style: 'border-stone-800/60 bg-stone-900/35 dark:border-stone-700/60 dark:bg-stone-900/40'
   },
   {
     id: 'shiitake',
     title: 'Shiitake',
     description: 'Shiitake em fase de produção, com umidade alta e ventilação controlada.',
-    style: 'border-amber-200 bg-amber-50/70'
+    style: 'border-stone-800/60 bg-stone-900/35 dark:border-stone-700/60 dark:bg-stone-900/40'
   },
   {
     id: 'personalizado',
     title: 'Personalizado',
     description: 'Você escolhe manualmente os limites do seu cultivo.',
-    style: 'border-amber-200 bg-amber-50'
+    style: 'border-stone-800/60 bg-stone-900/35 dark:border-stone-700/60 dark:bg-stone-900/40'
   }
 ];
 
@@ -152,8 +152,11 @@ export const WizardOnboardingCriarEstufa = ({
     }
   };
 
-  const goNext = () => setStep((prev) => Math.min(prev + 1, 3));
   const goBack = () => setStep((prev) => Math.max(prev - 1, 1));
+  const goNext = () => setStep((prev) => Math.min(prev + 1, 3));
+  const handleBack = goBack;
+  const busy = loading ?? false;
+  const totalSteps = 3;
 
   const handleCepLookup = async () => {
     const normalizedCep = digitsOnly(cep);
@@ -217,37 +220,37 @@ export const WizardOnboardingCriarEstufa = ({
   };
 
   return (
-    <section className="rounded-3xl border border-stone-300 bg-[#fcfaf7] p-6 shadow-sm md:p-8">
+    <section className="rounded-3xl border border-stone-800/60 bg-stone-900/35 p-6 shadow-sm md:p-8">
       <header className="mb-6">
         <p className="text-xs font-semibold uppercase tracking-wide text-red-600">
           Onboarding guiado
         </p>
-        <h1 className="mt-1 text-2xl font-semibold text-slate-800">
+        <h1 className="mt-1 text-2xl font-semibold text-slate-800 dark:text-stone-100">
           {forceMode
             ? 'Você ainda não tem estufas cadastradas. Vamos criar a primeira agora.'
             : 'Vamos cadastrar uma nova estufa'}
         </h1>
-        <p className="mt-2 text-sm text-slate-600">
+        <p className="mt-2 text-sm text-slate-600 dark:text-stone-400">
           Leva menos de 1 minuto. Siga os passos abaixo.
         </p>
       </header>
 
-      <div className="mb-6 flex items-center gap-2 text-xs font-semibold text-slate-500">
+      <div className="mb-6 flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-stone-400">
         {[1, 2, 3].map((item) => (
           <div key={item} className="flex items-center gap-2">
             <span
-              className={`flex h-7 w-7 items-center justify-center rounded-full ${step >= item ? 'bg-red-600 text-white' : 'bg-slate-200 text-slate-600'}`}
+              className={`flex h-7 w-7 items-center justify-center rounded-full ${step >= item ? 'bg-red-600 text-white' : 'bg-slate-200 dark:bg-stone-700 text-slate-600 dark:text-stone-300'}`}
             >
               {item}
             </span>
-            {item < 3 ? <span className="h-px w-6 bg-slate-300" /> : null}
+            {item < 3 ? <span className="h-px w-6 bg-stone-700" /> : null}
           </div>
         ))}
       </div>
 
       {step === 1 ? (
         <div className="space-y-3">
-          <h2 className="text-lg font-semibold text-slate-800">Escolha o tipo de cultivo</h2>
+          <h2 className="text-lg font-semibold text-slate-800 dark:text-stone-100">Escolha o tipo de cultivo</h2>
           <div className="grid gap-3 md:grid-cols-3">
             {cropOptions.map((option) => {
               const selected = cropType === option.id;
@@ -258,8 +261,8 @@ export const WizardOnboardingCriarEstufa = ({
                   onClick={() => setCropType(option.id)}
                   className={`rounded-2xl border p-4 text-left transition ${selected ? 'ring-2 ring-red-500' : ''} ${option.style}`}
                 >
-                  <p className="text-sm font-semibold text-slate-800">{option.title}</p>
-                  <p className="mt-1 text-xs text-slate-600">{option.description}</p>
+                  <p className="text-sm font-semibold text-slate-800 dark:text-stone-100">{option.title}</p>
+                  <p className="mt-1 text-xs text-slate-600 dark:text-stone-400">{option.description}</p>
                 </button>
               );
             })}
@@ -270,15 +273,15 @@ export const WizardOnboardingCriarEstufa = ({
       {step === 2 ? (
         <div className="space-y-4">
           <div>
-            <h2 className="text-lg font-semibold text-slate-800">Nome e localização da estufa</h2>
-            <p className="text-sm text-slate-600">Informe o CEP para preenchimento automático de cidade e estado.</p>
+            <h2 className="text-lg font-semibold text-slate-800 dark:text-stone-100">Nome e localização da estufa</h2>
+            <p className="text-sm text-slate-600 dark:text-stone-400">Informe o CEP para preenchimento automático de cidade e estado.</p>
           </div>
           <input
             type="text"
             value={name}
             onChange={(event) => setName(event.target.value.slice(0, 80))}
             placeholder="Ex.: Estufa do galpão 1"
-            className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100"
+            className="w-full rounded-xl border border-slate-300 dark:border-stone-600 bg-white dark:bg-stone-800 px-3 py-2 text-sm text-slate-700 dark:text-stone-200 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100"
           />
           <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
             <input
@@ -299,7 +302,7 @@ export const WizardOnboardingCriarEstufa = ({
                 }
               }}
               placeholder="CEP (00000-000)"
-              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100"
+              className="w-full rounded-xl border border-slate-300 dark:border-stone-600 bg-white dark:bg-stone-800 px-3 py-2 text-sm text-slate-700 dark:text-stone-200 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100"
             />
             <Button
               type="button"
@@ -317,14 +320,14 @@ export const WizardOnboardingCriarEstufa = ({
               value={city}
               readOnly
               placeholder="Cidade preenchida automaticamente"
-              className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-700"
+              className="w-full rounded-xl border border-slate-300 dark:border-stone-600 bg-slate-50 dark:bg-stone-800 px-3 py-2 text-sm text-slate-700 dark:text-stone-300"
             />
             <input
               type="text"
               value={state}
               readOnly
               placeholder="UF preenchida automaticamente"
-              className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-700"
+              className="w-full rounded-xl border border-slate-300 dark:border-stone-600 bg-slate-50 dark:bg-stone-800 px-3 py-2 text-sm text-slate-700 dark:text-stone-300"
             />
           </div>
         </div>
@@ -333,11 +336,11 @@ export const WizardOnboardingCriarEstufa = ({
       {step === 3 ? (
         <div className="space-y-4">
           <div>
-            <h2 className="text-lg font-semibold text-slate-800">Revisão rápida</h2>
-            <p className="text-sm text-slate-600">Confira os dados antes de finalizar.</p>
+            <h2 className="text-lg font-semibold text-slate-800 dark:text-stone-100">Revisão rápida</h2>
+            <p className="text-sm text-slate-600 dark:text-stone-400">Confira os dados antes de finalizar.</p>
           </div>
 
-          <dl className="grid gap-2 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+          <dl className="grid gap-2 rounded-xl border border-slate-200 dark:border-stone-700 bg-slate-50 dark:bg-stone-800/40 p-4 text-sm text-slate-700 dark:text-stone-300">
             <div className="flex items-center justify-between">
               <dt>Nome</dt>
               <dd className="font-semibold">{name || 'Sem nome'}</dd>
@@ -361,21 +364,21 @@ export const WizardOnboardingCriarEstufa = ({
           </dl>
 
           {cropType === 'personalizado' ? (
-            <div className="space-y-3 rounded-xl border border-amber-200 bg-amber-50/85 p-4">
+            <div className="space-y-3 rounded-xl border border-stone-800/60 bg-stone-900/40 p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-sm font-semibold text-amber-900">Perfil de cultivo personalizado</h3>
-                <div className="inline-flex rounded-lg border border-amber-300 bg-white p-1 text-xs">
+                <div className="inline-flex rounded-lg border border-amber-300 bg-white dark:bg-stone-900 p-1 text-xs">
                   <button
                     type="button"
                     onClick={() => setCustomProfileTab('manual')}
-                    className={`rounded-md px-2.5 py-1 font-semibold transition ${customProfileTab === 'manual' ? 'bg-amber-600 text-white' : 'text-amber-900 hover:bg-amber-100'}`}
+                    className={`rounded-md px-2.5 py-1 font-semibold transition ${customProfileTab === 'manual' ? 'bg-red-600 text-white' : 'text-stone-400 hover:bg-stone-700/50'}`}
                   >
                     Manual
                   </button>
                   <button
                     type="button"
                     onClick={() => setCustomProfileTab('ia')}
-                    className={`rounded-md px-2.5 py-1 font-semibold transition ${customProfileTab === 'ia' ? 'bg-amber-600 text-white' : 'text-amber-900 hover:bg-amber-100'}`}
+                    className={`rounded-md px-2.5 py-1 font-semibold transition ${customProfileTab === 'ia' ? 'bg-red-600 text-white' : 'text-stone-400 hover:bg-stone-700/50'}`}
                   >
                     Sugerir com IA
                   </button>
@@ -383,23 +386,23 @@ export const WizardOnboardingCriarEstufa = ({
               </div>
 
               {customProfileTab === 'ia' ? (
-                <div className="rounded-lg border border-amber-300 bg-white/70 p-3">
+                <div className="rounded-lg border border-amber-300 bg-white/70 dark:bg-stone-800/50 p-3">
                   <p className="text-xs font-semibold text-amber-900">Assistente de perfil com IA</p>
-                  <p className="mt-1 text-xs text-slate-600">
+                  <p className="mt-1 text-xs text-slate-600 dark:text-stone-400">
                     Descreva o cultivo desejado e a IA sugere faixas iniciais para preencher os parametros.
                   </p>
                   <div className="mt-2">
-                    <label className="text-xs text-slate-700">
+                    <label className="text-xs text-slate-700 dark:text-stone-300">
                       Descricao do perfil de cultivo
                       <input
                         type="text"
                         value={customParams.plantation}
                         onChange={(event) => setCustomParams((prev) => ({ ...prev, plantation: event.target.value.slice(0, 120) }))}
                         placeholder="Ex.: Perfil para frutificacao com alta umidade e ventilacao moderada"
-                        className="mt-1 w-full rounded-lg border border-amber-300 bg-white px-2 py-1.5 text-sm text-slate-900"
+                        className="mt-1 w-full rounded-lg border border-amber-300 bg-white dark:bg-stone-800 px-2 py-1.5 text-sm text-slate-900 dark:text-stone-100"
                       />
                     </label>
-                    <p className="mt-1 text-[11px] text-slate-600">
+                    <p className="mt-1 text-[11px] text-slate-600 dark:text-stone-400">
                       Descreva objetivo e contexto do perfil. A IA usa esse dado para montar a sugestao.
                     </p>
                   </div>
@@ -415,7 +418,7 @@ export const WizardOnboardingCriarEstufa = ({
                         }
                       }}
                       placeholder="Ex.: Quero cultivar shiitake com foco em rendimento e baixa contaminacao"
-                      className="w-full rounded-lg border border-amber-300 bg-white px-2 py-1.5 text-sm text-slate-900 placeholder:text-slate-400"
+                      className="w-full rounded-lg border border-amber-300 bg-white dark:bg-stone-800 px-2 py-1.5 text-sm text-slate-900 dark:text-stone-100 placeholder:text-slate-400"
                     />
                     <Button type="button" onClick={handleSuggestWithAi} disabled={aiLoading || !aiQuestion.trim()}>
                       {aiLoading ? 'Gerando...' : 'Aplicar sugestao'}
@@ -424,7 +427,7 @@ export const WizardOnboardingCriarEstufa = ({
                   {aiError ? <p className="mt-2 text-xs text-rose-700">{aiError}</p> : null}
                   {aiSuccess ? <p className="mt-2 text-xs text-emerald-700">{aiSuccess}</p> : null}
                   {aiNotes.length > 0 ? (
-                    <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-slate-700">
+                    <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-slate-700 dark:text-stone-300">
                       {aiNotes.map((note, index) => (
                         <li key={`${note}-${index}`}>{note}</li>
                       ))}
@@ -434,10 +437,10 @@ export const WizardOnboardingCriarEstufa = ({
               ) : null}
 
               <div className="grid gap-3 md:grid-cols-2">
-                <p className="text-[11px] text-slate-600 md:col-span-2">
+                <p className="text-[11px] text-slate-600 dark:text-stone-400 md:col-span-2">
                   Limites permitidos: temperatura {CUSTOM_LIMITS.temperature.label}, umidade do ar {CUSTOM_LIMITS.humidity.label} e umidade do substrato {CUSTOM_LIMITS.soilMoisture.label}.
                 </p>
-                <label className="text-xs text-slate-700 md:col-span-2">
+                <label className="text-xs text-slate-700 dark:text-stone-300 md:col-span-2">
                   Nome do perfil de cultivo
                   <input
                     type="text"
@@ -445,13 +448,13 @@ export const WizardOnboardingCriarEstufa = ({
                     onChange={(event) => setCustomParams((prev) => ({ ...prev, profileName: event.target.value.slice(0, 80) }))}
                     disabled={isAiTab}
                     placeholder="Ex.: Shiitake - Frutificacao inverno"
-                    className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm ${isAiTab ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500' : 'border-amber-300 bg-white text-slate-900'}`}
+                    className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm ${isAiTab ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500' : 'border-amber-300 bg-white dark:bg-stone-800 text-slate-900 dark:text-stone-100'}`}
                   />
-                  <p className="mt-1 text-[11px] text-slate-600">
+                  <p className="mt-1 text-[11px] text-slate-600 dark:text-stone-400">
                     Esse e o nome do perfil que sera usado para aplicar os limites ideais da estufa.
                   </p>
                 </label>
-                <label className="text-xs text-slate-700 md:col-span-2">
+                <label className="text-xs text-slate-700 dark:text-stone-300 md:col-span-2">
                   Descricao do perfil de cultivo
                   <input
                     type="text"
@@ -459,13 +462,13 @@ export const WizardOnboardingCriarEstufa = ({
                     onChange={(event) => setCustomParams((prev) => ({ ...prev, plantation: event.target.value.slice(0, 120) }))}
                     disabled={isAiTab}
                     placeholder="Ex.: Perfil para frutificacao com alta umidade e ventilacao moderada"
-                    className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm ${isAiTab ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500' : 'border-amber-300 bg-white text-slate-900'}`}
+                    className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm ${isAiTab ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500' : 'border-amber-300 bg-white dark:bg-stone-800 text-slate-900 dark:text-stone-100'}`}
                   />
-                  <p className="mt-1 text-[11px] text-slate-600">
+                  <p className="mt-1 text-[11px] text-slate-600 dark:text-stone-400">
                     Esse texto ajuda a identificar rapidamente quando usar esse perfil.
                   </p>
                 </label>
-                <label className="text-xs text-slate-700">
+                <label className="text-xs text-slate-700 dark:text-stone-300">
                   Temperatura minima (°C)
                   <input
                     type="number"
@@ -475,11 +478,11 @@ export const WizardOnboardingCriarEstufa = ({
                     min={CUSTOM_LIMITS.temperature.min}
                     max={CUSTOM_LIMITS.temperature.max}
                     step={CUSTOM_LIMITS.temperature.step}
-                    className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm ${isAiTab ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500' : 'border-amber-300 bg-white text-slate-900'}`}
+                    className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm ${isAiTab ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500' : 'border-amber-300 bg-white dark:bg-stone-800 text-slate-900 dark:text-stone-100'}`}
                   />
-                  <p className="mt-1 text-[11px] text-slate-500">Permitido: {CUSTOM_LIMITS.temperature.label}</p>
+                  <p className="mt-1 text-[11px] text-slate-500 dark:text-stone-400">Permitido: {CUSTOM_LIMITS.temperature.label}</p>
                 </label>
-                <label className="text-xs text-slate-700">
+                <label className="text-xs text-slate-700 dark:text-stone-300">
                   Temperatura maxima (°C)
                   <input
                     type="number"
@@ -489,11 +492,11 @@ export const WizardOnboardingCriarEstufa = ({
                     min={CUSTOM_LIMITS.temperature.min}
                     max={CUSTOM_LIMITS.temperature.max}
                     step={CUSTOM_LIMITS.temperature.step}
-                    className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm ${isAiTab ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500' : 'border-amber-300 bg-white text-slate-900'}`}
+                    className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm ${isAiTab ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500' : 'border-amber-300 bg-white dark:bg-stone-800 text-slate-900 dark:text-stone-100'}`}
                   />
-                  <p className="mt-1 text-[11px] text-slate-500">Permitido: {CUSTOM_LIMITS.temperature.label}</p>
+                  <p className="mt-1 text-[11px] text-slate-500 dark:text-stone-400">Permitido: {CUSTOM_LIMITS.temperature.label}</p>
                 </label>
-                <label className="text-xs text-slate-700">
+                <label className="text-xs text-slate-700 dark:text-stone-300">
                   Umidade minima (%)
                   <input
                     type="number"
@@ -503,11 +506,11 @@ export const WizardOnboardingCriarEstufa = ({
                     min={CUSTOM_LIMITS.humidity.min}
                     max={CUSTOM_LIMITS.humidity.max}
                     step={CUSTOM_LIMITS.humidity.step}
-                    className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm ${isAiTab ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500' : 'border-amber-300 bg-white text-slate-900'}`}
+                    className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm ${isAiTab ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500' : 'border-amber-300 bg-white dark:bg-stone-800 text-slate-900 dark:text-stone-100'}`}
                   />
-                  <p className="mt-1 text-[11px] text-slate-500">Permitido: {CUSTOM_LIMITS.humidity.label}</p>
+                  <p className="mt-1 text-[11px] text-slate-500 dark:text-stone-400">Permitido: {CUSTOM_LIMITS.humidity.label}</p>
                 </label>
-                <label className="text-xs text-slate-700">
+                <label className="text-xs text-slate-700 dark:text-stone-300">
                   Umidade maxima (%)
                   <input
                     type="number"
@@ -517,11 +520,11 @@ export const WizardOnboardingCriarEstufa = ({
                     min={CUSTOM_LIMITS.humidity.min}
                     max={CUSTOM_LIMITS.humidity.max}
                     step={CUSTOM_LIMITS.humidity.step}
-                    className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm ${isAiTab ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500' : 'border-amber-300 bg-white text-slate-900'}`}
+                    className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm ${isAiTab ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500' : 'border-amber-300 bg-white dark:bg-stone-800 text-slate-900 dark:text-stone-100'}`}
                   />
-                  <p className="mt-1 text-[11px] text-slate-500">Permitido: {CUSTOM_LIMITS.humidity.label}</p>
+                  <p className="mt-1 text-[11px] text-slate-500 dark:text-stone-400">Permitido: {CUSTOM_LIMITS.humidity.label}</p>
                 </label>
-                <label className="text-xs text-slate-700">
+                <label className="text-xs text-slate-700 dark:text-stone-300">
                   Umidade do substrato minima (%)
                   <input
                     type="number"
@@ -531,11 +534,11 @@ export const WizardOnboardingCriarEstufa = ({
                     min={CUSTOM_LIMITS.soilMoisture.min}
                     max={CUSTOM_LIMITS.soilMoisture.max}
                     step={CUSTOM_LIMITS.soilMoisture.step}
-                    className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm ${isAiTab ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500' : 'border-amber-300 bg-white text-slate-900'}`}
+                    className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm ${isAiTab ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500' : 'border-amber-300 bg-white dark:bg-stone-800 text-slate-900 dark:text-stone-100'}`}
                   />
-                  <p className="mt-1 text-[11px] text-slate-500">Permitido: {CUSTOM_LIMITS.soilMoisture.label}</p>
+                  <p className="mt-1 text-[11px] text-slate-500 dark:text-stone-400">Permitido: {CUSTOM_LIMITS.soilMoisture.label}</p>
                 </label>
-                <label className="text-xs text-slate-700">
+                <label className="text-xs text-slate-700 dark:text-stone-300">
                   Umidade do substrato maxima (%)
                   <input
                     type="number"
@@ -545,9 +548,9 @@ export const WizardOnboardingCriarEstufa = ({
                     min={CUSTOM_LIMITS.soilMoisture.min}
                     max={CUSTOM_LIMITS.soilMoisture.max}
                     step={CUSTOM_LIMITS.soilMoisture.step}
-                    className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm ${isAiTab ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500' : 'border-amber-300 bg-white text-slate-900'}`}
+                    className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm ${isAiTab ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500' : 'border-amber-300 bg-white dark:bg-stone-800 text-slate-900 dark:text-stone-100'}`}
                   />
-                  <p className="mt-1 text-[11px] text-slate-500">Permitido: {CUSTOM_LIMITS.soilMoisture.label}</p>
+                  <p className="mt-1 text-[11px] text-slate-500 dark:text-stone-400">Permitido: {CUSTOM_LIMITS.soilMoisture.label}</p>
                 </label>
               </div>
             </div>
@@ -564,24 +567,31 @@ export const WizardOnboardingCriarEstufa = ({
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
           {step > 1 ? (
-            <Button type="button" variant="secondary" onClick={goBack} disabled={loading}>
-              Voltar
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleBack}
+              disabled={busy}
+              className="rounded-xl border border-stone-200 dark:border-stone-700 px-4 py-2 text-sm font-medium text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition disabled:opacity-40"
+            >
+              ← Voltar
             </Button>
           ) : null}
         </div>
-        {step < 3 ? (
-          <Button
-            type="button"
-            onClick={goNext}
-            disabled={loading || (step === 2 && (!name.trim() || digitsOnly(cep).length !== 8 || !city.trim() || !state))}
-          >
-            Continuar
-          </Button>
-        ) : (
-          <Button type="button" onClick={handleCreate} disabled={loading || !name.trim() || digitsOnly(cep).length !== 8 || !city.trim() || !state}>
-            {loading ? 'Criando estufa...' : 'Criar estufa'}
-          </Button>
-        )}
+
+        <Button
+          type="submit"
+          disabled={busy}
+          className="rounded-xl bg-gradient-to-r from-red-700 to-red-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:from-red-600 hover:to-red-500 transition disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          {busy ? (
+            <><i className="fa-solid fa-circle-notch fa-spin mr-2" />{step === totalSteps ? 'Criando...' : 'Salvando...'}</>
+          ) : step === totalSteps ? (
+            <><i className="fa-solid fa-check mr-2" />Criar estufa</>
+          ) : (
+            <>Próximo <i className="fa-solid fa-arrow-right ml-2" /></>
+          )}
+        </Button>
       </div>
     </section>
   );

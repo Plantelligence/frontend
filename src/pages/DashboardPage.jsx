@@ -6,7 +6,7 @@ import React, {
   useState
 } from 'react';
 import { createPortal } from 'react-dom';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Button } from '../components/Button.jsx';
 import { ConfirmDialog } from '../components/ConfirmDialog.jsx';
 import { useAuthStore } from '../store/authStore.js';
@@ -24,7 +24,8 @@ import {
 } from '../api/greenhouseService.js';
 import { listCulturePresets } from '../api/presetService.js';
 import { listDevices, createDevice, updateDevice, deleteDevice } from '../api/deviceService.js';
-import { enviarTelemetria } from '../api/telemetriaService.js';
+import { WizardOnboardingDispositivo } from '../components/WizardOnboardingDispositivo.jsx';
+import { ControlesPanel } from '../components/ControlesPanel.jsx';
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
@@ -126,42 +127,6 @@ const createInitialGreenhouseState = (name = 'Estufa Matriz') => ({
 
 const createInitialEventLog = () => ([]);
 
-const computeNextGreenhouseState = (prev) => {
-  const temperature = clamp(prev.temperature + (Math.random() - 0.5) * 0.6, 22, 28);
-  const humidity = clamp(prev.humidity + (Math.random() - 0.5) * 2.4, 55, 78);
-  const soilMoisture = clamp(prev.soilMoisture + (Math.random() - 0.5) * 4.2, 35, 75);
-  const luminosidade = clamp(prev.luminosidade + (Math.random() - 0.5) * 50, 80, 600);
-
-  const irrigation = soilMoisture < 42
-    ? 'Irrigação acionada automaticamente'
-    : soilMoisture > 68
-      ? 'Irrigação pausada'
-      : 'Irrigação em stand-by';
-
-  const ventilation = temperature > 26.4
-    ? 'Ventilação forçada'
-    : temperature < 23.1
-      ? 'Ventilação mínima'
-      : 'Ventilação modulada';
-
-  const lighting = luminosidade < 120
-    ? 'Iluminação suplementar ativa'
-    : luminosidade > 450
-      ? 'Sombreamento acionado'
-      : 'Iluminação automática';
-
-  return {
-    ...prev,
-    temperature,
-    humidity,
-    soilMoisture,
-    luminosidade,
-    irrigation,
-    ventilation,
-    lighting,
-    lastUpdate: new Date().toISOString()
-  };
-};
 
 const buildEventMessage = (stats) => {
   if (stats.irrigation.startsWith('Irrigação acionada')) {
@@ -403,27 +368,27 @@ function SensorRow({ label, valor, unidade, ideal, faixa, cor, status }) {
 
   return (
     <div className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
-      isAlert ? 'bg-amber-50 border-amber-200' : 'bg-white border-stone-100'
+      isAlert ? 'bg-amber-50 border-amber-200' : 'bg-white dark:bg-stone-800/40 border-stone-100 dark:border-stone-700/40'
     }`}>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-1">
-          <span className="text-[10px] font-semibold tracking-widest uppercase text-slate-500">{label}</span>
+          <span className="text-[10px] font-semibold tracking-widest uppercase text-slate-500 dark:text-stone-400">{label}</span>
           {isPending ? (
-            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-stone-100 text-stone-400">Aguardando</span>
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-stone-100 dark:bg-stone-700 text-stone-400 dark:text-stone-500">Aguardando</span>
           ) : (
-            <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${isAlert ? 'bg-amber-100 text-amber-700' : 'bg-stone-100 text-stone-500'}`}>
+            <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${isAlert ? 'bg-amber-100 text-amber-700' : 'bg-stone-100 dark:bg-stone-700 text-stone-500 dark:text-stone-400'}`}>
               {isAlert ? '⚠ Fora' : '✓ OK'}
             </span>
           )}
         </div>
         <div className="flex items-center gap-2">
-          <span className={`text-lg font-bold leading-none ${isAlert ? 'text-amber-600' : isPending ? 'text-slate-300' : 'text-slate-900'}`}>
+          <span className={`text-lg font-bold leading-none ${isAlert ? 'text-amber-600' : isPending ? 'text-slate-300 dark:text-stone-600' : 'text-slate-900 dark:text-stone-100'}`}>
             {isPending ? '—' : typeof valor === 'number' ? valor.toFixed(valor % 1 === 0 ? 0 : 1) : '—'}
-            <small className="text-[11px] font-normal text-slate-400 ml-0.5">{unidade}</small>
+            <small className="text-[11px] font-normal text-slate-400 dark:text-stone-500 ml-0.5">{unidade}</small>
           </span>
-          {faixa && <span className="text-[10px] text-slate-400 flex-shrink-0">ideal: {faixa}</span>}
+          {faixa && <span className="text-[10px] text-slate-400 dark:text-stone-500 flex-shrink-0">ideal: {faixa}</span>}
         </div>
-        <div className="mt-1.5 h-1.5 bg-stone-100 rounded-full overflow-hidden">
+        <div className="mt-1.5 h-1.5 bg-stone-100 dark:bg-stone-700 rounded-full overflow-hidden">
           <div
             className="h-full rounded-full transition-all duration-700"
             style={{ width: `${p}%`, background: isAlert ? '#f59e0b' : isPending ? '#e2e8f0' : cor }}
@@ -452,7 +417,6 @@ const GreenhousePanel = ({
   onUpdateTeam,
   onToggleAlerts,
   onNotify,
-  onSimulateHeat,
   onDeleteRequest,
   onUpdateAlertThresholds,
   devices = [],
@@ -463,47 +427,30 @@ const GreenhousePanel = ({
   readOnly = false
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [teamModalOpen, setTeamModalOpen] = useState(false);
   const [draftName, setDraftName] = useState(greenhouse.name ?? 'Estufa Matriz');
   const [draftProfileId, setDraftProfileId] = useState(greenhouse.flowerProfileId ?? '');
   const [draftResponsibleIds, setDraftResponsibleIds] = useState(greenhouse.responsibleUserIds ?? []);
   const [menuFeedback, setMenuFeedback] = useState(null);
-  const [activeTopic, setActiveTopic] = useState('operacao');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const VALID_TABS = ['operacao', 'monitoramento', 'dispositivos', 'controles', 'guia'];
+  const tabFromUrl = searchParams.get('tab');
+  const [activeTopic, setActiveTopicState] = useState(
+    VALID_TABS.includes(tabFromUrl) ? tabFromUrl : 'operacao'
+  );
+  const setActiveTopic = (tab) => {
+    setActiveTopicState(tab);
+    setSearchParams((prev) => { prev.set('tab', tab); return prev; }, { replace: true });
+  };
 
   const [thresholdDraft, setThresholdDraft] = useState(() => greenhouse.alertThresholds ?? {});
   const [thresholdSaving, setThresholdSaving] = useState(false);
   const [thresholdFeedback, setThresholdFeedback] = useState(null);
 
   // estado local do formulário de cadastro de dispositivo
-  const [showAddDeviceForm, setShowAddDeviceForm] = useState(false);
-  const [deviceDraft, setDeviceDraft] = useState({ name: '', type: '', identifier: '' });
-  const [deviceFormBusy, setDeviceFormBusy] = useState(false);
-  const [deviceFormError, setDeviceFormError] = useState(null);
+  const [showDeviceWizard,  setShowDeviceWizard]  = useState(false);
   // credenciais IoT Hub retornadas após cadastro bem-sucedido
-  const [credentialsDevice, setCredentialsDevice] = useState(null);
 
-  // ── Leitura manual de sensores ────────────────────────────────────────────
-  const [leituraForm, setLeituraForm] = useState({ temperatura: '', umidade: '', umidadeSolo: '', luminosidade: '' });
-  const [leituraSaving, setLeituraSaving] = useState(false);
-  const [leituraFeedback, setLeituraFeedback] = useState(null);
-
-  const handleEnviarLeitura = async () => {
-    setLeituraSaving(true);
-    setLeituraFeedback(null);
-    try {
-      const parse = (v) => { const n = parseFloat(v); return isNaN(n) ? null : n; };
-      await enviarTelemetria(greenhouse.id, {
-        temperatura:  parse(leituraForm.temperatura),
-        umidade:      parse(leituraForm.umidade),
-        umidadeSolo:  parse(leituraForm.umidadeSolo),
-        luminosidade: parse(leituraForm.luminosidade),
-      });
-      setLeituraFeedback({ ok: true, text: 'Leitura gravada no histórico.' });
-    } catch {
-      setLeituraFeedback({ ok: false, text: 'Não foi possível gravar. Verifique se o InfluxDB está acessível.' });
-    } finally {
-      setLeituraSaving(false);
-    }
-  };
 
   const currentProfile = useMemo(() => {
     if (greenhouse.profile) {
@@ -526,9 +473,6 @@ const GreenhousePanel = ({
 
   useEffect(() => {
     setActiveTopic('operacao');
-    setShowAddDeviceForm(false);
-    setDeviceDraft({ name: '', type: '', identifier: '' });
-    setDeviceFormError(null);
     setThresholdDraft(greenhouse.alertThresholds ?? {});
     setThresholdFeedback(null);
   }, [greenhouse.id]);
@@ -564,18 +508,14 @@ const GreenhousePanel = ({
       return;
     }
 
-    // salva dados da estufa e equipe responsável ao mesmo tempo
-    const [resultEstufa, resultEquipe] = await Promise.all([
-      onSave(greenhouse.id, { name: trimmedName, flowerProfileId: draftProfileId || null }),
-      onUpdateTeam(greenhouse.id, draftResponsibleIds)
-    ]);
+    // salva apenas dados da estufa (nome e perfil)
+    const resultEstufa = await onSave(greenhouse.id, { name: trimmedName, flowerProfileId: draftProfileId || null });
 
-    if (resultEstufa.ok && resultEquipe.ok) {
-      setMenuFeedback({ type: 'success', text: 'Alterações salvas com sucesso.' });
+    if (resultEstufa.ok) {
+      setMenuFeedback({ type: 'success', text: 'Estufa atualizada com sucesso.' });
       setTimeoutSafe(() => setMenuOpen(false), 1800);
     } else {
-      const msg = !resultEstufa.ok ? resultEstufa.message : resultEquipe.message;
-      setMenuFeedback({ type: 'error', text: msg });
+      setMenuFeedback({ type: 'error', text: resultEstufa.message });
     }
   };
 
@@ -613,6 +553,7 @@ const GreenhousePanel = ({
     const result = await onUpdateTeam(greenhouse.id, draftResponsibleIds);
     if (result.ok) {
       setMenuFeedback({ type: 'success', text: 'Equipe responsável atualizada.' });
+      setTimeoutSafe(() => setTeamModalOpen(false), 1800);
     } else {
       setMenuFeedback({ type: 'error', text: result.message });
     }
@@ -649,16 +590,16 @@ const GreenhousePanel = ({
         : 'Sem avaliação';
 
   return (
-    <section className="rounded-[26px] border border-stone-300 bg-[#f5f1eb] p-4 shadow-sm md:p-6">
-      <header className="relative flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-stone-300 bg-[#fcfaf7] p-4">
+    <section className="rounded-[26px] border border-stone-300 dark:border-stone-800/60 dark:bg-[#0f0c0c] p-4 shadow-sm md:p-6">
+      <header className="relative flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
         <div>
           <span className="text-xs font-semibold uppercase tracking-[0.18em] text-red-700">
             Visão geral da estufa
           </span>
-          <h2 className="text-2xl font-semibold text-slate-800">
+          <h2 className="text-2xl font-semibold text-slate-800 dark:text-stone-100">
             {resolvedTelemetry.greenhouseName}
           </h2>
-          <p className="mt-1 text-sm text-slate-600">Aqui você acompanha como a estufa está agora.</p>
+          <p className="mt-1 text-sm text-slate-600 dark:text-stone-400">Aqui você acompanha como a estufa está agora.</p>
         </div>
         <div className="flex w-full flex-wrap items-center justify-start gap-3 md:w-auto md:justify-end">
           <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${statusTone}`}>
@@ -675,13 +616,13 @@ const GreenhousePanel = ({
             </span>
           ) : (
             <>
-              <label className="flex items-center gap-2 rounded-full border border-stone-300 bg-white px-3 py-1.5 text-xs text-slate-700">
+              <label className="flex items-center gap-2 rounded-full border border-stone-300 bg-white dark:border-stone-700/50 dark:bg-stone-800/50 px-3 py-1.5 text-xs text-slate-700 dark:text-stone-300">
                 <input
                   type="checkbox"
                   checked={Boolean(greenhouse.alertsEnabled)}
                   onChange={handleToggleAlerts}
                   disabled={alertsSaving}
-                  className="h-4 w-4 rounded border border-stone-400 bg-white text-red-600 focus:ring-red-400"
+                  className="h-4 w-4 rounded border border-stone-400 bg-white dark:bg-stone-800/50 text-red-600 focus:ring-red-400"
                 />
                 <span>{greenhouse.alertsEnabled ? 'Alertas ligados' : 'Alertas desligados'}</span>
               </label>
@@ -702,11 +643,11 @@ const GreenhousePanel = ({
             }
           }}
         >
-          <div className="w-full max-w-2xl rounded-2xl border border-stone-300 bg-[#fcfaf7] p-4 shadow-2xl sm:p-5">
+          <div className="w-full max-w-2xl rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4 shadow-2xl sm:p-5">
             <div className="mb-4 flex items-start justify-between gap-3 border-b border-stone-200 pb-3">
               <div>
-                <h3 className="text-lg font-semibold text-slate-800">Editar estufa</h3>
-                <p className="text-xs text-slate-500">Atualize nome, perfil de cultivo e equipe responsável.</p>
+                <h3 className="text-lg font-semibold text-slate-800 dark:text-stone-100">Editar estufa</h3>
+                <p className="text-xs text-slate-500 dark:text-stone-400">Atualize nome, perfil de cultivo e equipe responsável.</p>
               </div>
               <Button
                 type="button"
@@ -718,14 +659,14 @@ const GreenhousePanel = ({
               </Button>
             </div>
 
-            <form onSubmit={handleSave} className="space-y-3 text-sm text-slate-700">
+            <form onSubmit={handleSave} className="space-y-3 text-sm text-slate-700 dark:text-stone-300">
               <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-md border border-stone-200 bg-stone-50 px-3 py-2">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                <div className="rounded-md border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/40 px-3 py-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-stone-400">
                     Dados da estufa
                   </p>
                   <div className="mt-2 flex flex-col gap-2">
-                    <span className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                    <span className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-stone-400">
                       Nome da estufa
                     </span>
                     <input
@@ -735,17 +676,17 @@ const GreenhousePanel = ({
                         setDraftName(event.target.value.slice(0, 80));
                         setMenuFeedback(null);
                       }}
-                      className="rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                      className="rounded-md border border-stone-300 bg-white dark:bg-stone-800 px-3 py-2 text-sm text-slate-800 dark:text-stone-100 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-500/20"
                     />
                   </div>
                 </div>
 
-                <div className="rounded-md border border-stone-200 bg-stone-50 px-3 py-2">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                <div className="rounded-md border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/40 px-3 py-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-stone-400">
                     Perfil de cultivo
                   </p>
                   <div className="mt-2 flex flex-col gap-2">
-                    <span className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                    <span className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-stone-400">
                       Perfil de cultivo
                     </span>
                     <select
@@ -754,7 +695,7 @@ const GreenhousePanel = ({
                         setDraftProfileId(event.target.value);
                         setMenuFeedback(null);
                       }}
-                      className="rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                      className="rounded-md border border-stone-300 bg-white dark:bg-stone-800 px-3 py-2 text-sm text-slate-800 dark:text-stone-100 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-500/20"
                     >
                       <option value="">Selecione a espécie de cogumelo</option>
                       {profiles.map((profile) => (
@@ -763,51 +704,17 @@ const GreenhousePanel = ({
                         </option>
                       ))}
                     </select>
-                    <p className="text-[11px] text-slate-500">
+                    <p className="text-[11px] text-slate-500 dark:text-stone-400">
                       Dica: escolha o perfil mais próximo do seu cultivo para melhorar os alertas automáticos.
                     </p>
                     <Link
                       to="/dashboard/presets"
-                      className="inline-flex items-center justify-center rounded-md border border-stone-300 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-red-400 hover:text-red-700"
+                      className="inline-flex items-center justify-center rounded-md border border-stone-300 dark:border-stone-600 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-stone-300 transition hover:border-red-400 hover:text-red-700"
                     >
                       Gerenciar perfis de cultivo
                     </Link>
                   </div>
                 </div>
-              </div>
-
-              <div className="rounded-md border border-stone-200 bg-white px-3 py-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                  Equipe responsável
-                </p>
-                <p className="mt-1 text-[11px] text-slate-500">
-                  Somente os responsáveis marcados recebem o alerta do botão Notificar equipe.
-                </p>
-                <ul className="mt-2 max-h-44 space-y-1 overflow-y-auto pr-1">
-                  {teamMembers.length > 0 ? (
-                    teamMembers.map((member) => {
-                      const checked = draftResponsibleIds.includes(member.id);
-                      return (
-                        <li key={member.id}>
-                          <label className="flex cursor-pointer items-start gap-2 rounded border border-stone-200 px-2 py-1.5 text-xs text-slate-700 hover:border-red-300">
-                            <input
-                              type="checkbox"
-                              checked={checked}
-                              onChange={(event) => handleToggleResponsible(member.id, event.target.checked)}
-                              className="mt-0.5 h-4 w-4 rounded border border-stone-400 bg-white text-red-600 focus:ring-red-400"
-                            />
-                            <span>
-                              <span className="block font-semibold text-slate-800">{member.fullName}</span>
-                              <span className="text-[11px] text-slate-500">{member.email}</span>
-                            </span>
-                          </label>
-                        </li>
-                      );
-                    })
-                  ) : (
-                    <li className="text-[11px] text-slate-500">Nenhum colaborador disponível para delegação.</li>
-                  )}
-                </ul>
               </div>
 
               {menuFeedback ? (
@@ -827,7 +734,7 @@ const GreenhousePanel = ({
                   <span className="text-[11px] uppercase tracking-[0.2em] text-rose-600">
                     Remoção de estufa
                   </span>
-                  <p className="mt-1 text-[11px] text-slate-500">
+                  <p className="mt-1 text-[11px] text-slate-500 dark:text-stone-400">
                     Use apenas se não for mais acompanhar este cultivo.
                   </p>
                 </div>
@@ -851,11 +758,81 @@ const GreenhousePanel = ({
         document.body
       ) : null}
 
-      <div className="mt-4 flex flex-wrap items-center gap-2 rounded-2xl border border-stone-300 bg-[#fcfaf7] p-2">
+      {teamModalOpen ? createPortal(
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-slate-950/70 p-4"
+          onMouseDown={(e) => { if (e.target === e.currentTarget) setTeamModalOpen(false); }}
+        >
+          <div className="w-full max-w-lg rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-5 shadow-2xl">
+            <div className="mb-4 flex items-start justify-between gap-3 border-b border-stone-200 pb-3">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-800 dark:text-stone-100">Gerenciar equipe</h3>
+                <p className="text-xs text-slate-500 dark:text-stone-400">Defina quem recebe alertas e notificações desta estufa.</p>
+              </div>
+              <Button type="button" variant="secondary" className="h-9 px-3 text-xs" onClick={() => setTeamModalOpen(false)}>
+                Fechar
+              </Button>
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-[11px] text-slate-500 dark:text-stone-400">
+                Somente os membros marcados recebem notificações automáticas de alerta desta estufa.
+              </p>
+              <ul className="max-h-64 space-y-1 overflow-y-auto pr-1">
+                {teamMembers.length > 0 ? (
+                  teamMembers.map((member) => {
+                    const checked = draftResponsibleIds.includes(member.id);
+                    return (
+                      <li key={member.id}>
+                        <label className="flex cursor-pointer items-start gap-2 rounded-xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 px-3 py-2.5 text-xs text-slate-700 dark:text-stone-300 hover:border-red-300 transition">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(e) => handleToggleResponsible(member.id, e.target.checked)}
+                            className="mt-0.5 h-4 w-4 rounded border border-stone-400 bg-white dark:bg-stone-800/50 text-red-600 focus:ring-red-400"
+                          />
+                          <span>
+                            <span className="block font-semibold text-slate-800 dark:text-stone-100">{member.fullName}</span>
+                            <span className="block text-[11px] text-slate-500 dark:text-stone-400">{member.email}</span>
+                            <span className="block text-[10px] uppercase tracking-wide text-slate-400 dark:text-stone-500 mt-0.5">{member.role}</span>
+                          </span>
+                        </label>
+                      </li>
+                    );
+                  })
+                ) : (
+                  <li className="rounded-xl border border-dashed border-stone-300 dark:border-stone-700/40 bg-stone-50 dark:bg-stone-800/40 p-4 text-center text-[11px] text-slate-500 dark:text-stone-400">
+                    Nenhum colaborador na organização disponível para delegação.
+                  </li>
+                )}
+              </ul>
+
+              {menuFeedback && (
+                <div className={`rounded border px-3 py-2 text-xs ${
+                  menuFeedback.type === 'success'
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                    : 'border-rose-200 bg-rose-50 text-rose-700'
+                }`}>
+                  {menuFeedback.text}
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 border-t border-stone-200 pt-3">
+                <Button variant="secondary" type="button" onClick={() => setTeamModalOpen(false)}>Cancelar</Button>
+                <Button type="button" onClick={handleSaveTeam} disabled={teamSaving}>
+                  {teamSaving ? 'Salvando...' : 'Salvar equipe'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      ) : null}
+
+      <div className="mt-4 flex flex-wrap items-center gap-2 overflow-x-auto rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-2">
         {[
           { id: 'operacao', label: 'Operação' },
           { id: 'monitoramento', label: 'Monitoramento' },
-          { id: 'leitura', label: 'Leitura manual' },
           { id: 'dispositivos', label: 'Dispositivos' },
           { id: 'controles', label: 'Controles' },
           { id: 'guia', label: 'Guia rápido' }
@@ -867,7 +844,7 @@ const GreenhousePanel = ({
             className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
               activeTopic === topic.id
                 ? 'bg-red-600 text-white'
-                : 'border border-stone-300 bg-white text-slate-700 hover:border-red-300 hover:text-red-700'
+                : 'border border-stone-300 bg-white dark:bg-stone-900/35 text-slate-700 dark:text-stone-300 hover:border-red-300 hover:text-red-700'
             }`}
           >
             {topic.label}
@@ -877,15 +854,15 @@ const GreenhousePanel = ({
 
       {activeTopic === 'monitoramento' ? (
       <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
-        <article className="rounded-2xl border border-stone-300 bg-white p-5 flex flex-col gap-4">
+        <article className="rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-5 flex flex-col gap-4">
 
           {/* cabeçalho com horário da última leitura e status IoT */}
           <header className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-slate-700">Como está sua estufa agora</span>
+            <span className="text-sm font-semibold text-slate-700 dark:text-stone-300">Como está sua estufa agora</span>
             <span className={`text-[10px] px-2 py-1 rounded border font-medium ${
               hasTelemetry
                 ? 'bg-green-50 border-green-200 text-green-700'
-                : 'bg-stone-100 border-stone-200 text-stone-500'
+                : 'bg-stone-100 dark:bg-stone-700/50 border-stone-200 dark:border-stone-700/40 text-stone-500 dark:text-stone-400'
             }`}>
               {hasTelemetry
                 ? `Atualizado às ${formatTimestamp(resolvedTelemetry.lastUpdate)}`
@@ -937,17 +914,17 @@ const GreenhousePanel = ({
             return (
               <>
                 {/* gauges circulares em miniatura — resumo visual rápido */}
-                <div className="rounded-xl border border-stone-200 bg-[#fcfaf7] p-4">
-                  <p className="text-[10px] font-semibold tracking-widest uppercase text-slate-400 mb-3">
+                <div className="rounded-xl border border-stone-200 bg-white dark:bg-stone-800 p-4">
+                  <p className="text-[10px] font-semibold tracking-widest uppercase text-slate-400 dark:text-stone-500 mb-3">
                     Resumo dos sensores
                   </p>
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                     {sensors.map(({ key, label, valor, unidade, ideal, cor }) => {
                       const st = sensorStatus(valor, ideal);
                       return (
                         <div key={key} className="flex flex-col items-center gap-1">
                           <Gauge valor={typeof valor === 'number' ? Number(valor.toFixed(valor % 1 === 0 ? 0 : 1)) : 0} unidade={unidade} ideal={ideal ?? [0, 100]} cor={cor} status={st} />
-                          <span className="text-[9px] text-slate-500 text-center leading-tight">{label}</span>
+                          <span className="text-[9px] text-slate-500 dark:text-stone-400 text-center leading-tight">{label}</span>
                           <span className={`w-1.5 h-1.5 rounded-full ${st === 'ok' ? 'bg-green-500' : st === 'alerta' ? 'bg-amber-500' : 'bg-stone-300'}`} />
                         </div>
                       );
@@ -974,13 +951,13 @@ const GreenhousePanel = ({
                 {/* status de iluminação e ventilação — texto descritivo */}
                 {hasTelemetry && (
                   <div className="grid gap-2 sm:grid-cols-2">
-                    <div className="rounded-lg border border-stone-200 bg-[#fcfaf7] px-3 py-2">
-                      <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Ventilação</p>
-                      <p className="text-sm font-medium text-slate-700 mt-0.5">{resolvedTelemetry.ventilation}</p>
+                    <div className="rounded-lg border border-stone-200 bg-white dark:bg-stone-800 px-3 py-2">
+                      <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-stone-500">Ventilação</p>
+                      <p className="text-sm font-medium text-slate-700 dark:text-stone-300 mt-0.5">{resolvedTelemetry.ventilation}</p>
                     </div>
-                    <div className="rounded-lg border border-stone-200 bg-[#fcfaf7] px-3 py-2">
-                      <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Iluminação</p>
-                      <p className="text-sm font-medium text-slate-700 mt-0.5">{resolvedTelemetry.lighting}</p>
+                    <div className="rounded-lg border border-stone-200 bg-white dark:bg-stone-800 px-3 py-2">
+                      <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-stone-500">Iluminação</p>
+                      <p className="text-sm font-medium text-slate-700 dark:text-stone-300 mt-0.5">{resolvedTelemetry.lighting}</p>
                     </div>
                   </div>
                 )}
@@ -989,40 +966,40 @@ const GreenhousePanel = ({
           })()}
 
           {/* clima externo via OpenWeather */}
-          <div className="rounded-xl border border-stone-200 bg-[#fcfaf7] p-4">
-            <p className="text-[10px] font-semibold tracking-widest uppercase text-slate-400 mb-2">
+          <div className="rounded-xl border border-stone-200 bg-white dark:bg-stone-800 p-4">
+            <p className="text-[10px] font-semibold tracking-widest uppercase text-slate-400 dark:text-stone-500 mb-2">
               Clima da cidade (OpenWeather)
             </p>
             {externalWeatherLoading ? (
-              <p className="text-sm text-slate-500">Consultando clima externo...</p>
+              <p className="text-sm text-slate-500 dark:text-stone-400">Consultando clima externo...</p>
             ) : externalWeather ? (
-              <div className="grid gap-2 text-sm text-slate-700 sm:grid-cols-4">
+              <div className="grid gap-2 text-sm text-slate-700 dark:text-stone-300 grid-cols-2 sm:grid-cols-4">
                 <p>
-                  <span className="text-[10px] text-slate-400 block">Local</span>
+                  <span className="text-[10px] text-slate-400 dark:text-stone-500 block">Local</span>
                   <span className="font-semibold">{externalWeather.cidade}/{externalWeather.estado}</span>
                 </p>
                 <p>
-                  <span className="text-[10px] text-slate-400 block">Temperatura</span>
+                  <span className="text-[10px] text-slate-400 dark:text-stone-500 block">Temperatura</span>
                   <span className="font-semibold">{externalWeather.temperatura}°C</span>
                 </p>
                 <p>
-                  <span className="text-[10px] text-slate-400 block">Umidade</span>
+                  <span className="text-[10px] text-slate-400 dark:text-stone-500 block">Umidade</span>
                   <span className="font-semibold">{externalWeather.umidade}%</span>
                 </p>
                 <p>
-                  <span className="text-[10px] text-slate-400 block">Luminosidade estimada</span>
+                  <span className="text-[10px] text-slate-400 dark:text-stone-500 block">Luminosidade estimada</span>
                   <span className="font-semibold">
                     {externalWeather.luminosidade_estimada != null
                       ? `${externalWeather.luminosidade_estimada.toLocaleString('pt-BR')} lux`
                       : externalWeather.descricao}
                   </span>
                   {externalWeather.nuvens != null && (
-                    <span className="block text-[10px] text-slate-400">{externalWeather.nuvens}% nuvens</span>
+                    <span className="block text-[10px] text-slate-400 dark:text-stone-500">{externalWeather.nuvens}% nuvens</span>
                   )}
                 </p>
               </div>
             ) : (
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-500 dark:text-stone-400">
                 Sem dados climáticos externos. Verifique se cidade/estado da estufa estão preenchidos.
               </p>
             )}
@@ -1030,24 +1007,24 @@ const GreenhousePanel = ({
 
         </article>
 
-        <article className="rounded-2xl border border-stone-300 bg-white p-5">
-          <header className="mb-3 flex items-center justify-between text-sm text-slate-700">
-            <h3 className="text-lg font-semibold text-slate-800">Últimas atualizações</h3>
-            <span className="text-xs uppercase tracking-[0.18em] text-slate-500">Histórico</span>
+        <article className="rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-5">
+          <header className="mb-3 flex items-center justify-between text-sm text-slate-700 dark:text-stone-300">
+            <h3 className="text-lg font-semibold text-slate-800 dark:text-stone-100">Últimas atualizações</h3>
+            <span className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-stone-400">Histórico</span>
           </header>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-500 dark:text-stone-400">
             Aqui aparece o que aconteceu na estufa nos últimos momentos.
           </p>
-          <ul className="mt-4 max-h-72 space-y-3 overflow-y-auto pr-1 text-sm text-slate-700">
+          <ul className="mt-4 max-h-72 space-y-3 overflow-y-auto pr-1 text-sm text-slate-700 dark:text-stone-300">
             {resolvedLog.length > 0 ? (
               resolvedLog.map((entry) => (
-                <li key={entry.id} className="rounded-md border border-stone-200 bg-[#fcfaf7] p-3">
-                  <p className="text-xs text-slate-500">{formatTimestamp(entry.timestamp)}</p>
-                  <p className="mt-1 text-slate-700">{entry.message}</p>
+                <li key={entry.id} className="rounded-md border border-stone-200 bg-white dark:border-stone-700/40 dark:bg-stone-800/40 p-3">
+                  <p className="text-xs text-slate-500 dark:text-stone-400">{formatTimestamp(entry.timestamp)}</p>
+                  <p className="mt-1 text-slate-700 dark:text-stone-300">{entry.message}</p>
                 </li>
               ))
             ) : (
-              <li className="rounded-md border border-dashed border-stone-300 bg-[#fcfaf7] p-3 text-xs text-slate-500">
+              <li className="rounded-md border border-dashed border-stone-300 dark:border-stone-700/40 bg-white dark:bg-stone-800/40 p-3 text-xs text-slate-500 dark:text-stone-400">
                 Integração de eventos IoT em implantação. As atualizações aparecerão aqui conforme os dispositivos forem conectados.
               </li>
             )}
@@ -1057,35 +1034,35 @@ const GreenhousePanel = ({
       ) : null}
 
       {activeTopic === 'guia' ? (
-      <article className="mt-6 rounded-2xl border border-stone-300 bg-white p-5 text-sm text-slate-700">
-        <h3 className="text-base font-semibold text-slate-800">Como ler essas informações</h3>
-        <p className="mt-1 text-xs text-slate-500">
+      <article className="mt-6 rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-5 text-sm text-slate-700">
+        <h3 className="text-base font-semibold text-slate-800 dark:text-stone-100">Como ler essas informações</h3>
+        <p className="mt-1 text-xs text-slate-500 dark:text-stone-400">
           Este guia rápido ajuda a entender para que serve cada opção no cultivo diário.
         </p>
         <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          <div className="rounded border border-stone-200 bg-[#fcfaf7] p-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600">Temperatura</p>
-            <p className="mt-1 text-xs text-slate-600">Mostra se o ambiente está quente ou frio para o cultivo.</p>
+          <div className="rounded border border-stone-200 bg-white dark:bg-stone-800 p-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600 dark:text-stone-300">Temperatura</p>
+            <p className="mt-1 text-xs text-slate-600 dark:text-stone-400">Mostra se o ambiente está quente ou frio para o cultivo.</p>
           </div>
-          <div className="rounded border border-stone-200 bg-[#fcfaf7] p-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600">Umidade do ambiente</p>
-            <p className="mt-1 text-xs text-slate-600">Ajuda a manter o ar no ponto certo para o crescimento.</p>
+          <div className="rounded border border-stone-200 bg-white dark:bg-stone-800 p-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600 dark:text-stone-300">Umidade do ambiente</p>
+            <p className="mt-1 text-xs text-slate-600 dark:text-stone-400">Ajuda a manter o ar no ponto certo para o crescimento.</p>
           </div>
-          <div className="rounded border border-stone-200 bg-[#fcfaf7] p-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600">Umidade do solo/substrato</p>
-            <p className="mt-1 text-xs text-slate-600">Indica se precisa molhar mais ou menos o meio de cultivo.</p>
+          <div className="rounded border border-stone-200 bg-white dark:bg-stone-800 p-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600 dark:text-stone-300">Umidade do solo/substrato</p>
+            <p className="mt-1 text-xs text-slate-600 dark:text-stone-400">Indica se precisa molhar mais ou menos o meio de cultivo.</p>
           </div>
-          <div className="rounded border border-stone-200 bg-[#fcfaf7] p-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600">Luminosidade</p>
-            <p className="mt-1 text-xs text-slate-600">Nível de luz medido em lux. Cogumelos precisam de pouca luz — excesso prejudica o crescimento.</p>
+          <div className="rounded border border-stone-200 bg-white dark:bg-stone-800 p-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600 dark:text-stone-300">Luminosidade</p>
+            <p className="mt-1 text-xs text-slate-600 dark:text-stone-400">Nível de luz medido em lux. Cogumelos precisam de pouca luz — excesso prejudica o crescimento.</p>
           </div>
-          <div className="rounded border border-stone-200 bg-[#fcfaf7] p-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600">Perfil de cultivo</p>
-            <p className="mt-1 text-xs text-slate-600">É a meta que a estufa deve seguir para esse tipo de cultivo.</p>
+          <div className="rounded border border-stone-200 bg-white dark:bg-stone-800 p-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600 dark:text-stone-300">Perfil de cultivo</p>
+            <p className="mt-1 text-xs text-slate-600 dark:text-stone-400">É a meta que a estufa deve seguir para esse tipo de cultivo.</p>
           </div>
-          <div className="rounded border border-stone-200 bg-[#fcfaf7] p-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600">Equipe responsável</p>
-            <p className="mt-1 text-xs text-slate-600">As pessoas marcadas aqui recebem aviso quando algo sair do esperado.</p>
+          <div className="rounded border border-stone-200 bg-white dark:bg-stone-800 p-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600 dark:text-stone-300">Equipe responsável</p>
+            <p className="mt-1 text-xs text-slate-600 dark:text-stone-400">As pessoas marcadas aqui recebem aviso quando algo sair do esperado.</p>
           </div>
         </div>
       </article>
@@ -1093,40 +1070,40 @@ const GreenhousePanel = ({
 
       {activeTopic === 'operacao' ? (
       <div className="mt-6 grid gap-6 md:grid-cols-2">
-        <article className="rounded-2xl border border-stone-300 bg-white p-5 text-sm text-slate-700">
+        <article className="rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-5 text-sm text-slate-700">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h3 className="text-base font-semibold text-slate-800">Meta do cultivo</h3>
+            <h3 className="text-base font-semibold text-slate-800 dark:text-stone-100">Meta do cultivo</h3>
             <Link
               to="/dashboard/presets"
-              className="inline-flex items-center justify-center rounded-md border border-stone-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-red-400 hover:text-red-700"
+              className="inline-flex items-center justify-center rounded-md border border-stone-300 dark:border-stone-600 dark:text-stone-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-red-400 hover:text-red-700"
             >
               Ver perfis
             </Link>
           </div>
           {currentProfile ? (
             <>
-              <p className="mt-1 text-xs text-slate-500">{currentProfile.summary}</p>
-              <dl className="mt-3 grid gap-3 text-xs text-slate-700 sm:grid-cols-4">
-                <div className="rounded border border-stone-200 bg-[#fcfaf7] p-3">
-                  <dt className="text-[11px] uppercase tracking-widest text-slate-500">Temperatura</dt>
+              <p className="mt-1 text-xs text-slate-500 dark:text-stone-400">{currentProfile.summary}</p>
+              <dl className="mt-3 grid gap-3 text-xs text-slate-700 dark:text-stone-300 grid-cols-2 sm:grid-cols-4">
+                <div className="rounded border border-stone-200 bg-white dark:bg-stone-800 p-3">
+                  <dt className="text-[11px] uppercase tracking-widest text-slate-500 dark:text-stone-400">Temperatura</dt>
                   <dd>
                     {currentProfile.temperature?.min ?? '—'}°C — {currentProfile.temperature?.max ?? '—'}°C
                   </dd>
                 </div>
-                <div className="rounded border border-stone-200 bg-[#fcfaf7] p-3">
-                  <dt className="text-[11px] uppercase tracking-widest text-slate-500">Umidade do ambiente</dt>
+                <div className="rounded border border-stone-200 bg-white dark:bg-stone-800 p-3">
+                  <dt className="text-[11px] uppercase tracking-widest text-slate-500 dark:text-stone-400">Umidade do ambiente</dt>
                   <dd>
                     {currentProfile.humidity?.min ?? '—'}% — {currentProfile.humidity?.max ?? '—'}%
                   </dd>
                 </div>
-                <div className="rounded border border-stone-200 bg-[#fcfaf7] p-3">
-                  <dt className="text-[11px] uppercase tracking-widest text-slate-500">Umidade do solo</dt>
+                <div className="rounded border border-stone-200 bg-white dark:bg-stone-800 p-3">
+                  <dt className="text-[11px] uppercase tracking-widest text-slate-500 dark:text-stone-400">Umidade do solo</dt>
                   <dd>
                     {currentProfile.soilMoisture?.min ?? '—'}% — {currentProfile.soilMoisture?.max ?? '—'}%
                   </dd>
                 </div>
-                <div className="rounded border border-stone-200 bg-[#fcfaf7] p-3">
-                  <dt className="text-[11px] uppercase tracking-widest text-slate-500">Luminosidade</dt>
+                <div className="rounded border border-stone-200 bg-white dark:bg-stone-800 p-3">
+                  <dt className="text-[11px] uppercase tracking-widest text-slate-500 dark:text-stone-400">Luminosidade</dt>
                   <dd>
                     {currentProfile.luminosity?.min ?? '—'} lux — {currentProfile.luminosity?.max ?? '—'} lux
                   </dd>
@@ -1134,12 +1111,12 @@ const GreenhousePanel = ({
               </dl>
             </>
           ) : (
-            <p className="mt-2 text-xs text-slate-500">
+            <p className="mt-2 text-xs text-slate-500 dark:text-stone-400">
               Clique em Editar estufa e escolha um perfil de cultivo para ativar os limites ideais.
             </p>
           )}
-          <div className="mt-3 rounded-xl border border-stone-200 bg-[#fcfaf7] p-3">
-            <h4 className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Equipe responsável</h4>
+          <div className="mt-3 rounded-xl border border-stone-200 bg-white dark:bg-stone-800 p-3">
+            <h4 className="text-[11px] uppercase tracking-[0.18em] text-slate-500 dark:text-stone-400">Equipe responsável</h4>
             <ul className="mt-1.5 flex flex-wrap gap-1.5">
               {greenhouse.watchersDetails?.length > 0 ? (
                 greenhouse.watchersDetails.map((watcher) => (
@@ -1151,37 +1128,37 @@ const GreenhousePanel = ({
                   </li>
                 ))
               ) : (
-                <li className="rounded-full border border-stone-200 bg-white px-2.5 py-0.5 text-[11px] text-slate-500">
+                <li className="rounded-full border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 px-2.5 py-0.5 text-[11px] text-slate-500 dark:text-stone-400">
                   Administrador ainda não definiu equipe para esta estufa.
                 </li>
               )}
             </ul>
             {!readOnly ? (
               <div className="mt-2 flex items-center justify-between gap-2">
-                <p className="text-[10px] text-slate-500">
+                <p className="text-[10px] text-slate-500 dark:text-stone-400">
                   Adicione ou remova membros para receber o alerta de notificação.
                 </p>
                 <Button
                   type="button"
                   variant="secondary"
                   className="h-8 shrink-0 px-3 text-[11px]"
-                  onClick={() => setMenuOpen(true)}
+                  onClick={() => setTeamModalOpen(true)}
                 >
                   Gerenciar equipe
                 </Button>
               </div>
             ) : (
-              <p className="mt-2 text-[10px] text-slate-500">
+              <p className="mt-2 text-[10px] text-slate-500 dark:text-stone-400">
                 Perfil Leitor: somente visualização da equipe delegada.
               </p>
             )}
           </div>
         </article>
 
-        <article className="rounded-2xl border border-stone-300 bg-white p-5">
-          <h3 className="text-base font-semibold text-slate-800">Próximos passos</h3>
+        <article className="rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-5">
+          <h3 className="text-base font-semibold text-slate-800 dark:text-stone-100">Próximos passos</h3>
           {resolvedEvaluation.status === 'pending' ? (
-            <p className="mt-2 text-xs text-slate-500">
+            <p className="mt-2 text-xs text-slate-500 dark:text-stone-400">
               Clique em Gerar avaliação para receber orientações com os dados disponíveis neste momento.
             </p>
           ) : (
@@ -1196,11 +1173,11 @@ const GreenhousePanel = ({
                   : 'Com os dados atuais, encontramos pontos fora da faixa ideal.'}
               </p>
               {resolvedEvaluation.partialEvaluation ? (
-                <p className="mt-1 text-[11px] text-slate-500">
+                <p className="mt-1 text-[11px] text-slate-500 dark:text-stone-400">
                   Esta avaliação é parcial. Nesta fase de implantação, o sistema analisa principalmente o clima da cidade e apenas os sensores que já estão ativos na estufa.
                 </p>
               ) : null}
-              <div className="mt-3 grid gap-3 text-xs text-slate-700 sm:grid-cols-4">
+              <div className="mt-3 grid gap-3 text-xs text-slate-700 dark:text-stone-300 grid-cols-2 sm:grid-cols-4">
                 {['temperature', 'humidity', 'soilMoisture', 'luminosity'].map((metricKey) => {
                   const metric = resolvedEvaluation.metrics[metricKey] ?? {};
                   const labelMap = {
@@ -1222,7 +1199,7 @@ const GreenhousePanel = ({
                         ? 'Sensor interno'
                         : 'Não informado';
                   const className = metric.evaluated === false
-                    ? 'border-stone-200 bg-stone-100 text-slate-600'
+                    ? 'border-stone-200 bg-stone-100 dark:border-stone-700/40 dark:bg-stone-700/30 dark:text-stone-400 text-slate-600'
                     : metric.ok
                       ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
                       : 'border-amber-200 bg-amber-50 text-amber-700';
@@ -1256,7 +1233,7 @@ const GreenhousePanel = ({
               ) : null}
             </>
           )}
-          <div className="mt-3 rounded-xl border border-stone-200 bg-[#fcfaf7] p-3">
+          <div className="mt-3 rounded-xl border border-stone-200 bg-white dark:bg-stone-800 p-3">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <Button
                 variant="secondary"
@@ -1276,11 +1253,11 @@ const GreenhousePanel = ({
                     ? 'Notificar equipe'
                     : 'Gerar avaliação'}
               </Button>
-              <p className="text-[10px] text-slate-500">
+              <p className="text-[10px] text-slate-500 dark:text-stone-400">
                 {readOnly ? 'Perfil Leitor não executa ações.' : 'Para evitar repetição, um novo aviso sai só após 15 min.'}
               </p>
             </div>
-            <p className="mt-2 text-[10px] text-slate-500">
+            <p className="mt-2 text-[10px] text-slate-500 dark:text-stone-400">
               {readOnly
                 ? 'Você pode apenas acompanhar os dados da estufa delegada.'
                 : hasTelemetry
@@ -1296,7 +1273,7 @@ const GreenhousePanel = ({
                 notifyFeedback.type === 'success'
                   ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
                   : notifyFeedback.type === 'info'
-                    ? 'border-stone-300 bg-stone-100 text-slate-600'
+                    ? 'border-stone-300 bg-stone-100 dark:border-stone-700/40 dark:bg-stone-700/30 dark:text-stone-400 text-slate-600'
                     : 'border-rose-200 bg-rose-50 text-rose-700'
               }`}
             >
@@ -1305,23 +1282,23 @@ const GreenhousePanel = ({
           ) : null}
         </article>
         {!readOnly ? (
-          <article className="col-span-full mt-4 rounded-2xl border border-stone-300 bg-white p-5 text-sm text-slate-700">
-            <h3 className="text-base font-semibold text-slate-800">Faixas de alerta personalizadas</h3>
-            <p className="mt-1 text-xs text-slate-500">
+          <article className="col-span-full mt-4 rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-5 text-sm text-slate-700">
+            <h3 className="text-base font-semibold text-slate-800 dark:text-stone-100">Faixas de alerta personalizadas</h3>
+            <p className="mt-1 text-xs text-slate-500 dark:text-stone-400">
               Defina o mínimo e o máximo de cada parâmetro. O sistema usa esses valores para gerar avaliações e notificações automáticas.
             </p>
-            <div className="mt-4 grid gap-4 sm:grid-cols-4">
+            <div className="mt-4 grid gap-4 grid-cols-2 sm:grid-cols-4">
               {[
                 { key: 'temperatura', label: 'Temperatura', unit: '°C' },
                 { key: 'umidade', label: 'Umidade do ar', unit: '%' },
                 { key: 'umidade_solo', label: 'Umidade do solo', unit: '%' },
                 { key: 'luminosidade', label: 'Luminosidade', unit: 'lux' }
               ].map(({ key, label, unit }) => (
-                <div key={key} className="rounded-xl border border-stone-200 bg-[#fcfaf7] p-4">
+                <div key={key} className="rounded-xl border border-stone-200 bg-white dark:bg-stone-800 p-4">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-red-700">{label}</p>
                   <div className="mt-2 grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-[10px] text-slate-500">Mínimo</label>
+                      <label className="text-[10px] text-slate-500 dark:text-stone-400">Mínimo</label>
                       <input
                         type="number"
                         value={thresholdDraft[key]?.min ?? ''}
@@ -1329,12 +1306,12 @@ const GreenhousePanel = ({
                           ...prev,
                           [key]: { ...prev[key], min: event.target.value === '' ? undefined : Number(event.target.value) }
                         }))}
-                        className="mt-0.5 w-full rounded border border-stone-300 bg-white px-2 py-1.5 text-sm text-slate-800 outline-none focus:border-red-400"
+                        className="mt-0.5 w-full rounded border border-stone-300 bg-white dark:bg-stone-800 px-2 py-1.5 text-sm text-slate-800 dark:text-stone-100 outline-none focus:border-red-400"
                         placeholder={`min ${unit}`}
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] text-slate-500">Máximo</label>
+                      <label className="text-[10px] text-slate-500 dark:text-stone-400">Máximo</label>
                       <input
                         type="number"
                         value={thresholdDraft[key]?.max ?? ''}
@@ -1342,7 +1319,7 @@ const GreenhousePanel = ({
                           ...prev,
                           [key]: { ...prev[key], max: event.target.value === '' ? undefined : Number(event.target.value) }
                         }))}
-                        className="mt-0.5 w-full rounded border border-stone-300 bg-white px-2 py-1.5 text-sm text-slate-800 outline-none focus:border-red-400"
+                        className="mt-0.5 w-full rounded border border-stone-300 bg-white dark:bg-stone-800 px-2 py-1.5 text-sm text-slate-800 dark:text-stone-100 outline-none focus:border-red-400"
                         placeholder={`max ${unit}`}
                       />
                     </div>
@@ -1382,64 +1359,6 @@ const GreenhousePanel = ({
       </div>
       ) : null}
 
-      {/* aba leitura manual */}
-      {activeTopic === 'leitura' ? (
-      <div className="mt-5">
-        <article className="rounded-2xl border border-stone-300 bg-white p-5 flex flex-col gap-5">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-red-600">Leitura manual</p>
-            <h3 className="mt-1 text-lg font-semibold text-slate-800">Enviar dados dos sensores</h3>
-            <p className="mt-1 text-sm text-slate-500">
-              Registre uma leitura agora. Os dados são gravados no histórico e ficam disponíveis para o cálculo automático dos relatórios.
-            </p>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            {[
-              { field: 'temperatura',  label: 'Temperatura',     unit: '°C',  placeholder: 'Ex: 22.5' },
-              { field: 'umidade',      label: 'Umidade do ar',   unit: '%',   placeholder: 'Ex: 78' },
-              { field: 'umidadeSolo',  label: 'Umidade do solo', unit: '%',   placeholder: 'Ex: 63' },
-              { field: 'luminosidade', label: 'Luminosidade',    unit: 'lux', placeholder: 'Ex: 350' },
-            ].map(({ field, label, unit, placeholder }) => (
-              <div key={field} className="flex flex-col gap-1">
-                <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  {label} <span className="font-normal normal-case text-slate-400">({unit})</span>
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={leituraForm[field]}
-                  onChange={(e) => setLeituraForm((prev) => ({ ...prev, [field]: e.target.value }))}
-                  placeholder={placeholder}
-                  className="rounded border border-stone-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-red-400"
-                />
-              </div>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-3 border-t border-stone-100 pt-4">
-            <button
-              type="button"
-              onClick={handleEnviarLeitura}
-              disabled={leituraSaving}
-              className="rounded-md bg-red-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
-            >
-              {leituraSaving ? 'Enviando...' : 'Gravar leitura'}
-            </button>
-            {leituraFeedback && (
-              <p className={`text-sm ${leituraFeedback.ok ? 'text-emerald-700' : 'text-rose-600'}`}>
-                {leituraFeedback.text}
-              </p>
-            )}
-          </div>
-
-          <div className="rounded-md border border-stone-100 bg-stone-50 px-4 py-3 text-[11px] text-slate-500">
-            <strong className="font-semibold text-slate-600">Dica:</strong> Para gerar um relatório com médias automáticas, acesse a página de Relatórios, escolha o período e clique em "Calcular do sensor" — o sistema busca as médias de todas as leituras gravadas aqui.
-          </div>
-        </article>
-      </div>
-      ) : null}
-
       {/* aba dispositivos */}
       {activeTopic === 'dispositivos' ? (
       <div className="mt-6 flex flex-col gap-4">
@@ -1447,19 +1366,16 @@ const GreenhousePanel = ({
         {/* cabeçalho com botão de adicionar */}
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-semibold text-slate-800">Dispositivos cadastrados</p>
-            <p className="text-xs text-slate-500 mt-0.5">Sensores e atuadores vinculados a esta estufa.</p>
+            <p className="text-sm font-semibold text-slate-800 dark:text-stone-100">Dispositivos cadastrados</p>
+            <p className="text-xs text-slate-500 dark:text-stone-400 mt-0.5">Sensores e atuadores vinculados a esta estufa.</p>
           </div>
           {!readOnly && (
             <button
               type="button"
-              onClick={() => {
-                setShowAddDeviceForm((prev) => !prev);
-                setDeviceFormError(null);
-              }}
-              className="rounded-md border border-stone-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-red-400 hover:text-red-700"
+              onClick={() => setShowDeviceWizard(true)}
+              className="flex items-center gap-1.5 rounded-md border border-stone-300 dark:border-stone-600 dark:text-stone-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-red-400 hover:text-red-700"
             >
-              {showAddDeviceForm ? 'Cancelar' : '+ Adicionar dispositivo'}
+              <i className="fa-solid fa-plus" /> Adicionar dispositivo
             </button>
           )}
         </div>
@@ -1472,10 +1388,10 @@ const GreenhousePanel = ({
             <li>O sistema cria o dispositivo no Azure IoT Hub automaticamente e exibe as credenciais.</li>
             <li>Copie os 4 valores exibidos para o <strong>boot.py</strong> do ESP32 — incluindo o ID da estufa abaixo.</li>
           </ol>
-          <div className="mt-1 flex items-center gap-2 rounded-lg border border-blue-200 bg-white px-3 py-2">
+          <div className="mt-1 flex items-center gap-2 rounded-lg border border-blue-200 bg-white dark:border-stone-700/40 dark:bg-stone-800/40 px-3 py-2">
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">ID desta estufa (ESTUFA_ID)</p>
-              <p className="text-xs font-mono text-slate-700 mt-0.5 truncate">{greenhouse.id}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-stone-500">ID desta estufa (ESTUFA_ID)</p>
+              <p className="text-xs font-mono text-slate-700 dark:text-stone-400 mt-0.5 truncate">{greenhouse.id}</p>
             </div>
             <button
               type="button"
@@ -1487,144 +1403,22 @@ const GreenhousePanel = ({
           </div>
         </div>
 
-        {/* painel de credenciais IoT Hub após cadastro bem-sucedido */}
-        {credentialsDevice && (
-          <div className="rounded-2xl border border-emerald-300 bg-emerald-50 p-5 flex flex-col gap-4">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-emerald-700">Dispositivo registrado no Azure IoT Hub</p>
-                <h4 className="mt-1 text-base font-semibold text-slate-800">{credentialsDevice.name}</h4>
-                <p className="text-xs text-slate-500 mt-0.5">Copie os valores abaixo para o <strong>boot.py</strong> do seu ESP32. O token expira em 1 ano.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setCredentialsDevice(null)}
-                className="shrink-0 text-slate-400 hover:text-slate-600 text-lg leading-none"
-                title="Fechar"
-              >×</button>
-            </div>
-            <div className="flex flex-col gap-2 font-mono text-xs bg-white rounded-xl border border-emerald-200 p-4 select-all">
-              <div><span className="text-slate-400">HUB_HOST  = </span><span className="text-slate-800">"{credentialsDevice.mqttServer}"</span></div>
-              <div><span className="text-slate-400">DEVICE_ID = </span><span className="text-slate-800">"{credentialsDevice.iothubDeviceId}"</span></div>
-              <div><span className="text-slate-400">SAS_TOKEN = </span><span className="text-slate-800 break-all">"{credentialsDevice.iothubSasToken}"</span></div>
-              <div><span className="text-slate-400">ESTUFA_ID = </span><span className="text-slate-800">"{greenhouse.id}"</span></div>
-            </div>
-            <div className="flex gap-2 flex-wrap">
-              <button
-                type="button"
-                onClick={() => {
-                  const text = [
-                    `HUB_HOST  = "${credentialsDevice.mqttServer}"`,
-                    `DEVICE_ID = "${credentialsDevice.iothubDeviceId}"`,
-                    `SAS_TOKEN = "${credentialsDevice.iothubSasToken}"`,
-                    `ESTUFA_ID = "${greenhouse.id}"`,
-                  ].join('\n');
-                  navigator.clipboard?.writeText(text);
-                }}
-                className="rounded border border-emerald-400 bg-white px-4 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50"
-              >
-                Copiar tudo
-              </button>
-              <p className="text-[10px] text-slate-400 self-center">Salve agora — o token não será exibido novamente. Você pode regenerá-lo se perder.</p>
-            </div>
-          </div>
-        )}
-
-        {/* formulário de cadastro */}
-        {showAddDeviceForm && !readOnly && (
-          <form
-            onSubmit={async (e) => {
-              e.preventDefault();
-              setDeviceFormBusy(true);
-              setDeviceFormError(null);
-              try {
-                const created = await onCreateDevice?.(greenhouse.id, deviceDraft);
-                setDeviceDraft({ name: '', type: '', identifier: '' });
-                setShowAddDeviceForm(false);
-                if (created?.iothubDeviceId) {
-                  setCredentialsDevice(created);
-                }
-              } catch (err) {
-                setDeviceFormError(getFriendlyErrorMessage(err, 'Não foi possível cadastrar o dispositivo.'));
-              } finally {
-                setDeviceFormBusy(false);
-              }
-            }}
-            className="rounded-2xl border border-stone-300 bg-white p-5 flex flex-col gap-3"
-          >
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Novo dispositivo</p>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div className="flex flex-col gap-1">
-                <label className="text-xs text-slate-600">Nome</label>
-                <input
-                  type="text"
-                  value={deviceDraft.name}
-                  onChange={(e) => setDeviceDraft((prev) => ({ ...prev, name: e.target.value }))}
-                  placeholder="Ex: Sensor de temperatura 1"
-                  className="rounded border border-stone-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-red-400"
-                  required
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-xs text-slate-600">Tipo</label>
-                <select
-                  value={deviceDraft.type}
-                  onChange={(e) => setDeviceDraft((prev) => ({ ...prev, type: e.target.value }))}
-                  className="rounded border border-stone-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-red-400"
-                  required
-                >
-                  <option value="">Selecione...</option>
-                  <option value="sensor-temperatura">Sensor de temperatura</option>
-                  <option value="sensor-umidade">Sensor de umidade do ar</option>
-                  <option value="sensor-umidade-solo">Sensor de umidade do solo</option>
-                  <option value="sensor-luminosidade">Sensor de luminosidade</option>
-                  <option value="atuador-ventilacao">Atuador — ventilação</option>
-                  <option value="atuador-irrigacao">Atuador — irrigação</option>
-                  <option value="atuador-iluminacao">Atuador — iluminação</option>
-                </select>
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-xs text-slate-600">Identificador <span className="font-normal text-slate-400">(opcional — gerado automaticamente)</span></label>
-                <input
-                  type="text"
-                  value={deviceDraft.identifier}
-                  onChange={(e) => setDeviceDraft((prev) => ({ ...prev, identifier: e.target.value }))}
-                  placeholder="Ex: ESP32-001 (deixe vazio para gerar)"
-                  className="rounded border border-stone-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-red-400"
-                />
-              </div>
-            </div>
-            {deviceFormError && (
-              <p className="text-xs text-rose-600">{deviceFormError}</p>
-            )}
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                disabled={deviceFormBusy}
-                className="rounded-md bg-red-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
-              >
-                {deviceFormBusy ? 'Salvando...' : 'Cadastrar dispositivo'}
-              </button>
-            </div>
-          </form>
-        )}
-
         {/* lista de dispositivos */}
         {devicesLoading ? (
-          <p className="text-sm text-slate-500 py-4">Carregando dispositivos...</p>
+          <p className="text-sm text-slate-500 dark:text-stone-400 py-4">Carregando dispositivos...</p>
         ) : devices.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-stone-300 bg-[#fcfaf7] p-8 text-center">
-            <p className="text-sm text-slate-600">Nenhum dispositivo cadastrado nesta estufa.</p>
-            <p className="mt-1 text-xs text-slate-400">Adicione um dispositivo para começar o monitoramento.</p>
+          <div className="rounded-2xl border border-dashed border-stone-300 bg-white dark:border-stone-700/40 dark:bg-stone-800/40 p-8 text-center">
+            <p className="text-sm text-slate-600 dark:text-stone-400">Nenhum dispositivo cadastrado nesta estufa.</p>
+            <p className="mt-1 text-xs text-slate-400 dark:text-stone-500">Adicione um dispositivo para começar o monitoramento.</p>
           </div>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {devices.map((device) => (
-              <div key={device.id} className="rounded-2xl border border-stone-300 bg-white p-4 flex flex-col gap-2">
+              <div key={device.id} className="rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4 flex flex-col gap-2">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <p className="text-sm font-semibold text-slate-800">{device.name}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">
+                    <p className="text-sm font-semibold text-slate-800 dark:text-stone-100">{device.name}</p>
+                    <p className="text-xs text-slate-500 dark:text-stone-400 mt-0.5">
                       {DEVICE_TYPE_LABELS[device.type] ?? device.type}
                     </p>
                   </div>
@@ -1638,7 +1432,7 @@ const GreenhousePanel = ({
                 </div>
 
                 {/* identificador do dispositivo (serial / nome do ESP32) */}
-                <p className="text-[11px] text-slate-400 font-mono truncate">{device.identifier}</p>
+                <p className="text-[11px] text-slate-400 dark:text-stone-500 font-mono truncate">{device.identifier}</p>
 
                 {/* status do registro no Azure IoT Hub */}
                 {device.iothubDeviceId ? (
@@ -1647,8 +1441,8 @@ const GreenhousePanel = ({
                     <p className="text-[10px] text-emerald-600 font-mono truncate mt-0.5">{device.iothubDeviceId}</p>
                   </div>
                 ) : (
-                  <div className="rounded border border-dashed border-stone-200 bg-stone-50 px-3 py-2">
-                    <p className="text-[10px] text-slate-400">Aguardando registro no IoT Hub</p>
+                  <div className="rounded border border-dashed border-stone-200 dark:border-stone-700/40 bg-stone-50 dark:bg-stone-800/40 px-3 py-2">
+                    <p className="text-[10px] text-slate-400 dark:text-stone-500">Aguardando registro no IoT Hub</p>
                   </div>
                 )}
 
@@ -1657,14 +1451,14 @@ const GreenhousePanel = ({
                     <button
                       type="button"
                       onClick={() => onToggleDevice?.(greenhouse.id, device.id, !device.active)}
-                      className="flex-1 rounded border border-stone-300 py-1.5 text-[11px] font-medium text-slate-600 transition hover:border-red-300 hover:text-red-700"
+                      className="flex-1 rounded border border-stone-300 dark:border-stone-700/40 dark:text-stone-300 dark:bg-stone-800/40 py-1.5 text-[11px] font-medium text-slate-600 transition hover:border-red-300 hover:text-red-700"
                     >
                       {device.active ? 'Desativar' : 'Ativar'}
                     </button>
                     <button
                       type="button"
                       onClick={() => onDeleteDevice?.(greenhouse.id, device.id)}
-                      className="rounded border border-stone-200 px-3 py-1.5 text-[11px] text-slate-400 transition hover:border-rose-300 hover:text-rose-600"
+                      className="rounded border border-stone-200 dark:border-stone-700/40 px-3 py-1.5 text-[11px] text-slate-400 transition hover:border-rose-300 hover:text-rose-600"
                     >
                       Remover
                     </button>
@@ -1676,165 +1470,46 @@ const GreenhousePanel = ({
         )}
 
         {/* nota sobre o que já funciona e o que ainda depende de ESP32 físico */}
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-slate-400 dark:text-stone-500">
           O registro do dispositivo no Azure IoT Hub já está funcionando. A leitura de telemetria em tempo real requer um ESP32 físico conectado.
         </p>
       </div>
       ) : null}
 
-      {/* aba controles — atuadores cadastrados com painel de comando */}
-      {activeTopic === 'controles' ? (() => {
-        const atuadores = devices.filter((d) => d.type?.startsWith('atuador-'));
-        const sensores  = devices.filter((d) => d.type?.startsWith('sensor-'));
+      {/* aba controles — painel de comando Lâmpada e Nebulizador */}
+      {activeTopic === 'controles' ? (
+        <ControlesPanel
+          greenhouse={greenhouse}
+          devices={devices}
+          devicesLoading={devicesLoading}
+          telemetry={telemetry}
+          readOnly={readOnly}
+        />
+      ) : null}
 
-        // ícone representativo por tipo de atuador
-        const iconByType = {
-          'atuador-ventilacao': '💨',
-          'atuador-irrigacao':  '💧',
-          'atuador-iluminacao': '💡',
-        };
-
-        return (
-          <div className="mt-6 flex flex-col gap-5">
-
-            {/* cabeçalho da aba */}
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <div>
-                <p className="text-sm font-semibold text-slate-800">Painel de controle</p>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Aqui você verá os atuadores cadastrados e poderá acioná-los manualmente.
-                </p>
-              </div>
-              <span className="rounded border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-semibold text-amber-700">
-                Comandos IoT — em breve
-              </span>
-            </div>
-
-            {/* grade de atuadores */}
-            {devicesLoading ? (
-              <p className="text-sm text-slate-500 py-4">Carregando dispositivos...</p>
-            ) : atuadores.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-stone-300 bg-[#fcfaf7] p-8 text-center">
-                <p className="text-sm text-slate-600">Nenhum atuador cadastrado nesta estufa.</p>
-                <p className="mt-1 text-xs text-slate-400">
-                  Vá até a aba Dispositivos e adicione um atuador (ventilação, irrigação ou iluminação).
-                </p>
-              </div>
-            ) : (
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {atuadores.map((device) => (
-                  <div
-                    key={device.id}
-                    className={`rounded-2xl border p-5 flex flex-col gap-3 transition-colors ${
-                      device.active
-                        ? 'bg-white border-stone-300'
-                        : 'bg-stone-50 border-stone-200'
-                    }`}
-                  >
-                    {/* cabeçalho do card */}
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xl leading-none" aria-hidden="true">
-                          {iconByType[device.type] ?? '⚙️'}
-                        </span>
-                        <div>
-                          <p className="text-sm font-semibold text-slate-800">{device.name}</p>
-                          <p className="text-xs text-slate-400 mt-0.5">{DEVICE_TYPE_LABELS[device.type] ?? device.type}</p>
-                        </div>
-                      </div>
-                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold border ${
-                        device.active
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                          : 'bg-stone-100 text-stone-500 border-stone-200'
-                      }`}>
-                        {device.active ? 'Ativo' : 'Inativo'}
-                      </span>
-                    </div>
-
-                    {/* identificador */}
-                    <p className="text-[11px] text-slate-400 font-mono truncate">{device.identifier}</p>
-
-                    {/* estado do atuador — real-time ainda não disponível */}
-                    <div className="rounded-lg border border-dashed border-stone-200 bg-stone-50 px-3 py-2.5 flex items-center justify-between gap-2">
-                      <div>
-                        <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Estado atual</p>
-                        <p className="text-xs text-slate-500 mt-0.5">Telemetria em tempo real — em breve</p>
-                      </div>
-                      <span className="text-[10px] font-semibold text-amber-600 border border-amber-200 bg-amber-50 rounded px-2 py-1">
-                        Aguardando IoT
-                      </span>
-                    </div>
-
-                    {/* botões de ação */}
-                    {!readOnly && (
-                      <div className="flex gap-2 mt-1">
-                        <button
-                          type="button"
-                          title="Ativar/desativar registro do dispositivo"
-                          onClick={() => onToggleDevice?.(greenhouse.id, device.id, !device.active)}
-                          className="flex-1 rounded border border-stone-300 py-2 text-xs font-medium text-slate-600 transition hover:border-red-300 hover:text-red-700"
-                        >
-                          {device.active ? 'Desativar' : 'Ativar'}
-                        </button>
-                        <button
-                          type="button"
-                          disabled
-                          title="Disponível após integração com IoT Hub"
-                          className="flex-1 rounded border border-stone-200 py-2 text-xs font-medium text-slate-400 cursor-not-allowed bg-stone-50"
-                        >
-                          Acionar
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* sensores cadastrados — lista resumida de leitura */}
-            {sensores.length > 0 && (
-              <div className="rounded-2xl border border-stone-200 bg-white p-5">
-                <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">
-                  Sensores vinculados
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {sensores.map((s) => (
-                    <span
-                      key={s.id}
-                      className={`rounded-full border px-3 py-1 text-[11px] font-medium ${
-                        s.active
-                          ? 'border-stone-200 bg-stone-50 text-slate-600'
-                          : 'border-stone-100 text-stone-400'
-                      }`}
-                    >
-                      {DEVICE_TYPE_LABELS[s.type] ?? s.type} — {s.name}
-                      {!s.active && <span className="ml-1 text-[10px] text-stone-300">(inativo)</span>}
-                    </span>
-                  ))}
-                </div>
-                <p className="mt-3 text-[10px] text-slate-400">
-                  Leitura em tempo real dos sensores será exibida aqui após a integração com Azure IoT Hub.
-                </p>
-              </div>
-            )}
-
-          </div>
-        );
-      })() : null}
-
+      {/* Wizard de onboarding do dispositivo ESP32 */}
+      {showDeviceWizard && (
+        <WizardOnboardingDispositivo
+          estufaId={greenhouse.id}
+          onClose={() => setShowDeviceWizard(false)}
+          onSuccess={() => {
+            setShowDeviceWizard(false);
+            if (onCreateDevice) onCreateDevice();
+          }}
+        />
+      )}
     </section>
   );
 };
 
 // rótulos legíveis para os tipos de dispositivo cadastrados
 const DEVICE_TYPE_LABELS = {
-  'sensor-temperatura': 'Sensor de temperatura',
-  'sensor-umidade': 'Sensor de umidade do ar',
-  'sensor-umidade-solo': 'Sensor de umidade do solo',
-  'sensor-luminosidade': 'Sensor de luminosidade',
-  'atuador-ventilacao': 'Atuador — ventilação',
-  'atuador-irrigacao': 'Atuador — irrigação',
-  'atuador-iluminacao': 'Atuador — iluminação',
+  'sensor-temperatura':   'Sensor de temperatura',
+  'sensor-umidade':       'Sensor de umidade do ar',
+  'sensor-solo':          'Sensor de umidade do solo',
+  'sensor-luminosidade':  'Sensor de luminosidade',
+  'atuador-lampada':      'Atuador — Lâmpada',
+  'atuador-nebulizador':  'Atuador — Nebulizador',
 };
 
 export const DashboardPage = () => {
@@ -2842,163 +2517,10 @@ export const DashboardPage = () => {
     [greenhouses, profileMap, clearSimulationTimers, externalWeatherById]
   );
 
-  const handleSimulateHeat = useCallback(
-    (greenhouseId) => {
-      const greenhouse = greenhouses.find((entry) => entry.id === greenhouseId);
-
-      if (!greenhouse) {
-        return;
-      }
-
-      const greenhouseName = greenhouse.name ?? 'Estufa Matriz';
-      const nowIso = new Date().toISOString();
-
-      clearSimulationTimers(greenhouseId);
-
-      let simulatedTelemetry;
-
-      setTelemetryById((prev) => {
-        const current = prev[greenhouseId] ?? createInitialGreenhouseState(greenhouseName);
-        const nextTemperature = clamp((current.temperature ?? 24) + 5.5, 10, 48);
-        simulatedTelemetry = {
-          ...current,
-          greenhouseName,
-          temperature: nextTemperature,
-          ventilation: 'Ventilação forçada',
-          lighting: 'Iluminação reduzida',
-          lastUpdate: nowIso
-        };
-        return {
-          ...prev,
-          [greenhouseId]: simulatedTelemetry
-        };
-      });
-
-      setEventLogById((prev) => {
-        const existing = prev[greenhouseId] ?? createInitialEventLog(greenhouseName);
-        const entry = {
-          id: generateEventId(),
-          timestamp: nowIso,
-          message: 'Simulação: sensores detectaram temperatura elevada. Alertas automáticos acionados.'
-        };
-        return {
-          ...prev,
-          [greenhouseId]: [entry, ...existing].slice(0, 24)
-        };
-      });
-
-      setNotifyFeedbackById((prev) => ({
-        ...prev,
-        [greenhouseId]: {
-          type: 'info',
-          text: 'Desvio térmico simulado. Rotina automática de estabilização será executada em instantes.'
-        }
-      }));
-
-      setNotifyBusyById((prev) => ({
-        ...prev,
-        [greenhouseId]: true
-      }));
-
-      const externalWeather = externalWeatherById[greenhouseId];
-      const evaluationPayload = buildEvaluationMetricsPayload(simulatedTelemetry, externalWeather);
-      if (Object.keys(evaluationPayload.metrics).length === 0) {
-        setNotifyFeedbackById((prev) => ({
-          ...prev,
-          [greenhouseId]: {
-            type: 'info',
-            text: 'Sem dados válidos para avaliar a simulação neste momento.'
-          }
-        }));
-        setNotifyBusyById((prev) => ({
-          ...prev,
-          [greenhouseId]: false
-        }));
-        return;
-      }
-
-      evaluateGreenhouseMetrics(greenhouseId, {
-        metrics: evaluationPayload.metrics,
-        metricSources: evaluationPayload.metricSources,
-        missingMetrics: evaluationPayload.missingMetrics,
-        partialEvaluation: evaluationPayload.partialEvaluation,
-        notify: true,
-        forceNotify: true
-      })
-        .then((result) => {
-          if (result?.metricsEvaluation) {
-            setEvaluationById((prev) => ({
-              ...prev,
-              [greenhouseId]: {
-                status: result.status,
-                alerts: result.alerts,
-                metrics: result.metricsEvaluation,
-                partialEvaluation: Boolean(result.partialEvaluation),
-                metricSources: result.metricSources ?? {},
-                missingMetrics: Array.isArray(result.missingMetrics) ? result.missingMetrics : []
-              }
-            }));
-          }
-
-          if (result?.greenhouse) {
-            setGreenhouses((prev) =>
-              prev.map((item) => (item.id === greenhouseId ? { ...item, ...result.greenhouse } : item))
-            );
-          }
-
-          if (result?.notified) {
-            setNotifyFeedbackById((prev) => ({
-              ...prev,
-              [greenhouseId]: {
-                type: 'success',
-                text: 'Equipe notificada: desvio simulado identificado e rotina automática registrada.'
-              }
-            }));
-          } else if (result?.throttled) {
-            setNotifyFeedbackById((prev) => ({
-              ...prev,
-              [greenhouseId]: {
-                type: 'info',
-                text: 'Notificação simulada registrada localmente (janela de cooldown ativa).'
-              }
-            }));
-          }
-        })
-        .catch(() => {
-          setNotifyFeedbackById((prev) => ({
-            ...prev,
-            [greenhouseId]: {
-              type: 'error',
-                text: 'Falha ao requisitar envio de e-mail para o desvio simulado.'
-            }
-          }));
-        })
-        .finally(() => {
-          setNotifyBusyById((prev) => ({
-            ...prev,
-            [greenhouseId]: false
-          }));
-        });
-
-      const coolingTimer = setTimeoutSafe(() => {
-        applyAutomaticCooling(greenhouseId);
-      }, AUTOMATION_COOLING_DELAY_MS);
-
-      const watchdogTimer = setTimeoutSafe(() => {
-        runWatchdogCheck(greenhouseId);
-      }, ALERT_WATCHDOG_DELAY_MS);
-
-      simulationTimersRef.current[greenhouseId] = {
-        coolingTimer: coolingTimer ?? null,
-        watchdogTimer: watchdogTimer ?? null
-      };
-    },
-    [greenhouses, clearSimulationTimers, applyAutomaticCooling, runWatchdogCheck, externalWeatherById]
-  );
 
   if (requiresPasswordReset) {
     return (
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-16 text-slate-100">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-16 text-slate-100 dark:text-stone-100">
         <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-6">
           <h1 className="text-2xl font-semibold text-amber-200">Redefina sua senha</h1>
           <p className="mt-4 text-sm text-amber-100/90">
@@ -3024,28 +2546,27 @@ export const DashboardPage = () => {
     : '';
 
   return (
-    <div className="mx-auto w-full max-w-[1400px] px-4 py-6">
-      <div className="rounded-[30px] bg-[#181415] p-4 shadow-[0_24px_60px_rgba(0,0,0,0.35)] md:p-6">
-      <header className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-stone-300 bg-[#f5f1eb] p-4">
+    <>
+      <header className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
         <div>
           <span className="text-xs font-semibold uppercase tracking-[0.24em] text-red-700">Detalhes da estufa</span>
-          <h1 className="text-3xl font-semibold text-slate-800">
+          <h1 className="text-3xl font-semibold text-slate-800 dark:text-stone-100">
             {selectedGreenhouse?.name ?? 'Carregando estufa'}
           </h1>
-          <p className="mt-2 max-w-2xl text-sm text-slate-600">
+          <p className="mt-2 max-w-2xl text-sm text-slate-600 dark:text-stone-400">
             Aqui você acompanha os dados da estufa selecionada. Para trocar de estufa, volte para a lista.
           </p>
         </div>
         <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
           <Link
             to="/dashboard"
-            className="inline-flex items-center justify-center rounded-md border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-red-400 hover:text-red-700"
+            className="inline-flex items-center justify-center rounded-md border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-stone-300 transition hover:border-red-400 hover:text-red-700"
           >
             Voltar para estufas
           </Link>
           <Link
             to="/settings"
-            className="inline-flex items-center justify-center rounded-md border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-red-400 hover:text-red-700"
+            className="inline-flex items-center justify-center rounded-md border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-stone-300 transition hover:border-red-400 hover:text-red-700"
           >
             Configurações da conta
           </Link>
@@ -3063,7 +2584,7 @@ export const DashboardPage = () => {
           {[0, 1].map((placeholder) => (
             <div
               key={placeholder}
-              className="h-64 animate-pulse rounded-xl border border-stone-300 bg-[#f5f1eb]"
+              className="h-64 animate-pulse rounded-xl border border-stone-300 bg-stone-100 dark:border-stone-700/40 dark:bg-stone-800/30"
             />
           ))}
         </div>
@@ -3081,38 +2602,19 @@ export const DashboardPage = () => {
             teamMembers={teamMembers}
             notifyFeedback={notifyFeedbackById[selectedGreenhouse.id]}
             saving={Boolean(savingById[selectedGreenhouse.id])}
-            teamSaving={Boolean(teamSavingById[selectedGreenhouse.id])}
-            alertsSaving={Boolean(alertsSavingById[selectedGreenhouse.id])}
-            notifyBusy={Boolean(notifyBusyById[selectedGreenhouse.id])}
-            externalWeather={externalWeatherById[selectedGreenhouse.id]}
-            externalWeatherLoading={Boolean(externalWeatherLoadingById[selectedGreenhouse.id])}
-            onSave={handleSaveGreenhouse}
-            onUpdateTeam={handleUpdateTeam}
-            onToggleAlerts={handleToggleAlerts}
-            onUpdateAlertThresholds={handleUpdateAlertThresholds}
-            onNotify={handleNotifyTeam}
-            onSimulateHeat={handleSimulateHeat}
-            onDeleteRequest={handleRequestDeleteGreenhouse}
-            devices={devicesById[selectedGreenhouse.id] ?? []}
-            devicesLoading={Boolean(devicesLoadingById[selectedGreenhouse.id])}
-            onCreateDevice={handleCreateDevice}
-            onDeleteDevice={handleDeleteDevice}
-            onToggleDevice={handleToggleDevice}
-            readOnly={isReader}
           />
         </div>
       ) : null}
+
       <ConfirmDialog
-        open={Boolean(deleteTarget)}
-        title="Remover estufa"
+        open={!!deleteTarget}
+        title={`Remover estufa`}
         description={deleteDialogDescription}
-        confirmLabel={deleteBusy ? 'Removendo...' : 'Remover estufa'}
-        confirmDisabled={deleteBusy}
-        cancelDisabled={deleteBusy}
         onConfirm={handleConfirmDeleteGreenhouse}
-        onCancel={handleCancelDelete}
+        onCancel={() => setDeleteTarget(null)}
+        confirmDisabled={Boolean(savingById[deleteTarget?.id])}
+        cancelDisabled={Boolean(savingById[deleteTarget?.id])}
       />
-      </div>
-    </div>
+    </>
   );
 };

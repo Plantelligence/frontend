@@ -22,10 +22,10 @@ export const ChatbotSupportButton = () => {
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-700">
               Suporte técnico
             </p>
-            <h3 className="mt-1 text-base font-semibold text-slate-800">
+            <h3 className="mt-1 text-base font-semibold text-slate-800 dark:text-stone-100">
               Em breve
             </h3>
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm text-slate-600 dark:text-stone-400">
               O assistente de suporte estará disponível em breve para ajudar com dúvidas sobre o cultivo e operação das estufas.
             </p>
           </div>
@@ -41,7 +41,7 @@ export const ChatbotSupportButton = () => {
           >
             <i className="fa-solid fa-comments" aria-hidden="true" />
           </button>
-          <span className="pointer-events-none absolute right-14 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-full border border-stone-300 bg-[#fcfaf7] px-3 py-1 text-xs font-semibold text-slate-700 opacity-0 shadow-sm transition-opacity group-hover:opacity-100">
+          <span className="pointer-events-none absolute right-14 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-full border border-stone-300 bg-[#fcfaf7] px-3 py-1 text-xs font-semibold text-slate-700 dark:text-stone-300 opacity-0 shadow-sm transition-opacity group-hover:opacity-100">
             Chat de duvidas
           </span>
         </div>

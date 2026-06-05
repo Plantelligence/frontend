@@ -141,7 +141,7 @@ export const FirstAccessPage = () => {
       <header className="text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-red-400">Primeiro acesso</p>
         <h1 className="mt-2 text-2xl font-semibold text-slate-100">Ative sua conta no PLANTELLIGENCE</h1>
-        <p className="mt-2 text-sm text-slate-400">
+        <p className="mt-2 text-sm text-slate-400 dark:text-stone-500">
           Siga os passos abaixo para criar sua senha e configurar a verificação de segurança.
         </p>
       </header>
@@ -168,16 +168,16 @@ export const FirstAccessPage = () => {
                 Recomendamos o <strong>Microsoft Authenticator</strong>.
                 Se preferir, você também pode usar Google Authenticator, Authy ou outro aplicativo compatível.
               </p>
-              <p className="mt-3 text-sm text-slate-400">
+              <p className="mt-3 text-sm text-slate-400 dark:text-stone-500">
                 Conta: <strong className="text-slate-200">{setup.user?.email}</strong>
               </p>
               {formattedExpiry && (
-                <p className="mt-1 text-xs text-slate-500">Link válido até {formattedExpiry}.</p>
+                <p className="mt-1 text-xs text-slate-500 dark:text-stone-400">Link válido até {formattedExpiry}.</p>
               )}
             </div>
             <div className="rounded-lg border border-slate-700 bg-slate-950/80 p-4 text-sm text-slate-300">
               <p className="font-semibold text-slate-100">Orientação rápida</p>
-              <ol className="mt-2 list-decimal space-y-1 pl-5 text-xs text-slate-400">
+              <ol className="mt-2 list-decimal space-y-1 pl-5 text-xs text-slate-400 dark:text-stone-500">
                 <li>Abra o aplicativo autenticador no celular.</li>
                 <li>Toque em adicionar conta por QR Code.</li>
                 <li>No passo 2, escaneie o QR Code desta tela.</li>
@@ -187,7 +187,7 @@ export const FirstAccessPage = () => {
 
           <section className="grid gap-4 md:grid-cols-2">
             <article className="rounded-xl border border-slate-700 bg-slate-950 p-5">
-              <p className="text-xs uppercase tracking-[0.15em] text-slate-400">Passo 2</p>
+              <p className="text-xs uppercase tracking-[0.15em] text-slate-400 dark:text-stone-500">Passo 2</p>
               <h3 className="mt-1 text-lg font-semibold text-slate-100">Configure e confirme seu acesso</h3>
               {setup.enrollment?.uri ? (
                 <div className="mt-4 flex justify-center rounded-lg border border-slate-700 bg-white p-4">
@@ -197,7 +197,7 @@ export const FirstAccessPage = () => {
                 <p className="mt-3 text-sm text-amber-300">Não foi possível gerar o QR Code para este convite.</p>
               )}
 
-              <p className="mt-3 text-xs text-slate-400">
+              <p className="mt-3 text-xs text-slate-400 dark:text-stone-500">
                 Escaneie o QR Code acima no aplicativo e, em seguida, digite o código de 6 dígitos no formulário ao lado.
               </p>
 
@@ -211,9 +211,9 @@ export const FirstAccessPage = () => {
 
               {showSecret && (
                 <div className="mt-3 rounded-lg border border-slate-700 bg-slate-900 p-3">
-                  <p className="text-xs text-slate-400">Insira esta chave no app autenticador:</p>
+                  <p className="text-xs text-slate-400 dark:text-stone-500">Insira esta chave no app autenticador:</p>
                   <p className="mt-1 break-all font-mono text-base tracking-wider text-red-300">{setup.enrollment?.secret}</p>
-                  <p className="mt-2 text-xs text-slate-500">
+                  <p className="mt-2 text-xs text-slate-500 dark:text-stone-400">
                     Emissor: {setup.enrollment?.issuer} • Conta: {setup.enrollment?.accountName}
                   </p>
                 </div>
@@ -222,7 +222,7 @@ export const FirstAccessPage = () => {
 
             <article className="rounded-xl border border-slate-700 bg-slate-950 p-5">
               <h3 className="text-lg font-semibold text-slate-100">Crie sua senha e finalize</h3>
-              <p className="mt-2 text-sm text-slate-400">
+              <p className="mt-2 text-sm text-slate-400 dark:text-stone-500">
                 Depois de configurar o aplicativo, informe o código de 6 dígitos para finalizar seu primeiro acesso.
               </p>
 
@@ -257,7 +257,7 @@ export const FirstAccessPage = () => {
                   required
                 />
 
-                <p className="text-xs text-slate-500">{passwordPolicy.message}</p>
+                <p className="text-xs text-slate-500 dark:text-stone-400">{passwordPolicy.message}</p>
 
                 {submitError && (
                   <div className="rounded-md border border-rose-500/60 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">

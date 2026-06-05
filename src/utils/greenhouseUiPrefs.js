@@ -63,30 +63,30 @@ export const cropTypeVisuals = {
   champignon: {
     label: 'Champignon',
     icon: 'fa-solid fa-spa',
-    ring: 'border-red-200',
-    badge: 'bg-red-100 text-red-700',
-    iconWrap: 'bg-red-100 text-red-700'
+    ring: 'border-red-200 dark:border-red-500/30',
+    badge: 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400',
+    iconWrap: 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400'
   },
   shimeji: {
     label: 'Shimeji',
     icon: 'fa-solid fa-leaf',
-    ring: 'border-teal-200',
-    badge: 'bg-teal-100 text-teal-700',
-    iconWrap: 'bg-teal-100 text-teal-700'
+    ring: 'border-teal-200 dark:border-teal-500/30',
+    badge: 'bg-teal-100 text-teal-700 dark:bg-teal-500/10 dark:text-teal-400',
+    iconWrap: 'bg-teal-100 text-teal-700 dark:bg-teal-500/15 dark:text-teal-400'
   },
   shiitake: {
     label: 'Shiitake',
     icon: 'fa-solid fa-seedling',
-    ring: 'border-amber-200',
-    badge: 'bg-amber-100 text-amber-700',
-    iconWrap: 'bg-amber-100 text-amber-700'
+    ring: 'border-amber-200 dark:border-amber-500/30',
+    badge: 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400',
+    iconWrap: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400'
   },
   personalizado: {
     label: 'Personalizado',
     icon: 'fa-solid fa-clover',
-    ring: 'border-lime-200',
-    badge: 'bg-lime-100 text-lime-700',
-    iconWrap: 'bg-lime-100 text-lime-700'
+    ring: 'border-lime-200 dark:border-lime-500/30',
+    badge: 'bg-lime-100 text-lime-700 dark:bg-lime-500/10 dark:text-lime-400',
+    iconWrap: 'bg-lime-100 text-lime-700 dark:bg-lime-500/15 dark:text-lime-400'
   }
 };
 

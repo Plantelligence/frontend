@@ -7,7 +7,6 @@ import {
   resolveCepLocation
 } from '../api/greenhouseService.js';
 import { createCulturePreset } from '../api/presetService.js';
-import { DashboardSideNav } from '../components/DashboardSideNav.jsx';
 import { WizardOnboardingCriarEstufa } from '../components/WizardOnboardingCriarEstufa.jsx';
 import { loadGreenhouseUiPrefs, saveGreenhouseUiPrefs } from '../utils/greenhouseUiPrefs.js';
 import { getFriendlyErrorMessage } from '../utils/errorMessages.js';
@@ -190,19 +189,7 @@ export const OnboardingGreenhousePage = () => {
   };
 
   return (
-    <div className="mx-auto w-full max-w-[1400px] px-4 py-6">
-      <div className="rounded-[30px] border border-stone-700 bg-[#181415] p-4 shadow-[0_20px_50px_rgba(0,0,0,0.35)] md:p-6">
-        <div className="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
-          <DashboardSideNav
-            active="onboarding"
-            footerText={
-              forceMode
-                ? 'Você ainda não tem estufas cadastradas. Vamos criar a primeira agora.'
-                : 'Preencha os dados para criar uma nova estufa sem complicação.'
-            }
-          />
-
-          <section className="overflow-y-auto rounded-[26px] bg-[#f5f1eb] p-4 md:p-6 lg:h-[calc(100vh-160px)] lg:min-h-[640px] lg:max-h-[820px]">
+          <section className="overflow-y-auto rounded-[26px] dark:bg-[#0f0c0c] p-4 md:p-6">
             <WizardOnboardingCriarEstufa
               profiles={profiles}
               forceMode={forceMode}
@@ -212,8 +199,5 @@ export const OnboardingGreenhousePage = () => {
               onResolveCep={handleResolveCep}
             />
           </section>
-        </div>
-      </div>
-    </div>
   );
 };

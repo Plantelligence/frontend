@@ -2,7 +2,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { listGreenhouses } from '../api/greenhouseService.js';
-import { DashboardSideNav } from '../components/DashboardSideNav.jsx';
 import { useAuthStore } from '../store/authStore.js';
 import { FiltroEstufas } from '../components/FiltroEstufas.jsx';
 import { GridEstufas } from '../components/GridEstufas.jsx';
@@ -93,38 +92,30 @@ export const GreenhousesPage = () => {
   }, [greenhouses]);
 
   return (
-    <div className="mx-auto w-full max-w-[1400px] px-4 py-6">
-      <div className="rounded-[30px] bg-[#181415] p-4 shadow-[0_24px_60px_rgba(0,0,0,0.35)] md:p-6">
-        <div className="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
-          <DashboardSideNav
-            active="dashboard"
-            footerText="Dica rápida: escolha uma estufa e clique em Abrir detalhes."
-          />
-
-          <section className="overflow-y-auto rounded-[26px] bg-[#f5f1eb] p-4 md:p-6 lg:h-[calc(100vh-160px)] lg:min-h-[640px] lg:max-h-[820px]">
-            <header className="mb-4 rounded-2xl border border-stone-300 bg-[#fcfaf7] p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-red-700">Seleção de estufas</p>
-              <h1 className="mt-1 text-2xl font-semibold text-slate-800">Estufas da organização {organizationName}</h1>
-              <p className="mt-1 text-sm text-slate-600">
+          <section className="overflow-y-auto rounded-[26px] bg-[#0f0c0c]/5 dark:bg-[#0f0c0c] p-4 md:p-6">
+            <header className="mb-4 rounded-2xl border border-stone-200 bg-stone-50 dark:border-stone-800/60 dark:bg-stone-800/40 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-red-600">Seleção de estufas</p>
+              <h1 className="mt-1 text-2xl font-semibold text-stone-800 dark:text-stone-100">Estufas da organização {organizationName}</h1>
+              <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
                 Abra uma estufa para configurar perfil, equipe responsável e acompanhar os dados reais quando sua integração estiver ativa.
               </p>
             </header>
 
-            <section className="mb-4 grid gap-3 md:grid-cols-3">
-              <article className="rounded-2xl border border-amber-200 bg-white p-4">
-                <p className="text-xs uppercase tracking-wide text-amber-700">Com perfil vinculado</p>
-                <p className="mt-1 text-3xl font-semibold text-amber-800">{summary.withProfile}</p>
-                <p className="text-xs text-slate-500">Estufas prontas para avaliação por faixa ideal.</p>
+            <section className="mb-4 grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+              <article className="rounded-2xl border border-amber-200/60 bg-amber-50/50 dark:border-amber-500/20 dark:bg-amber-500/5 p-4">
+                <p className="text-xs uppercase tracking-wide text-amber-600 dark:text-amber-400 font-semibold">Com perfil vinculado</p>
+                <p className="mt-1 text-3xl font-semibold text-amber-700 dark:text-amber-300">{summary.withProfile}</p>
+                <p className="text-xs text-stone-500 dark:text-stone-400">Estufas prontas para avaliação por faixa ideal.</p>
               </article>
-              <article className="rounded-2xl border border-emerald-200 bg-white p-4">
-                <p className="text-xs uppercase tracking-wide text-emerald-700">Com equipe delegada</p>
-                <p className="mt-1 text-3xl font-semibold text-emerald-800">{summary.withTeam}</p>
-                <p className="text-xs text-slate-500">Recebem notificação somente para responsáveis definidos.</p>
+              <article className="rounded-2xl border border-emerald-200/60 bg-emerald-50/50 dark:border-emerald-500/20 dark:bg-emerald-500/5 p-4">
+                <p className="text-xs uppercase tracking-wide text-emerald-600 dark:text-emerald-400 font-semibold">Com equipe delegada</p>
+                <p className="mt-1 text-3xl font-semibold text-emerald-700 dark:text-emerald-300">{summary.withTeam}</p>
+                <p className="text-xs text-stone-500 dark:text-stone-400">Recebem notificação somente para responsáveis definidos.</p>
               </article>
-              <article className="rounded-2xl border border-stone-200 bg-white p-4">
-                <p className="text-xs uppercase tracking-wide text-red-600">Estufas cadastradas</p>
-                <p className="mt-1 text-3xl font-semibold text-slate-800">{summary.total}</p>
-                <p className="text-xs text-slate-500">Total disponível para abrir e acompanhar.</p>
+              <article className="rounded-2xl border border-stone-200 bg-stone-50 dark:border-stone-800/60 dark:bg-stone-800/40 p-4">
+                <p className="text-xs uppercase tracking-wide text-red-600 dark:text-red-400 font-semibold">Estufas cadastradas</p>
+                <p className="mt-1 text-3xl font-semibold text-stone-800 dark:text-stone-100">{summary.total}</p>
+                <p className="text-xs text-stone-500 dark:text-stone-400">Total disponível para abrir e acompanhar.</p>
               </article>
             </section>
 
@@ -146,7 +137,7 @@ export const GreenhousesPage = () => {
             {loading ? (
               <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
                 {[0, 1, 2].map((item) => (
-                  <div key={item} className="h-52 animate-pulse rounded-2xl border border-stone-300 bg-white" />
+                  <div key={item} className="h-52 animate-pulse rounded-2xl border border-stone-200 bg-stone-100 dark:border-stone-800/60 dark:bg-stone-800/30" />
                 ))}
               </div>
             ) : (
@@ -154,13 +145,10 @@ export const GreenhousesPage = () => {
                 <GridEstufas
                   estufas={filteredGreenhouses}
                   getCardVisual={getCardVisual}
-                  onOpen={(greenhouseId) => navigate(`/dashboard/estufas/${greenhouseId}`)}
+                  onOpen={(id) => navigate(`/dashboard/estufas/${id}`)}
                 />
               </div>
             )}
           </section>
-        </div>
-      </div>
-    </div>
   );
 };

@@ -3,6 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!--
+      Declara suporte nativo a ambos os esquemas de cor.
+      O navegador usa isso para renderizar corretamente elementos nativos
+      (scrollbar, inputs, select, fundo do body) conforme o sistema operacional.
+      Funciona mesmo antes do CSS carregar, eliminando flash de tema errado.
+    -->
+    <meta name="color-scheme" content="light dark" />
+
     <title>Plantelligence</title>
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
     <link
@@ -10,7 +19,11 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
     />
   </head>
-  <body class="bg-slate-900 text-slate-100">
+  <!--
+    Sem classe de cor no body: as variáveis CSS cuidam disso.
+    O body herda var(--pub-bg) definido no index.css.
+  -->
+  <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

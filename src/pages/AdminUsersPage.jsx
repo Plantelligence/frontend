@@ -464,54 +464,56 @@ export const AdminUsersPage = () => {
     }
   };
 
+  const saveReaderGreenhouses = handleReaderAccessSave;
+  const savingReader = readerSaving;
+
   return (
-    <div className="mx-auto w-full max-w-[1400px] px-4 py-6">
-      <div className="rounded-[30px] bg-[#181415] p-4 shadow-[0_24px_60px_rgba(0,0,0,0.35)] md:p-6">
-        <header className="rounded-[26px] bg-[#f5f1eb] p-5 md:p-6">
+    <>
+        <header className="rounded-[26px] dark:bg-[#0f0c0c] p-5 md:p-6">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-700">Administração do Sistema</p>
-          <h1 className="mt-1 text-2xl font-semibold text-slate-800">Acesso de usuários</h1>
-          <p className="mt-2 text-sm text-slate-600">
+          <h1 className="mt-1 text-2xl font-semibold text-slate-800 dark:text-stone-100">Acesso de usuários</h1>
+          <p className="mt-2 text-sm text-slate-600 dark:text-stone-400">
             Defina nível de acesso, bloqueie contas e delegue estufas para usuários leitores.
           </p>
 
-          <div className="mt-4 rounded-xl border border-stone-200 bg-white p-4 text-xs text-slate-600">
-            <p className="font-semibold uppercase tracking-[0.15em] text-slate-700">Níveis de acesso</p>
+          <div className="mt-4 rounded-xl border border-stone-200 dark:border-stone-800/60 bg-white dark:bg-stone-900/35 p-4 text-xs text-slate-600 dark:text-stone-400">
+            <p className="font-semibold uppercase tracking-[0.15em] text-slate-700 dark:text-stone-300">Níveis de acesso</p>
             <ul className="mt-2 space-y-1">
               <li>
-                <span className="font-semibold text-slate-800">Administrador master:</span> usuário criador da organização, com controle total da organização.
+                <span className="font-semibold text-slate-800 dark:text-stone-100">Administrador master:</span> usuário criador da organização, com controle total da organização.
               </li>
               <li>
-                <span className="font-semibold text-slate-800">Administrador de usuários:</span> gerencia usuários e permissões sem desativar a organização.
+                <span className="font-semibold text-slate-800 dark:text-stone-100">Administrador de usuários:</span> gerencia usuários e permissões sem desativar a organização.
               </li>
               <li>
-                <span className="font-semibold text-slate-800">Colaborador:</span> acesso amplo às estufas para operação diária.
+                <span className="font-semibold text-slate-800 dark:text-stone-100">Colaborador:</span> acesso amplo às estufas para operação diária.
               </li>
               <li>
-                <span className="font-semibold text-slate-800">Leitor:</span> apenas consulta das estufas delegadas.
+                <span className="font-semibold text-slate-800 dark:text-stone-100">Leitor:</span> apenas consulta das estufas delegadas.
               </li>
             </ul>
           </div>
 
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-            <article className="rounded-xl border border-stone-200 bg-white p-4">
+            <article className="rounded-xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
               <p className="text-xs uppercase tracking-wide text-red-700">Usuários</p>
-              <p className="mt-1 text-2xl font-semibold text-slate-800">{users.length}</p>
+              <p className="mt-1 text-2xl font-semibold text-slate-800 dark:text-stone-100">{users.length}</p>
             </article>
-            <article className="rounded-xl border border-stone-200 bg-white p-4">
+            <article className="rounded-xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
               <p className="text-xs uppercase tracking-wide text-red-700">Administradores</p>
-              <p className="mt-1 text-2xl font-semibold text-slate-800">{adminCount}</p>
+              <p className="mt-1 text-2xl font-semibold text-slate-800 dark:text-stone-100">{adminCount}</p>
             </article>
-            <article className="rounded-xl border border-stone-200 bg-white p-4">
+            <article className="rounded-xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
               <p className="text-xs uppercase tracking-wide text-red-700">Colaboradores</p>
-              <p className="mt-1 text-2xl font-semibold text-slate-800">{collaboratorCount}</p>
+              <p className="mt-1 text-2xl font-semibold text-slate-800 dark:text-stone-100">{collaboratorCount}</p>
             </article>
-            <article className="rounded-xl border border-stone-200 bg-white p-4">
+            <article className="rounded-xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
               <p className="text-xs uppercase tracking-wide text-red-700">Leitores</p>
-              <p className="mt-1 text-2xl font-semibold text-slate-800">{readerCount}</p>
+              <p className="mt-1 text-2xl font-semibold text-slate-800 dark:text-stone-100">{readerCount}</p>
             </article>
-            <article className="rounded-xl border border-stone-200 bg-white p-4">
+            <article className="rounded-xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
               <p className="text-xs uppercase tracking-wide text-red-700">Bloqueados</p>
-              <p className="mt-1 text-2xl font-semibold text-slate-800">{blockedCount}</p>
+              <p className="mt-1 text-2xl font-semibold text-slate-800 dark:text-stone-100">{blockedCount}</p>
             </article>
           </div>
 
@@ -538,46 +540,46 @@ export const AdminUsersPage = () => {
         </header>
 
         <section className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
-          <article className="rounded-[26px] bg-[#f5f1eb] p-5 md:p-6 lg:col-span-2">
+          <article className="rounded-[26px] dark:bg-[#0f0c0c] p-5 md:p-6 lg:col-span-2">
             <header className="mb-4">
-              <h2 className="text-lg font-semibold text-slate-800">Criar usuário</h2>
-              <p className="text-xs text-slate-500">
+              <h2 className="text-lg font-semibold text-slate-800 dark:text-stone-100">Criar usuário</h2>
+              <p className="text-xs text-slate-500 dark:text-stone-400">
                 O sistema envia um convite de primeiro acesso por e-mail para o usuário definir a própria senha e configurar MFA.
               </p>
             </header>
 
-            <form onSubmit={handleCreateUser} className="grid gap-3 md:grid-cols-[1fr_1fr_180px_auto]">
-              <label className="flex flex-col gap-1 text-sm text-slate-700">
+            <form onSubmit={handleCreateUser} className="flex flex-col gap-3 md:grid md:grid-cols-[1fr_1fr_180px_auto]">
+              <label className="flex flex-col gap-1 text-sm text-slate-700 dark:text-stone-300">
                 <span>Nome completo</span>
                 <input
                   type="text"
                   name="fullName"
                   value={createUserForm.fullName}
                   onChange={handleCreateUserChange}
-                  className="w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-100"
+                  className="w-full rounded-md border border-stone-300 bg-white dark:bg-stone-800 px-3 py-2 text-sm text-slate-800 dark:text-stone-100 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-100"
                   placeholder="Ex.: Ana Souza"
                   required
                 />
               </label>
-              <label className="flex flex-col gap-1 text-sm text-slate-700">
+              <label className="flex flex-col gap-1 text-sm text-slate-700 dark:text-stone-300">
                 <span>E-mail</span>
                 <input
                   type="email"
                   name="email"
                   value={createUserForm.email}
                   onChange={handleCreateUserChange}
-                  className="w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-100"
+                  className="w-full rounded-md border border-stone-300 bg-white dark:bg-stone-800 px-3 py-2 text-sm text-slate-800 dark:text-stone-100 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-100"
                   placeholder="usuario@empresa.com"
                   required
                 />
               </label>
-              <label className="flex flex-col gap-1 text-sm text-slate-700">
+              <label className="flex flex-col gap-1 text-sm text-slate-700 dark:text-stone-300">
                 <span>Nível</span>
                 <select
                   name="role"
                   value={createUserForm.role}
                   onChange={handleCreateUserChange}
-                  className="w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-100"
+                  className="w-full rounded-md border border-stone-300 bg-white dark:bg-stone-800 px-3 py-2 text-sm text-slate-800 dark:text-stone-100 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-100"
                 >
                   {roleOptions.map((option) => (
                     <option key={option.value} value={option.value}>{option.label}</option>
@@ -596,8 +598,8 @@ export const AdminUsersPage = () => {
             </form>
 
             {createUserForm.role === 'Reader' && (
-              <div className="mt-4 rounded-xl border border-stone-200 bg-white p-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-600">Delegação inicial para leitor</p>
+              <div className="mt-4 rounded-xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-600 dark:text-stone-400">Delegação inicial para leitor</p>
                 <div className="mt-2 max-h-[190px] space-y-2 overflow-y-auto pr-1">
                   {greenhouses.map((item) => {
                     const checked = createUserForm.readerGreenhouseIds.includes(item.id);
@@ -606,17 +608,17 @@ export const AdminUsersPage = () => {
                         key={item.id}
                         className={`flex cursor-pointer items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm ${
                           checked
-                            ? 'border-red-300 bg-red-50 text-slate-800'
-                            : 'border-stone-200 bg-white text-slate-700'
+                            ? 'border-red-300 bg-red-50 dark:border-red-500/40 dark:bg-red-500/10 text-slate-800 dark:text-stone-100'
+                            : 'border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-slate-700 dark:text-stone-300'
                         }`}
                       >
                         <span>
                           <span className="block font-semibold">{item.nome || item.id}</span>
-                          <span className="block text-xs text-slate-500">{item.cidade || '-'} / {item.estado || '-'}</span>
+                          <span className="block text-xs text-slate-500 dark:text-stone-400">{item.cidade || '-'} / {item.estado || '-'}</span>
                         </span>
                         <input
                           type="checkbox"
-                          className="h-4 w-4 rounded border-stone-400 bg-white text-red-600 focus:ring focus:ring-red-500/30"
+                          className="h-4 w-4 rounded border-stone-400 bg-white dark:bg-stone-700 text-red-600 focus:ring focus:ring-red-500/30"
                           checked={checked}
                           onChange={() => toggleCreateReaderGreenhouse(item.id)}
                         />
@@ -639,10 +641,10 @@ export const AdminUsersPage = () => {
             )}
           </article>
 
-          <article className="rounded-[26px] bg-[#f5f1eb] p-5 md:p-6">
+          <article className="rounded-[26px] dark:bg-[#0f0c0c] p-5 md:p-6">
             <header className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-800">Usuários</h2>
-              <span className="text-xs text-slate-500">{loadingUsers ? 'Carregando...' : `${users.length} registros`}</span>
+              <h2 className="text-lg font-semibold text-slate-800 dark:text-stone-100">Usuários</h2>
+              <span className="text-xs text-slate-500 dark:text-stone-400">{loadingUsers ? 'Carregando...' : `${users.length} registros`}</span>
             </header>
 
             {usersError ? (
@@ -661,15 +663,15 @@ export const AdminUsersPage = () => {
                       key={listedUser.id}
                       className={`rounded-xl border px-4 py-3 text-sm transition ${
                         isSelected
-                          ? 'border-red-300 bg-red-50 text-slate-800'
-                          : 'border-stone-200 bg-white text-slate-700 hover:border-red-200'
+                          ? 'border-red-300 bg-red-50 dark:border-red-500/40 dark:bg-red-500/10 text-slate-800 dark:text-stone-100'
+                          : 'border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 text-slate-700 dark:text-stone-300 hover:border-red-200'
                       }`}
                     >
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <button type="button" onClick={() => setSelectedUserId(listedUser.id)} className="text-left">
                           <p className="font-semibold">{listedUser.fullName ?? listedUser.email}</p>
-                          <p className="text-xs text-slate-500">{listedUser.email}</p>
-                          <p className="text-xs text-slate-500">
+                          <p className="text-xs text-slate-500 dark:text-stone-400">{listedUser.email}</p>
+                          <p className="text-xs text-slate-500 dark:text-stone-400">
                             {(listedUser.permissionLevel === 'AdminMaster'
                               ? 'Administrador master'
                               : listedUser.permissionLevel === 'AdminUsers'
@@ -710,7 +712,7 @@ export const AdminUsersPage = () => {
                               }))
                             }
                             disabled={isSelf}
-                            className="rounded-md border border-stone-300 bg-white px-2 py-1 text-xs text-slate-800"
+                            className="rounded-md border border-stone-300 bg-white dark:bg-stone-800 px-2 py-1 text-xs text-slate-800 dark:text-stone-100"
                           >
                             {roleOptions.map((option) => (
                               <option key={option.value} value={option.value}>{option.label}</option>
@@ -759,43 +761,43 @@ export const AdminUsersPage = () => {
             )}
           </article>
 
-          <article className="rounded-[26px] bg-[#f5f1eb] p-5 md:p-6">
+          <article className="rounded-[26px] dark:bg-[#0f0c0c] p-5 md:p-6">
             <header className="mb-4">
-              <h2 className="text-lg font-semibold text-slate-800">Status de acesso</h2>
-              <p className="text-xs text-slate-500">
+              <h2 className="text-lg font-semibold text-slate-800 dark:text-stone-100">Status de acesso</h2>
+              <p className="text-xs text-slate-500 dark:text-stone-400">
                 Usuário bloqueado não consegue entrar na conta nem redefinir senha.
               </p>
             </header>
 
             {!selectedUser ? (
-              <p className="rounded border border-stone-200 bg-white px-3 py-2 text-sm text-slate-500">
+              <p className="rounded border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 px-3 py-2 text-sm text-slate-500 dark:text-stone-400">
                 Selecione um usuário para editar o acesso.
               </p>
             ) : (
               <div className="space-y-3">
-                <div className="rounded-xl border border-stone-200 bg-white p-3 text-xs text-slate-600">
-                  <p className="font-semibold text-slate-800">{selectedUser.fullName ?? selectedUser.email}</p>
-                  <p className="mt-1 text-slate-500">Status atual: {selectedUser.blocked ? 'Bloqueado' : 'Ativo'}</p>
+                <div className="rounded-xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-3 text-xs text-slate-600 dark:text-stone-400">
+                  <p className="font-semibold text-slate-800 dark:text-stone-100">{selectedUser.fullName ?? selectedUser.email}</p>
+                  <p className="mt-1 text-slate-500 dark:text-stone-400">Status atual: {selectedUser.blocked ? 'Bloqueado' : 'Ativo'}</p>
                 </div>
 
-                <label className="flex items-center justify-between gap-3 rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm text-slate-700">
+                <label className="flex items-center justify-between gap-3 rounded-xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 px-3 py-2 text-sm text-slate-700 dark:text-stone-300">
                   <span>Bloquear acesso deste usuário</span>
                   <input
                     type="checkbox"
                     checked={accessDraft.blocked}
                     onChange={(event) => setAccessDraft((prev) => ({ ...prev, blocked: event.target.checked }))}
-                    className="h-4 w-4 rounded border-stone-400 bg-white text-red-600 focus:ring focus:ring-red-500/30"
+                    className="h-4 w-4 rounded border-stone-400 bg-white dark:bg-stone-800 text-red-600 focus:ring focus:ring-red-500/30"
                   />
                 </label>
 
                 {accessDraft.blocked && (
-                  <label className="flex flex-col gap-1 text-sm text-slate-700">
+                  <label className="flex flex-col gap-1 text-sm text-slate-700 dark:text-stone-300">
                     <span>Motivo do bloqueio (opcional)</span>
                     <input
                       type="text"
                       value={accessDraft.reason}
                       onChange={(event) => setAccessDraft((prev) => ({ ...prev, reason: event.target.value }))}
-                      className="w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-100"
+                      className="w-full rounded-md border border-stone-300 bg-white dark:bg-stone-800 px-3 py-2 text-sm text-slate-800 dark:text-stone-100 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-100"
                       placeholder="Ex.: desligamento da empresa"
                     />
                   </label>
@@ -823,10 +825,10 @@ export const AdminUsersPage = () => {
         </section>
 
         {selectedUser && normalizeRole(selectedUser.role) === 'Reader' && (
-          <section className="mt-4 rounded-[26px] bg-[#f5f1eb] p-5 md:p-6">
+          <section className="mt-4 rounded-[26px] dark:bg-[#0f0c0c] p-5 md:p-6">
             <header className="mb-4">
-              <h2 className="text-lg font-semibold text-slate-800">Delegação de estufas para leitor</h2>
-              <p className="text-xs text-slate-500">
+              <h2 className="text-lg font-semibold text-slate-800 dark:text-stone-100">Delegação de estufas para leitor</h2>
+              <p className="text-xs text-slate-500 dark:text-stone-400">
                 Marque quais estufas o usuário leitor pode consultar.
               </p>
             </header>
@@ -839,19 +841,19 @@ export const AdminUsersPage = () => {
                     key={item.id}
                     className={`flex cursor-pointer items-center justify-between gap-3 rounded-xl border px-3 py-2 text-sm ${
                       checked
-                        ? 'border-red-300 bg-red-50 text-slate-800'
-                        : 'border-stone-200 bg-white text-slate-700'
+                        ? 'border-red-300 bg-red-50 dark:border-red-500/40 dark:bg-red-500/10 text-slate-800 dark:text-stone-100'
+                        : 'border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-slate-700 dark:text-stone-300'
                     }`}
                   >
                     <span>
                       <span className="block font-semibold">{item.nome || item.id}</span>
-                      <span className="block text-xs text-slate-500">{item.cidade || '-'} / {item.estado || '-'}</span>
+                      <span className="block text-xs text-slate-500 dark:text-stone-400">{item.cidade || '-'} / {item.estado || '-'}</span>
                     </span>
                     <input
                       type="checkbox"
                       checked={checked}
                       onChange={() => toggleReaderGreenhouse(item.id)}
-                      className="h-4 w-4 rounded border-stone-400 bg-white text-red-600 focus:ring focus:ring-red-500/30"
+                      className="h-4 w-4 rounded border-stone-400 bg-white dark:bg-stone-700 text-red-600 focus:ring focus:ring-red-500/30"
                     />
                   </label>
                 );
@@ -859,25 +861,23 @@ export const AdminUsersPage = () => {
             </div>
 
             {readerFeedback && (
-              <p className="mt-3 rounded border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-                {readerFeedback}
-              </p>
-            )}
-            {readerError && (
-              <p className="mt-3 rounded border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-                {readerError}
+              <p className={`mt-3 rounded-lg px-3 py-2 text-xs font-medium ${readerFeedback.ok ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400'}`}>
+                {readerFeedback.msg}
               </p>
             )}
 
-            <div className="mt-3 flex justify-center">
-              <Button onClick={handleReaderAccessSave} disabled={readerSaving}>
-                {readerSaving ? 'Salvando...' : 'Salvar delegação'}
-              </Button>
+            <div className="mt-4 flex justify-end">
+              <button
+                type="button"
+                onClick={saveReaderGreenhouses}
+                disabled={savingReader}
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-40 transition"
+              >
+                {savingReader ? 'Salvando...' : 'Salvar delegação'}
+              </button>
             </div>
           </section>
-        )}
-
-      </div>
-    </div>
+      )}
+    </>
   );
 };

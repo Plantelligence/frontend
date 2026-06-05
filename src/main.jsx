@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App.jsx';
 import './index.css';
+// Aplica tema salvo antes de renderizar (evita flash)
+import './store/themeStore.js';
 
 const rootElement = document.getElementById('root');
 

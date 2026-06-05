@@ -9,7 +9,7 @@ export const GridEstufas = ({
 }) => {
   if (estufas.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">
+      <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500 dark:text-stone-400">
         Nenhuma estufa encontrada com esse filtro. Ajuste a busca e tente novamente.
       </div>
     );

@@ -1,6 +1,6 @@
 // Página de histórico de relatórios periódicos por estufa.
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { DashboardSideNav } from '../components/DashboardSideNav.jsx';
+import { createPortal } from 'react-dom';
 import { ConfirmDialog } from '../components/ConfirmDialog.jsx';
 import { useAuthStore } from '../store/authStore.js';
 import { listGreenhouses } from '../api/greenhouseService.js';
@@ -79,39 +79,49 @@ function RelatorioForm({ onSave, onCancel, saving, estufaId }) {
     });
   };
 
-  return (
-    <div className="absolute inset-0 z-[70] flex items-center justify-center bg-white/60 p-4 backdrop-blur-[1px]" onClick={onCancel}>
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto bg-black/70 px-4 py-8 backdrop-blur-sm" onClick={onCancel}>
       <aside
-        className="w-full max-w-2xl overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-2xl"
+        className="w-full max-w-2xl rounded-2xl border border-stone-800/60 bg-[#0f0c0c] shadow-2xl my-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="border-b border-stone-200 px-5 py-4">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-red-600">Novo relatório</p>
-          <h2 className="mt-1 text-lg font-semibold text-slate-800">Registrar período</h2>
+        <div className="flex items-start justify-between border-b border-stone-200 px-5 py-4">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-red-400">Novo relatório</p>
+            <h2 className="mt-1 text-lg font-semibold text-slate-800 dark:text-stone-100">Registrar período</h2>
+          </div>
+          <button type="button" onClick={onCancel}
+            className="ml-4 mt-0.5 rounded-lg p-1.5 text-slate-400 dark:text-stone-500 transition hover:bg-stone-100 hover:text-slate-700">
+            <i className="fa-solid fa-xmark text-base" />
+          </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col">
+        <form
+          onSubmit={handleSubmit}
+          onKeyDown={(e) => { if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') e.preventDefault(); }}
+          className="flex flex-col"
+        >
           <div className="space-y-4 overflow-y-auto px-5 py-4" style={{ maxHeight: '65vh' }}>
             {/* período */}
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Início do período</label>
+                <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-stone-400">Início do período</label>
                 <input
                   type="date"
                   value={form.periodoInicio}
                   onChange={(e) => update('periodoInicio', e.target.value)}
                   required
-                  className="rounded border border-stone-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-red-400"
+                  className="rounded border border-stone-300 bg-white dark:bg-stone-800 px-3 py-2 text-sm text-slate-800 dark:text-stone-100 outline-none focus:border-red-400"
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Fim do período</label>
+                <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-stone-400">Fim do período</label>
                 <input
                   type="date"
                   value={form.periodoFim}
                   onChange={(e) => update('periodoFim', e.target.value)}
                   required
-                  className="rounded border border-stone-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-red-400"
+                  className="rounded border border-stone-300 bg-white dark:bg-stone-800 px-3 py-2 text-sm text-slate-800 dark:text-stone-100 outline-none focus:border-red-400"
                 />
               </div>
             </div>
@@ -119,7 +129,7 @@ function RelatorioForm({ onSave, onCancel, saving, estufaId }) {
             {/* médias opcionais */}
             <div>
               <div className="mb-2 flex items-center justify-between gap-2">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Médias do período (opcional)</p>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-stone-500">Médias do período (opcional)</p>
                 <button
                   type="button"
                   onClick={handleBuscarMedias}
@@ -130,53 +140,53 @@ function RelatorioForm({ onSave, onCancel, saving, estufaId }) {
                 </button>
               </div>
               {resumoMsg ? (
-                <p className={`mb-3 rounded-md border px-3 py-2 text-[11px] ${resumoMsg.startsWith('Médias preenchidas') ? 'border-green-200 bg-green-50 text-green-700' : 'border-stone-100 bg-stone-50 text-slate-500'}`}>
+                <p className={`mb-3 rounded-md border px-3 py-2 text-[11px] ${resumoMsg.startsWith('Médias preenchidas') ? 'border-green-200 bg-green-50 text-green-700' : 'border-stone-100 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/40 text-slate-500 dark:text-stone-400'}`}>
                   {resumoMsg}
                 </p>
               ) : (
-                <p className="mb-3 rounded-md border border-stone-100 bg-stone-50 px-3 py-2 text-[11px] text-slate-500">
+                <p className="mb-3 rounded-md border border-stone-100 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/40 px-3 py-2 text-[11px] text-slate-500 dark:text-stone-400">
                   Clique em "Calcular do sensor" para preencher automaticamente a partir dos dados gravados, ou preencha manualmente.
                 </p>
               )}
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs text-slate-600">Temperatura média (°C)</label>
+                  <label className="text-xs text-slate-600 dark:text-stone-400">Temperatura média (°C)</label>
                   <input
                     type="text"
                     value={form.avgTemperatura}
                     onChange={(e) => update('avgTemperatura', e.target.value)}
                     placeholder="Ex: 16.5"
-                    className="rounded border border-stone-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-red-400"
+                    className="rounded border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 px-3 py-2 text-sm text-slate-800 dark:text-stone-100 placeholder:text-slate-400 outline-none focus:border-red-400"
                   />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs text-slate-600">Umidade do ar média (%)</label>
+                  <label className="text-xs text-slate-600 dark:text-stone-400">Umidade do ar média (%)</label>
                   <input
                     type="text"
                     value={form.avgUmidade}
                     onChange={(e) => update('avgUmidade', e.target.value)}
                     placeholder="Ex: 88"
-                    className="rounded border border-stone-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-red-400"
+                    className="rounded border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 px-3 py-2 text-sm text-slate-800 dark:text-stone-100 placeholder:text-slate-400 outline-none focus:border-red-400"
                   />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs text-slate-600">Umidade do solo média (%)</label>
+                  <label className="text-xs text-slate-600 dark:text-stone-400">Umidade do solo média (%)</label>
                   <input
                     type="text"
                     value={form.avgUmidadeSolo}
                     onChange={(e) => update('avgUmidadeSolo', e.target.value)}
                     placeholder="Ex: 63"
-                    className="rounded border border-stone-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-red-400"
+                    className="rounded border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 px-3 py-2 text-sm text-slate-800 dark:text-stone-100 placeholder:text-slate-400 outline-none focus:border-red-400"
                   />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs text-slate-600">Luminosidade média (lux)</label>
+                  <label className="text-xs text-slate-600 dark:text-stone-400">Luminosidade média (lux)</label>
                   <input
                     type="text"
                     value={form.avgLuminosidade}
                     onChange={(e) => update('avgLuminosidade', e.target.value)}
                     placeholder="Ex: 250"
-                    className="rounded border border-stone-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-red-400"
+                    className="rounded border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 px-3 py-2 text-sm text-slate-800 dark:text-stone-100 placeholder:text-slate-400 outline-none focus:border-red-400"
                   />
                 </div>
               </div>
@@ -184,13 +194,13 @@ function RelatorioForm({ onSave, onCancel, saving, estufaId }) {
 
             {/* resumo operacional */}
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Resumo do período</label>
+              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-stone-400">Resumo do período</label>
               <textarea
                 value={form.resumo}
                 onChange={(e) => update('resumo', e.target.value)}
                 rows={4}
                 placeholder="Descreva as principais ações realizadas e observações do período..."
-                className="w-full resize-none rounded border border-stone-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-red-400"
+                className="w-full resize-none rounded border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 px-3 py-2 text-sm text-slate-800 dark:text-stone-100 placeholder:text-slate-400 outline-none focus:border-red-400"
               />
             </div>
           </div>
@@ -199,7 +209,7 @@ function RelatorioForm({ onSave, onCancel, saving, estufaId }) {
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 rounded border border-stone-200 px-3 py-2 text-sm text-stone-700 transition hover:bg-stone-50"
+              className="flex-1 rounded border border-stone-200 dark:border-stone-700 px-3 py-2 text-sm text-stone-700 dark:text-stone-300 transition hover:bg-stone-50 dark:hover:bg-stone-800"
             >
               Cancelar
             </button>
@@ -213,20 +223,21 @@ function RelatorioForm({ onSave, onCancel, saving, estufaId }) {
           </div>
         </form>
       </aside>
-    </div>
+    </div>,
+    document.body
   );
 }
 
 // card de exibição de um relatório
 function RelatorioCard({ relatorio, onDelete, readOnly }) {
   return (
-    <article className="rounded-2xl border border-stone-200 bg-white p-5 flex flex-col gap-3">
+    <article className="rounded-2xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-5 flex flex-col gap-3">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold text-slate-800">
+          <p className="text-sm font-semibold text-slate-800 dark:text-stone-100">
             {formatDate(relatorio.periodoInicio)} — {formatDate(relatorio.periodoFim)}
           </p>
-          <p className="text-[10px] text-slate-400 mt-0.5">
+          <p className="text-[10px] text-slate-400 dark:text-stone-500 mt-0.5">
             Gerado em {formatDate(relatorio.criadoEm)}
           </p>
         </div>
@@ -234,7 +245,7 @@ function RelatorioCard({ relatorio, onDelete, readOnly }) {
           <button
             type="button"
             onClick={() => onDelete(relatorio)}
-            className="shrink-0 text-[11px] text-slate-400 border border-stone-200 rounded px-2 py-1 transition hover:border-rose-300 hover:text-rose-600"
+            className="shrink-0 text-[11px] text-slate-400 dark:text-stone-500 border border-stone-200 dark:border-stone-700 rounded px-2 py-1 transition hover:border-rose-300 hover:text-rose-600"
           >
             Remover
           </button>
@@ -245,27 +256,27 @@ function RelatorioCard({ relatorio, onDelete, readOnly }) {
       {(relatorio.avgTemperatura || relatorio.avgUmidade || relatorio.avgUmidadeSolo || relatorio.avgLuminosidade) && (
         <div className="grid gap-2 grid-cols-2 sm:grid-cols-4">
           {relatorio.avgTemperatura && (
-            <div className="rounded border border-stone-100 bg-stone-50 px-3 py-2">
-              <p className="text-[10px] uppercase tracking-widest text-slate-400">Temperatura</p>
-              <p className="text-sm font-semibold text-slate-800">{relatorio.avgTemperatura}°C</p>
+            <div className="rounded border border-stone-100 bg-stone-50 dark:bg-stone-800/40 px-3 py-2">
+              <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-stone-500">Temperatura</p>
+              <p className="text-sm font-semibold text-slate-800 dark:text-stone-100">{relatorio.avgTemperatura}°C</p>
             </div>
           )}
           {relatorio.avgUmidade && (
-            <div className="rounded border border-stone-100 bg-stone-50 px-3 py-2">
-              <p className="text-[10px] uppercase tracking-widest text-slate-400">Umidade do ar</p>
-              <p className="text-sm font-semibold text-slate-800">{relatorio.avgUmidade}%</p>
+            <div className="rounded border border-stone-100 bg-stone-50 dark:bg-stone-800/40 px-3 py-2">
+              <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-stone-500">Umidade do ar</p>
+              <p className="text-sm font-semibold text-slate-800 dark:text-stone-100">{relatorio.avgUmidade}%</p>
             </div>
           )}
           {relatorio.avgUmidadeSolo && (
-            <div className="rounded border border-stone-100 bg-stone-50 px-3 py-2">
-              <p className="text-[10px] uppercase tracking-widest text-slate-400">Umidade do solo</p>
-              <p className="text-sm font-semibold text-slate-800">{relatorio.avgUmidadeSolo}%</p>
+            <div className="rounded border border-stone-100 bg-stone-50 dark:bg-stone-800/40 px-3 py-2">
+              <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-stone-500">Umidade do solo</p>
+              <p className="text-sm font-semibold text-slate-800 dark:text-stone-100">{relatorio.avgUmidadeSolo}%</p>
             </div>
           )}
           {relatorio.avgLuminosidade && (
-            <div className="rounded border border-stone-100 bg-stone-50 px-3 py-2">
-              <p className="text-[10px] uppercase tracking-widest text-slate-400">Luminosidade</p>
-              <p className="text-sm font-semibold text-slate-800">{relatorio.avgLuminosidade} lux</p>
+            <div className="rounded border border-stone-100 bg-stone-50 dark:bg-stone-800/40 px-3 py-2">
+              <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-stone-500">Luminosidade</p>
+              <p className="text-sm font-semibold text-slate-800 dark:text-stone-100">{relatorio.avgLuminosidade} lux</p>
             </div>
           )}
         </div>
@@ -273,7 +284,7 @@ function RelatorioCard({ relatorio, onDelete, readOnly }) {
 
       {/* resumo operacional */}
       {relatorio.resumo && (
-        <p className="text-sm text-slate-600 leading-relaxed border-t border-stone-100 pt-2">
+        <p className="text-sm text-slate-600 dark:text-stone-400 leading-relaxed border-t border-stone-100 dark:border-stone-700 pt-2">
           {relatorio.resumo}
         </p>
       )}
@@ -353,17 +364,8 @@ export const RelatoriosPage = () => {
   );
 
   return (
-    <div className="mx-auto w-full max-w-[1400px] px-4 py-6">
-      <div className="rounded-[30px] bg-[#181415] p-4 shadow-[0_24px_60px_rgba(0,0,0,0.35)] md:p-6">
-        <div className="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
-          <DashboardSideNav
-            active="relatorios"
-            footerText={isReader
-              ? 'Perfil Leitor: apenas consulta dos relatórios das estufas delegadas.'
-              : 'Registre o histórico mensal de temperatura, umidade do ar, umidade do solo e luminosidade de cada estufa.'}
-          />
-
-          <section className="relative rounded-[26px] bg-[#f5f1eb] p-4 md:p-6 lg:h-[calc(100vh-160px)] lg:min-h-[640px] lg:max-h-[820px] overflow-y-auto">
+    <>
+          <section className="relative rounded-[26px] dark:bg-[#0f0c0c] p-4 md:p-6 overflow-y-auto">
 
             {/* painel de criação */}
             {formOpen && (
@@ -375,12 +377,12 @@ export const RelatoriosPage = () => {
               />
             )}
 
-            <header className="mb-4 rounded-2xl border border-stone-300 bg-[#fcfaf7] p-4">
+            <header className="mb-4 rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-red-700">Histórico</p>
-                  <h1 className="mt-1 text-2xl font-semibold text-slate-800">Relatórios da estufa</h1>
-                  <p className="mt-1 text-sm text-slate-600">Registre as médias mensais dos 4 sensores e anote o que aconteceu na estufa no período.</p>
+                  <h1 className="mt-1 text-2xl font-semibold text-slate-800 dark:text-stone-100">Relatórios da estufa</h1>
+                  <p className="mt-1 text-sm text-slate-600 dark:text-stone-400">Registre as médias mensais dos 4 sensores e anote o que aconteceu na estufa no período.</p>
                 </div>
                 {!isReader && selectedId && (
                   <button
@@ -396,14 +398,14 @@ export const RelatoriosPage = () => {
 
             {/* seletor de estufa */}
             {greenhouses.length > 1 && (
-              <div className="mb-4 rounded-2xl border border-stone-200 bg-white px-4 py-3">
-                <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
+              <div className="mb-4 rounded-2xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 px-4 py-3">
+                <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-stone-400 mb-2">
                   Estufa
                 </label>
                 <select
                   value={selectedId}
                   onChange={(e) => setSelectedId(e.target.value)}
-                  className="w-full rounded border border-stone-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-red-400 sm:w-auto"
+                  className="w-full rounded border border-stone-300 bg-white dark:bg-stone-800 px-3 py-2 text-sm text-slate-800 dark:text-stone-100 outline-none focus:border-red-400 sm:w-auto"
                 >
                   {greenhouses.map((g) => (
                     <option key={g.id} value={g.id}>{g.name}</option>
@@ -414,9 +416,9 @@ export const RelatoriosPage = () => {
 
             {/* cabeçalho com estufa selecionada */}
             {selectedGreenhouse && greenhouses.length === 1 && (
-              <div className="mb-4 rounded-2xl border border-stone-200 bg-white px-4 py-3">
-                <p className="text-xs text-slate-500">Exibindo relatórios de</p>
-                <p className="text-sm font-semibold text-slate-800">{selectedGreenhouse.name}</p>
+              <div className="mb-4 rounded-2xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 px-4 py-3">
+                <p className="text-xs text-slate-500 dark:text-stone-400">Exibindo relatórios de</p>
+                <p className="text-sm font-semibold text-slate-800 dark:text-stone-100">{selectedGreenhouse.name}</p>
               </div>
             )}
 
@@ -429,42 +431,38 @@ export const RelatoriosPage = () => {
             {loading ? (
               <div className="grid gap-4 md:grid-cols-2">
                 {[0, 1, 2].map((i) => (
-                  <div key={i} className="h-36 animate-pulse rounded-2xl border border-stone-200 bg-white" />
+                  <div key={i} className="h-36 animate-pulse rounded-2xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35" />
                 ))}
               </div>
             ) : relatorios.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-stone-300 bg-[#fcfaf7] p-10 text-center">
-                <p className="text-sm text-slate-600">Nenhum relatório registrado para esta estufa.</p>
+              <div className="rounded-2xl border border-dashed border-stone-300 bg-stone-50 dark:border-stone-700/40 dark:bg-stone-800/40 p-10 text-center">
+                <p className="text-sm text-slate-600 dark:text-stone-400">Nenhum relatório registrado para esta estufa.</p>
                 {!isReader && (
-                  <p className="mt-1 text-xs text-slate-400">Clique em "Novo relatório" para registrar o primeiro período.</p>
+                  <p className="mt-1 text-xs text-slate-400 dark:text-stone-500">Clique em "Novo relatório" para registrar o primeiro período.</p>
                 )}
               </div>
             ) : (
               <div className="grid gap-4 md:grid-cols-2">
-                {relatorios.map((relatorio) => (
+                {relatorios.map((r) => (
                   <RelatorioCard
-                    key={relatorio.id}
-                    relatorio={relatorio}
-                    onDelete={setDeleteTarget}
-                    readOnly={isReader}
+                    key={r.id}
+                    relatorio={r}
+                    onDelete={isReader ? null : () => setDeleteTarget(r)}
                   />
                 ))}
               </div>
             )}
           </section>
-        </div>
-      </div>
 
-      <ConfirmDialog
-        open={Boolean(deleteTarget)}
-        title="Remover relatório"
-        description={deleteTarget ? `Deseja remover o relatório do período ${formatDate(deleteTarget.periodoInicio)} — ${formatDate(deleteTarget.periodoFim)}?` : ''}
-        confirmLabel={saving ? 'Removendo...' : 'Remover'}
-        confirmDisabled={saving}
-        cancelDisabled={saving}
-        onConfirm={handleConfirmDelete}
-        onCancel={() => setDeleteTarget(null)}
-      />
-    </div>
+          <ConfirmDialog
+            open={!!deleteTarget}
+            title="Remover relatório"
+            description={`Deseja remover o relatório do período ${deleteTarget?.periodo_inicio ?? ''}? Esta ação não pode ser desfeita.`}
+            onConfirm={handleConfirmDelete}
+            onCancel={() => setDeleteTarget(null)}
+            confirmLabel="Remover"
+            cancelLabel="Cancelar"
+          />
+    </>
   );
 };

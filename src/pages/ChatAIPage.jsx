@@ -1,289 +1,385 @@
-// Pagina de chat com IA integrada ao contexto da estufa.
+/**
+ * ChatAIPage — Assistente de IA especializado em cultivo de estufas.
+ * Layout alinhado ao padrão visual das demais páginas do dashboard.
+ */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { DashboardSideNav } from '../components/DashboardSideNav.jsx';
-import { sendChatMessage } from '../api/chatService.js';
+import { useAuthStore } from '../store/authStore.js';
 
-// Mensagem inicial que aparece quando o usuario abre o chat.
+// Lê o token sempre fresco (evita usar token expirado em closures)
+const getFreshToken = () => {
+  const { tokens } = useAuthStore.getState();
+  return tokens?.accessToken ?? tokens?.access_token ?? null;
+};
+
+// Tenta renovar o access token via refresh endpoint
+const tryRefreshToken = async () => {
+  const { tokens, setSession, clearSession } = useAuthStore.getState();
+  const refreshToken = tokens?.refreshToken ?? tokens?.refresh_token ?? null;
+  if (!refreshToken) return null;
+  try {
+    const res = await fetch(`${API_BASE}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+    });
+    if (!res.ok) { clearSession(); return null; }
+    const data = await res.json();
+    setSession({ user: data.user, tokens: data.tokens });
+    return data.tokens?.accessToken ?? data.tokens?.access_token ?? null;
+  } catch {
+    clearSession();
+    return null;
+  }
+};
+
+// ── Constantes ─────────────────────────────────────────────────────────────────
+
+const API_BASE = (() => {
+  const raw = (import.meta.env?.VITE_APP_API_URL ?? '').trim();
+  if (!raw) return '/api';
+  const cleaned = raw.replace(/\/+$/, '');
+  return cleaned.endsWith('/api') ? cleaned : `${cleaned}/api`;
+})();
+
 const INITIAL_MESSAGE = {
   id: 'init',
   role: 'assistant',
-  text: 'Ola! Sou o assistente da Plantelligence. Posso te ajudar com duvidas sobre cultivo de cogumelos, interpretar alertas das suas estufas ou sugerir ajustes nos parametros ambientais. Como posso ajudar?',
-  timestamp: new Date().toISOString()
+  text: 'Olá! Sou o assistente da **Plantelligence**. Posso te ajudar com dúvidas sobre cultivo de cogumelos, interpretar alertas das suas estufas ou sugerir ajustes nos parâmetros ambientais.\n\nComo posso ajudar?',
+  timestamp: new Date().toISOString(),
+  streaming: false,
 };
 
-const generateMessageId = () =>
-  typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+const uid = () =>
+  typeof crypto !== 'undefined' && crypto.randomUUID
     ? crypto.randomUUID()
     : `msg-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
-const formatTime = (iso) => {
-  try {
-    return new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-  } catch (_error) {
-    return '--';
-  }
+const fmtTime = (iso) => {
+  try { return new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); }
+  catch { return '--'; }
 };
 
-// Normaliza texto markdown da IA para melhorar leitura na bolha do chat.
-const normalizeAssistantText = (rawText) => {
-  if (typeof rawText !== 'string') {
-    return '';
-  }
+// ── Bloco de código com botão copiar ──────────────────────────────────────────
 
-  return rawText
-    .replace(/\r\n/g, '\n')
-    .replace(/\r/g, '\n')
-    .replace(/\s+(#{1,6}\s)/g, '\n\n$1')
-    .replace(/\s+(\d+\.\s+\*\*)/g, '\n\n$1')
-    .replace(/\s+(-\s+\*\*)/g, '\n$1')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
-};
+const CodeBlock = ({ children, className }) => {
+  const [copied, setCopied] = useState(false);
+  const code = String(children).replace(/\n$/, '');
+  const lang = (className || '').replace('language-', '') || 'código';
 
-const resolveSectionBadgeClass = (title = '') => {
-  const normalized = title.toLowerCase();
-
-  if (normalized.includes('diagn')) {
-    return 'border-amber-200 bg-amber-50 text-amber-800';
-  }
-  if (normalized.includes('agora') || normalized.includes('acao') || normalized.includes('fazer')) {
-    return 'border-emerald-200 bg-emerald-50 text-emerald-800';
-  }
-  if (normalized.includes('erro') || normalized.includes('evitar') || normalized.includes('prev')) {
-    return 'border-rose-200 bg-rose-50 text-rose-800';
-  }
-  if (normalized.includes('grave') || normalized.includes('urg')) {
-    return 'border-violet-200 bg-violet-50 text-violet-800';
-  }
-
-  return 'border-slate-200 bg-slate-50 text-slate-700';
-};
-
-// Bolha de mensagem individual. Assistente fica a esquerda, usuario a direita.
-const MessageBubble = ({ message }) => {
-  const isUser = message.role === 'user';
+  const handleCopy = () => {
+    navigator.clipboard.writeText(code).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
-      <div className={`max-w-[78%] rounded-2xl px-4 py-3 text-sm shadow-sm ${
+    <div className="group my-2 overflow-hidden rounded-lg border border-stone-200 bg-stone-50">
+      <div className="flex items-center justify-between border-b border-stone-200 bg-stone-100 px-3 py-1.5">
+        <span className="text-[10px] font-semibold uppercase tracking-widest text-stone-500">{lang}</span>
+        <button type="button" onClick={handleCopy}
+          className="flex items-center gap-1 text-[10px] font-medium text-stone-500 hover:text-stone-800 dark:text-stone-100">
+          {copied ? <><i className="fa-solid fa-check text-emerald-600" /> Copiado!</> : <><i className="fa-regular fa-copy" /> Copiar</>}
+        </button>
+      </div>
+      <pre className="overflow-x-auto p-3 text-xs leading-relaxed text-stone-800 dark:text-stone-100"><code>{code}</code></pre>
+    </div>
+  );
+};
+
+// ── Badge por seção ────────────────────────────────────────────────────────────
+
+const sectionBadge = (title = '') => {
+  const t = title.toLowerCase();
+  if (t.includes('diagn'))                        return 'border-amber-300 bg-amber-50 text-amber-800';
+  if (t.includes('agora') || t.includes('fazer')) return 'border-emerald-300 bg-emerald-50 text-emerald-800';
+  if (t.includes('erro') || t.includes('evitar')) return 'border-rose-300 bg-rose-50 text-rose-800';
+  if (t.includes('grave') || t.includes('urg'))   return 'border-violet-300 bg-violet-50 text-violet-800';
+  return 'border-stone-200 bg-stone-50 text-stone-700';
+};
+
+// ── Bolha de mensagem ──────────────────────────────────────────────────────────
+
+const MessageBubble = ({ message }) => {
+  const isUser = message.role === 'user';
+  return (
+    <div className={`flex mb-3 ${isUser ? 'justify-end' : 'justify-start'}`}>
+      {!isUser && (
+        <div className="mr-2 mt-1 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-red-700 text-[9px] font-bold text-white">
+          IA
+        </div>
+      )}
+      <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm shadow-sm ${
         isUser
-          ? 'bg-red-600 text-white'
-          : 'border border-stone-200 bg-white text-slate-800'
+          ? 'bg-red-700 text-white rounded-br-md'
+          : 'border border-stone-200 bg-white text-slate-800 dark:border-stone-700/40 dark:bg-stone-800/40 dark:text-stone-100 rounded-bl-md'
       }`}>
-        {!isUser ? (
-          <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-red-600">
-            Assistente IA
-          </p>
-        ) : null}
+        {!isUser && (
+          <p className="mb-1 text-[9px] font-semibold uppercase tracking-widest text-red-600">Assistente</p>
+        )}
         {isUser ? (
           <p className="whitespace-pre-wrap break-words leading-relaxed">{message.text}</p>
         ) : (
-          <div className="break-words text-slate-800 leading-relaxed [&_h1]:mb-2 [&_h1]:mt-3 [&_h1]:text-base [&_h1]:font-semibold [&_h2]:mb-2 [&_h2]:mt-3 [&_h2]:text-[15px] [&_h2]:font-semibold [&_h3]:mb-2 [&_h3]:mt-3 [&_h3]:text-sm [&_h3]:font-semibold [&_p]:my-2 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1 [&_strong]:font-semibold [&_code]:rounded [&_code]:bg-stone-100 [&_code]:px-1 [&_code]:py-0.5">
+          <div className="break-words leading-relaxed
+            [&_p]:my-1 [&_ul]:my-1.5 [&_ul]:list-disc [&_ul]:pl-4
+            [&_ol]:my-1.5 [&_ol]:list-decimal [&_ol]:pl-4
+            [&_li]:my-0.5 [&_strong]:font-semibold [&_strong]:text-slate-900 dark:text-stone-100
+            [&_code]:rounded [&_code]:bg-stone-100 [&_code]:px-1 [&_code]:text-[11px] [&_code]:text-red-700">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
                 h3: ({ children }) => {
                   const title = String(children ?? '').replace(/^#+\s*/, '').trim();
                   return (
-                    <h3 className={`mb-2 mt-3 inline-flex rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${resolveSectionBadgeClass(title)}`}>
+                    <h3 className={`mb-1.5 mt-2.5 inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${sectionBadge(title)}`}>
                       {children}
                     </h3>
                   );
-                }
+                },
+                code: ({ node, inline, className, children, ...props }) => {
+                  if (inline) return <code className="rounded bg-stone-100 px-1 text-[11px] text-red-700" {...props}>{children}</code>;
+                  return <CodeBlock className={className}>{children}</CodeBlock>;
+                },
               }}
             >
               {message.text}
             </ReactMarkdown>
+            {message.streaming && (
+              <span className="ml-0.5 inline-block h-3.5 w-0.5 animate-pulse bg-red-500 align-text-bottom" />
+            )}
           </div>
         )}
-        <p className={`mt-1 text-[10px] ${isUser ? 'text-red-200' : 'text-slate-400'}`}>
-          {formatTime(message.timestamp)}
-        </p>
+        <p className={`mt-1 text-[9px] ${isUser ? 'text-red-200' : 'text-slate-400 dark:text-stone-500'}`}>{fmtTime(message.timestamp)}</p>
       </div>
     </div>
   );
 };
 
-// Indicador animado de "assistente digitando..."
 const TypingIndicator = () => (
-  <div className="flex justify-start">
-    <div className="flex items-center gap-1 rounded-2xl border border-stone-200 bg-white px-4 py-3 shadow-sm">
-      {[0, 1, 2].map((i) => (
-        <span
-          key={i}
-          className="h-2 w-2 animate-bounce rounded-full bg-slate-400"
-          style={{ animationDelay: `${i * 150}ms` }}
-        />
+  <div className="mb-3 flex justify-start">
+    <div className="mr-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-700 text-[9px] font-bold text-white">IA</div>
+    <div className="flex items-center gap-1.5 rounded-2xl rounded-bl-md border border-stone-200 bg-white dark:border-stone-700/40 dark:bg-stone-800/40 px-4 py-2.5 shadow-sm">
+      {[0,1,2].map(i => (
+        <span key={i} className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400" style={{ animationDelay: `${i*150}ms` }} />
       ))}
     </div>
   </div>
 );
 
-export const ChatAIPage = () => {
-  const [messages, setMessages] = useState([INITIAL_MESSAGE]);
-  const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const messagesContainerRef = useRef(null);
-  const bottomRef = useRef(null);
-  const inputRef = useRef(null);
+// ── Componente principal ───────────────────────────────────────────────────────
 
-  // Rola automaticamente para o final quando chega nova mensagem.
+export const ChatAIPage = () => {
+  useAuthStore();
+
+  const [messages, setMessages]   = useState([INITIAL_MESSAGE]);
+  const [input, setInput]         = useState('');
+  const [loading, setLoading]     = useState(false);
+  const [streaming, setStreaming] = useState(false);
+
+  const messagesEndRef = useRef(null);
+  const inputRef       = useRef(null);
+  const containerRef   = useRef(null);
+  const abortRef       = useRef(null);
+  const isAtBottomRef  = useRef(true);
+
+  const scrollToBottom = useCallback((force = false) => {
+    if (!force && !isAtBottomRef.current) return;
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, []);
+
   useEffect(() => {
-    const container = messagesContainerRef.current;
-    if (!container) {
-      return;
-    }
-    container.scrollTo({
-      top: container.scrollHeight,
-      behavior: 'smooth'
-    });
-  }, [messages, loading]);
+    const el = containerRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = el;
+      isAtBottomRef.current = scrollHeight - scrollTop - clientHeight < 60;
+    };
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => { scrollToBottom(); }, [messages, loading, scrollToBottom]);
 
   const sendMessage = async () => {
     const trimmed = input.trim();
-    if (!trimmed || loading) {
-      return;
-    }
+    if (!trimmed || loading) return;
 
-    const userMessage = {
-      id: generateMessageId(),
-      role: 'user',
-      text: trimmed,
-      timestamp: new Date().toISOString()
-    };
+    abortRef.current?.abort();
+    abortRef.current = new AbortController();
 
-    setMessages((prev) => [...prev, userMessage]);
+    const userMsg = { id: uid(), role: 'user', text: trimmed, timestamp: new Date().toISOString() };
+    const history = [...messages, userMsg].map(({ role, text }) => ({ role, content: text }));
+
+    setMessages(prev => [...prev, userMsg]);
     setInput('');
     setLoading(true);
-    setError(null);
+    setStreaming(false);
+    isAtBottomRef.current = true;
+
+    const assistantId  = uid();
+    const assistantMsg = { id: assistantId, role: 'assistant', text: '', timestamp: new Date().toISOString(), streaming: true };
 
     try {
-      const history = [...messages, userMessage].map(({ role, text }) => ({
-        role,
-        content: text
-      }));
-      const result = await sendChatMessage({ messages: history });
-      const reply = normalizeAssistantText(
-        result?.response ?? 'Não consegui gerar resposta agora.'
-      );
+      const doFetch = async (token) => fetch(`${API_BASE}/chat/stream`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ messages: history }),
+        signal: abortRef.current.signal,
+      });
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: generateMessageId(),
-          role: 'assistant',
-          text: reply,
-          timestamp: new Date().toISOString()
+      let token    = getFreshToken();
+      let response = await doFetch(token);
+
+      if (response.status === 401) {
+        const newToken = await tryRefreshToken();
+        if (!newToken) throw new Error('Sessão expirada. Faça login novamente.');
+        abortRef.current = new AbortController();
+        response = await doFetch(newToken);
+      }
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body?.detail || `Erro ${response.status}`);
+      }
+
+      setMessages(prev => [...prev, assistantMsg]);
+      setLoading(false);
+      setStreaming(true);
+
+      const reader  = response.body.getReader();
+      const decoder = new TextDecoder();
+      let   buffer  = '';
+      let   fullText = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() ?? '';
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const parsed = JSON.parse(line.slice(6));
+            if (parsed.chunk) {
+              fullText += parsed.chunk;
+              setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, text: fullText } : m));
+              scrollToBottom();
+            }
+            if (parsed.done) {
+              setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, streaming: false } : m));
+              setStreaming(false);
+            }
+          } catch {}
         }
-      ]);
-    } catch (fetchError) {
-      const detail = fetchError?.response?.data?.detail;
-      const isIaUnavailable =
-        typeof detail === 'string'
-        && detail.toLowerCase().includes('assistente de ia indisponivel');
-
-      setError(
-        isIaUnavailable
-          ? 'Assistente temporariamente indisponível. Tente novamente em alguns minutos.'
-          : fetchError?.response?.data?.detail
-          ?? fetchError?.response?.data?.message
-          ?? 'Não foi possível obter uma resposta agora. Tente novamente em instantes.'
-      );
+      }
+    } catch (err) {
+      if (err?.name === 'AbortError') return;
+      setMessages(prev => prev.filter(m => m.id !== assistantId));
+      setMessages(prev => [...prev, {
+        id: uid(), role: 'assistant', streaming: false,
+        text: `Não foi possível obter resposta. ${err?.message || 'Tente novamente.'}\n\nReformule a pergunta ou tente em instantes.`,
+        timestamp: new Date().toISOString(),
+      }]);
     } finally {
       setLoading(false);
-      inputRef.current?.focus();
+      setStreaming(false);
+      setTimeout(() => inputRef.current?.focus(), 100);
     }
   };
 
-  const handleKeyDown = (event) => {
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault();
-      sendMessage();
-    }
+  const handleKey = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  };
+
+  const handleClear = () => {
+    abortRef.current?.abort();
+    setMessages([INITIAL_MESSAGE]);
+    setLoading(false);
+    setStreaming(false);
   };
 
   return (
-    <div className="mx-auto w-full max-w-[1400px] px-4 py-6">
-      <div className="rounded-[30px] bg-[#181415] p-4 shadow-[0_24px_60px_rgba(0,0,0,0.35)] md:p-6">
-        <div className="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
-          <DashboardSideNav
-            active="chat"
-            footerText="Use o assistente para tirar duvidas de cultivo e receber orientacoes praticas."
-          />
-
-          <section className="flex flex-col overflow-hidden rounded-[26px] bg-[#f5f1eb] p-4 md:p-6 lg:h-[calc(100vh-160px)] lg:min-h-[640px] lg:max-h-[820px]">
-            {/* Cabecalho */}
-            <header className="mb-4 rounded-2xl border border-stone-300 bg-[#fcfaf7] p-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-red-100">
-                  <i className="fa-solid fa-robot text-red-600" aria-hidden="true" />
-                </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-red-700">
-                    Assistente IA
-                  </p>
-                  <h1 className="mt-0.5 text-xl font-semibold text-slate-800">
-                    Chat com IA
-                  </h1>
-                </div>
-                <span className="ml-auto rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
-                  Assistente online
-                </span>
-              </div>
-              <p className="mt-2 text-sm text-slate-600">
-                Tire duvidas sobre cultivo, interprete alertas e receba sugestoes de ajuste para suas estufas.
-              </p>
-            </header>
-
-            {/* Area de mensagens — ocupa o espaco restante e rola internamente */}
-            <div ref={messagesContainerRef} className="flex-1 space-y-4 overflow-y-auto pr-1 pb-2">
-              {messages.map((message) => (
-                <MessageBubble key={message.id} message={message} />
-              ))}
-              {loading ? <TypingIndicator /> : null}
-              {error ? (
-                <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                  {error}
-                </p>
-              ) : null}
-              <div ref={bottomRef} />
-            </div>
-
-            {/* Campo de entrada */}
-            <div className="mt-4 flex items-end gap-3 rounded-2xl border border-stone-300 bg-white p-3 shadow-sm">
-              <textarea
-                ref={inputRef}
-                value={input}
-                onChange={(event) => setInput(event.target.value.slice(0, 1000))}
-                onKeyDown={handleKeyDown}
-                placeholder="Pergunte sobre cultivo, alertas ou parametros ambientais..."
-                rows={2}
-                disabled={loading}
-                className="flex-1 resize-none rounded-xl border-0 bg-transparent px-1 py-1 text-sm text-slate-800 placeholder-slate-400 outline-none disabled:opacity-60"
-              />
-              <button
-                type="button"
-                onClick={sendMessage}
-                disabled={loading || !input.trim()}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-600 text-white shadow-sm transition hover:bg-red-700 disabled:opacity-40"
-                aria-label="Enviar mensagem"
-              >
-                {loading ? (
-                  <i className="fa-solid fa-circle-notch animate-spin text-sm" aria-hidden="true" />
-                ) : (
-                  <i className="fa-solid fa-paper-plane text-sm" aria-hidden="true" />
-                )}
-              </button>
-            </div>
-            <p className="mt-2 text-center text-[11px] text-slate-400">
-              Pressione Enter para enviar · Shift+Enter para nova linha
-            </p>
-          </section>
+    <div
+      className="flex flex-col rounded-2xl border border-stone-200 bg-white shadow-sm dark:border-stone-800/60 dark:bg-stone-900/35"
+      style={{ height: 'calc(100vh - 7rem)', minHeight: '480px' }}
+    >
+      {/* Cabeçalho */}
+      <div className="flex flex-shrink-0 items-center justify-between border-b border-stone-200 px-5 py-3 dark:border-stone-800/40">
+        <div className="flex items-center gap-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-600/10 text-red-500">
+            <i className="fa-solid fa-robot text-sm" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-stone-800 dark:text-stone-100">Assistente de Cultivo</p>
+            <p className="text-[10px] text-stone-400">Especializado em estufas de cogumelos · LGPD compliant</p>
+          </div>
         </div>
+        <div className="flex items-center gap-3">
+          {(loading || streaming) && (
+            <span className="flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1 text-[11px] text-red-600 dark:bg-red-500/10 dark:text-red-400">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-500" />Gerando...
+            </span>
+          )}
+          <span className="flex items-center gap-1.5 text-[10px] text-stone-400">
+            <span className="h-2 w-2 rounded-full bg-emerald-400" />Online
+          </span>
+          <button type="button" onClick={handleClear}
+            className="rounded-lg border border-stone-200 px-3 py-1.5 text-xs text-stone-600 transition hover:border-red-400 hover:text-red-700 dark:border-stone-700/50 dark:text-stone-400 dark:hover:border-red-500 dark:hover:text-red-400">
+            <i className="fa-solid fa-trash-can mr-1" />Limpar
+          </button>
+        </div>
+      </div>
+
+      {/* Mensagens */}
+      <div ref={containerRef} className="flex-1 overflow-y-auto px-4 py-4 md:px-6">
+        {messages.map(msg => <MessageBubble key={msg.id} message={msg} />)}
+        {loading && !streaming && <TypingIndicator />}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Aviso */}
+      <div className="flex-shrink-0 border-t border-stone-100 px-4 py-1.5 text-center dark:border-stone-800/40">
+        <p className="text-[10px] text-stone-400">
+          <i className="fa-solid fa-shield-halved mr-1" />
+          Restrito a temas de cultivo. Não envie dados pessoais.
+        </p>
+      </div>
+
+      {/* Input */}
+      <div className="flex-shrink-0 border-t border-stone-200 bg-stone-50/80 px-4 py-3 dark:border-stone-700/50 dark:bg-stone-800/40 md:px-6">
+        <div className="flex gap-2">
+          <textarea
+            ref={inputRef}
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={handleKey}
+            placeholder="Pergunte sobre cultivo, alertas ou parâmetros da estufa..."
+            rows={1}
+            disabled={loading}
+            className="flex-1 resize-none rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm text-stone-800 outline-none transition focus:border-red-400 focus:ring-1 focus:ring-red-400/30 disabled:opacity-50 dark:border-stone-700/50 dark:bg-stone-800/50 dark:text-stone-100 dark:placeholder:text-stone-500"
+            style={{ maxHeight: '120px', overflowY: 'auto' }}
+          />
+          <button
+            type="button"
+            onClick={sendMessage}
+            disabled={loading || !input.trim()}
+            className="flex h-10 w-10 flex-shrink-0 items-center justify-center self-end rounded-xl bg-red-600 text-white shadow-sm transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {loading
+              ? <i className="fa-solid fa-circle-notch fa-spin text-sm" />
+              : <i className="fa-solid fa-paper-plane text-sm" />}
+          </button>
+        </div>
+        <p className="mt-1.5 text-center text-[10px] text-stone-400">
+          Enter para enviar · Shift+Enter para nova linha
+        </p>
       </div>
     </div>
   );

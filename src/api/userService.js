@@ -25,8 +25,14 @@ export const changePassword = (payload) =>
 export const requestDeletion = (payload) =>
   api.post('/users/deletion-request', payload).then((res) => res.data);
 
-export const getSecurityLogs = (limit = 500) =>
-  api.get('/users/logs', { params: { limit } }).then((res) => res.data);
+export const getSecurityLogs = (limit = 500, fromDate = null, untilDate = null) =>
+  api.get('/users/logs', {
+    params: {
+      limit,
+      ...(fromDate  ? { from_date:  fromDate  } : {}),
+      ...(untilDate ? { until_date: untilDate } : {}),
+    },
+  }).then((res) => res.data);
 
 // inicia o cadastro do app autenticador (retorna QR Code e chave TOTP)
 export const startOtpEnrollment = () =>

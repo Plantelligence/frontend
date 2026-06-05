@@ -15,6 +15,7 @@ import { AdminUsersPage } from './pages/AdminUsersPage.jsx';
 import { ChatAIPage } from './pages/ChatAIPage.jsx';
 import { PresetsPage } from './pages/PresetsPage.jsx';
 import { RelatoriosPage } from './pages/RelatoriosPage.jsx';
+import { HelpPage } from './pages/HelpPage.jsx';
 import { TechnologyPage } from './pages/TechnologyPage.jsx';
 import { AboutPage } from './pages/AboutPage.jsx';
 import { ContactPage } from './pages/ContactPage.jsx';
@@ -24,9 +25,11 @@ import { CookiesPage } from './pages/CookiesPage.jsx';
 import { EulaPage } from './pages/EulaPage.jsx';
 import { SegurancaPage } from './pages/SegurancaPage.jsx';
 import { TopNav } from './components/TopNav.jsx';
+import { DashboardLayout } from './components/DashboardLayout.jsx';
 import { ScrollToTop } from './components/ScrollToTop.jsx';
 import { ProtectedRoute } from './components/ProtectedRoute.jsx';
 import { AdminRoute } from './components/AdminRoute.jsx';
+import { useAuthStore } from './store/authStore.js';
 
 const COOKIE_STORAGE_KEY = 'plantelligence-cookie-consent';
 
@@ -239,6 +242,16 @@ const ProtectedAppContent = () => (
   </>
 );
 
+const GuestRoute = () => {
+  const tokens = useAuthStore((state) => state.tokens);
+  const isAuthenticated = Boolean(tokens?.accessToken || tokens?.access_token);
+
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return <Outlet />;
+};
+
 class ErrorBoundary extends Component {
   constructor(props) {
     super(props);
@@ -291,6 +304,7 @@ const App = () => {
     <ErrorBoundary>
       <ScrollToTop />
       <Routes>
+        {/* Páginas públicas com TopNav + Footer */}
         <Route element={<Shell />}>
           <Route index element={<TechnologyPage />} />
           <Route path="sobre-nos" element={<AboutPage />} />
@@ -299,28 +313,33 @@ const App = () => {
           <Route path="privacidade" element={<PrivacyPage />} />
           <Route path="cookies" element={<CookiesPage />} />
           <Route path="eula" element={<EulaPage />} />
-          <Route path="seguranca" element={<SegurancaPage />} />
-          <Route element={<ProtectedRoute />}>
-            <Route element={<ProtectedAppContent />}>
-              <Route path="dashboard" element={<GreenhousesPage />} />
-              <Route path="dashboard/onboarding" element={<OnboardingGreenhousePage />} />
-              <Route path="dashboard/estufas/:greenhouseId" element={<DashboardPage />} />
-              <Route path="dashboard/chat" element={<ChatAIPage />} />
-              <Route path="dashboard/presets" element={<PresetsPage />} />
-              <Route path="dashboard/relatorios" element={<RelatoriosPage />} />
-              <Route path="settings" element={<UserSettingsPage />} />
-              <Route path="settings/logs" element={<SecurityLogsPage />} />
-              <Route element={<AdminRoute />}>
-                <Route path="admin/usuarios" element={<AdminUsersPage />} />
-              </Route>
+          <Route path="segurança" element={<SegurancaPage />} />
+        </Route>
+
+        {/* Páginas protegidas com DashboardLayout (sem TopNav nem Footer público) */}
+        <Route element={<ProtectedRoute />}>
+          <Route element={<DashboardLayout />}>
+            <Route path="dashboard" element={<GreenhousesPage />} />
+            <Route path="dashboard/onboarding" element={<OnboardingGreenhousePage />} />
+            <Route path="dashboard/estufas/:greenhouseId" element={<DashboardPage />} />
+            <Route path="dashboard/chat" element={<ChatAIPage />} />
+            <Route path="dashboard/presets" element={<PresetsPage />} />
+            <Route path="dashboard/relatorios" element={<RelatoriosPage />} />
+            <Route path="settings" element={<UserSettingsPage />} />
+            <Route path="settings/logs" element={<SecurityLogsPage />} />
+            <Route path="help" element={<HelpPage />} />
+            <Route element={<AdminRoute />}>
+              <Route path="admin/usuários" element={<AdminUsersPage />} />
             </Route>
           </Route>
         </Route>
-        <Route element={<AuthShell />}>
-          <Route path="login" element={<LoginPage />} />
-          <Route path="register" element={<RegisterPage />} />
-          <Route path="password-reset" element={<PasswordResetPage />} />
-          <Route path="first-access" element={<FirstAccessPage />} />
+        <Route element={<GuestRoute />}>
+          <Route element={<AuthShell />}>
+            <Route path="login" element={<LoginPage />} />
+            <Route path="register" element={<RegisterPage />} />
+            <Route path="password-reset" element={<PasswordResetPage />} />
+            <Route path="first-access" element={<FirstAccessPage />} />
+          </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

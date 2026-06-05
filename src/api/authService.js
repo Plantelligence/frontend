@@ -43,8 +43,16 @@ export const refresh = (payload) =>
 export const logout = (payload) =>
   api.post('/auth/logout', payload).then((res) => res.status);
 
+// verifica se um e-mail está cadastrado (fluxo step-by-step do login)
+export const checkEmailExists = (email) =>
+  api.post('/auth/check-email', { email }).then((res) => res.data);
+
 export const requestPasswordReset = (payload) =>
   api.post('/auth/password-reset/request', payload).then((res) => res.data);
+
+// verifica TOTP do autenticador e devolve resetToken para redefinição sem e-mail
+export const verifyTotpForReset = (payload) =>
+  api.post('/auth/password-reset/verify-totp', payload).then((res) => res.data);
 
 export const confirmPasswordReset = (payload) =>
   api.post('/auth/password-reset/confirm', payload).then((res) => res.data);

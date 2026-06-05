@@ -48,7 +48,7 @@ export const BackendStatus = () => {
   return (
     <div className="flex flex-col gap-2 rounded-lg border border-slate-700 bg-slate-900/40 px-4 py-3 text-sm">
       <div className="flex items-center justify-between gap-3">
-        <span className="text-slate-400">Diagnóstico de conexão com o backend</span>
+        <span className="text-slate-400 dark:text-stone-500">Diagnóstico de conexão com o backend</span>
         <button
           type="button"
           onClick={handleTest}
@@ -74,8 +74,8 @@ export const BackendStatus = () => {
       )}
 
       {status === null && (
-        <p className="text-slate-500 text-xs">
-          URL configurada: <code className="text-slate-400">{API_URL || '(relativa /api)'}</code>
+        <p className="text-slate-500 dark:text-stone-400 text-xs">
+          URL configurada: <code className="text-slate-400 dark:text-stone-500">{API_URL || '(relativa /api)'}</code>
         </p>
       )}
     </div>

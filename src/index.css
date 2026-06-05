@@ -1,3 +1,31 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ── Tema escuro padrão na raiz (dashboard) ─────────────────────────────── */
+html { color-scheme: dark; }
+html.light { color-scheme: light; }
+
+/* ── Transição suave de tema (dashboard) ────────────────────────────────── */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
+}
+
+/* Remove transição de elementos animados */
+.animate-spin, .animate-bounce, .animate-pulse, [class*="fa-spin"] {
+  transition: none !important;
+}
+
+/* ── Scrollbar tema escuro (dashboard) ──────────────────────────────────── */
+.dark ::-webkit-scrollbar        { width: 5px; height: 5px; }
+.dark ::-webkit-scrollbar-track  { background: transparent; }
+.dark ::-webkit-scrollbar-thumb  { background: #44403c; border-radius: 99px; }
+.dark ::-webkit-scrollbar-thumb:hover { background: #57534e; }
+
+/* ── Scrollbar tema claro ───────────────────────────────────────────────── */
+::-webkit-scrollbar        { width: 5px; height: 5px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: #d6d3d1; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #a8a29e; }

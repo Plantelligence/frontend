@@ -212,7 +212,7 @@ export const RegisterPage = () => {
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 rounded-2xl border border-stone-700 bg-[#171112] p-8 shadow-xl">
       <div>
         <h1 className="text-2xl font-semibold text-slate-100">Criação de conta</h1>
-        <p className="mt-2 text-sm text-slate-400">
+        <p className="mt-2 text-sm text-slate-400 dark:text-stone-500">
           Coletamos apenas dados mínimos para autenticação e rastreabilidade de operações nas estufas de cogumelos. Consentimento explícito é obrigatório pela LGPD.
         </p>
       </div>
@@ -268,7 +268,7 @@ export const RegisterPage = () => {
             title={passwordPolicy.message}
             required
           />
-          <p className="md:col-span-2 text-xs text-slate-400">
+          <p className="md:col-span-2 text-xs text-slate-400 dark:text-stone-500">
             {passwordPolicy.message}
           </p>
           <div className="rounded-md border border-slate-800 bg-slate-900/60 p-4 text-sm text-slate-300 md:col-span-2">
@@ -380,9 +380,9 @@ export const RegisterPage = () => {
                 </div>
               </div>
             )}
-            <p className="text-xs text-slate-400">Ou insira a chave manualmente no aplicativo</p>
+            <p className="text-xs text-slate-400 dark:text-stone-500">Ou insira a chave manualmente no aplicativo</p>
             <p className="mt-1 font-mono text-lg tracking-wider text-red-300">{otpSetup.secret}</p>
-            <p className="mt-2 text-xs text-slate-500">
+            <p className="mt-2 text-xs text-slate-500 dark:text-stone-400">
               Conta: {otpSetup.accountName} • Emissor: {otpSetup.issuer}
             </p>
           </div>
@@ -412,7 +412,7 @@ export const RegisterPage = () => {
           </div>
         </form>
       )}
-      <p className="text-sm text-slate-400">
+      <p className="text-sm text-slate-400 dark:text-stone-500">
         Já possui conta?{' '}
         <Link to="/login" className="font-semibold text-red-300 hover:text-red-200">
           Voltar para login

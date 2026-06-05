@@ -340,20 +340,19 @@ export const UserSettingsPage = () => {
       })()
     : null;
 
-  const lightInputClass = 'border-stone-300 bg-white text-slate-800 placeholder:text-slate-400 focus:border-red-400 focus:ring-red-100';
-  const lightLabelClass = 'text-slate-700';
+  const lightInputClass = 'border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-slate-800 dark:text-stone-100 placeholder:text-slate-400 focus:border-red-400 focus:ring-red-100';
+  const lightLabelClass = 'text-slate-700 dark:text-stone-300';
   const tabButtonBase = 'rounded-full border px-4 py-2 text-sm font-semibold transition';
 
   return (
-    <div className="mx-auto w-full max-w-[1400px] px-4 py-6">
-      <div className="rounded-[30px] bg-[#181415] p-4 shadow-[0_24px_60px_rgba(0,0,0,0.35)] md:p-6">
-          <section className="overflow-hidden rounded-[26px] bg-[#f5f1eb] p-4 md:p-6 lg:h-[calc(100vh-160px)] lg:min-h-[640px] lg:max-h-[820px]">
-          <div className="flex h-full flex-col gap-8 overflow-y-auto rounded-2xl border border-stone-300 bg-[#fcfaf7] p-6 pr-4">
+    <>
+          <section className="overflow-hidden rounded-[26px] dark:bg-[#0f0c0c] p-4 md:p-6">
+          <div className="flex h-full flex-col gap-8 overflow-y-auto rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-6 pr-4">
       <header className="text-center">
-        <h1 className="text-2xl font-semibold text-slate-800">
+        <h1 className="text-2xl font-semibold text-slate-800 dark:text-stone-100">
           {activeTab === 'perfil' ? 'Perfil da Conta' : 'Configurações e Segurança'}
         </h1>
-        <p className="mt-2 text-sm text-slate-600">
+        <p className="mt-2 text-sm text-slate-600 dark:text-stone-400">
           {activeTab === 'perfil'
             ? 'Gerencie os dados essenciais da sua conta, sempre respeitando princípios LGPD.'
             : 'Ajuste segurança, MFA e preferências de privacidade da sua conta.'}
@@ -365,7 +364,7 @@ export const UserSettingsPage = () => {
             className={`${tabButtonBase} ${
               activeTab === 'perfil'
                 ? 'border-red-600 bg-red-600 text-red-50'
-                : 'border-stone-300 bg-white text-slate-700 hover:border-red-300 hover:text-red-700'
+                : 'border-stone-300 bg-white dark:bg-stone-900/35 text-slate-700 dark:text-stone-300 hover:border-red-300 hover:text-red-700'
             }`}
           >
             Perfil
@@ -376,7 +375,7 @@ export const UserSettingsPage = () => {
             className={`${tabButtonBase} ${
               activeTab === 'config'
                 ? 'border-red-600 bg-red-600 text-red-50'
-                : 'border-stone-300 bg-white text-slate-700 hover:border-red-300 hover:text-red-700'
+                : 'border-stone-300 bg-white dark:bg-stone-900/35 text-slate-700 dark:text-stone-300 hover:border-red-300 hover:text-red-700'
             }`}
           >
             Configurações
@@ -403,11 +402,11 @@ export const UserSettingsPage = () => {
 
       {activeTab === 'perfil' ? (
       <>
-      <section id="dados" className="mx-auto w-full max-w-4xl rounded-md border border-stone-300 bg-white p-6 text-sm text-slate-700">
+      <section id="dados" className="mx-auto w-full max-w-4xl rounded-md border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-6 text-sm text-slate-700 dark:text-stone-300">
         <header className="mb-4 flex flex-col items-center gap-3 text-center">
           <div>
-            <h2 className="text-lg font-semibold text-slate-800">Informações essenciais</h2>
-            <p className="text-xs text-slate-500">Somente dados necessários para uso da plataforma.</p>
+            <h2 className="text-lg font-semibold text-slate-800 dark:text-stone-100">Informações essenciais</h2>
+            <p className="text-xs text-slate-500 dark:text-stone-400">Somente dados necessários para uso da plataforma.</p>
           </div>
           <Button
             variant="secondary"
@@ -438,17 +437,17 @@ export const UserSettingsPage = () => {
           />
         </div>
         {profile?.role !== 'Admin' ? (
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-xs text-slate-500 dark:text-stone-400">
             Somente administradores podem alterar o nome da organização.
           </p>
         ) : null}
-        <label className="mt-4 flex items-start gap-3 text-sm text-slate-700">
+        <label className="mt-4 flex items-start gap-3 text-sm text-slate-700 dark:text-stone-300">
           <input
             type="checkbox"
             name="profileConsentConfirm"
             checked={profileConsentConfirm}
             onChange={(event) => setProfileConsentConfirm(event.target.checked)}
-            className="mt-1 h-4 w-4 rounded border-stone-400 bg-white text-red-600 focus:ring focus:ring-red-500/30"
+            className="mt-1 h-4 w-4 rounded border-stone-400 bg-white dark:bg-stone-800 text-red-600 focus:ring focus:ring-red-500/30"
             disabled={loadingProfile}
           />
           <span>Continuo autorizando o uso dos meus dados somente para automação e monitoramento das estufas.</span>
@@ -458,21 +457,21 @@ export const UserSettingsPage = () => {
             Marque o consentimento para habilitar o botão de salvar alterações.
           </p>
         ) : null}
-        <dl className="mt-4 grid gap-2 sm:grid-cols-2 text-xs text-slate-600">
+        <dl className="mt-4 grid gap-2 sm:grid-cols-2 text-xs text-slate-600 dark:text-stone-400">
           <div>
-            <dt className="font-semibold text-slate-700">E-mail operacional</dt>
+            <dt className="font-semibold text-slate-700 dark:text-stone-300">E-mail operacional</dt>
             <dd>{profile?.email}</dd>
           </div>
           <div>
-            <dt className="font-semibold text-slate-700">Permissão</dt>
+            <dt className="font-semibold text-slate-700 dark:text-stone-300">Permissão</dt>
             <dd>{roleLabel(profile)}</dd>
           </div>
           <div>
-            <dt className="font-semibold text-slate-700">Último acesso</dt>
+            <dt className="font-semibold text-slate-700 dark:text-stone-300">Último acesso</dt>
             <dd>{profile?.lastLoginAt ? new Date(profile.lastLoginAt).toLocaleString() : 'Nunca registrado'}</dd>
           </div>
           <div>
-            <dt className="font-semibold text-slate-700">Senha expira em</dt>
+            <dt className="font-semibold text-slate-700 dark:text-stone-300">Senha expira em</dt>
             <dd>{formatDateOnly(profile?.passwordExpiresAt)}</dd>
           </div>
         </dl>
@@ -482,10 +481,10 @@ export const UserSettingsPage = () => {
 
       {activeTab === 'config' ? (
       <>
-      <section id="senha" className="mx-auto w-full max-w-4xl rounded-md border border-stone-300 bg-white p-6 text-sm text-slate-700">
+      <section id="senha" className="mx-auto w-full max-w-4xl rounded-md border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-6 text-sm text-slate-700 dark:text-stone-300">
         <header className="mb-4 text-center">
-          <h2 className="text-lg font-semibold text-slate-800">Credenciais e autenticação primária</h2>
-          <p className="text-xs text-slate-500">Trocar a senha invalida tokens antigos e registra evento de auditoria operacional.</p>
+          <h2 className="text-lg font-semibold text-slate-800 dark:text-stone-100">Credenciais e autenticação primária</h2>
+          <p className="text-xs text-slate-500 dark:text-stone-400">Trocar a senha invalida tokens antigos e registra evento de auditoria operacional.</p>
         </header>
         {passwordError && (
           <p className="mb-4 rounded border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">
@@ -533,14 +532,14 @@ export const UserSettingsPage = () => {
               labelClassName={`${lightLabelClass} text-center items-center`}
             />
           </div>
-          <div className="rounded-md border border-stone-300 bg-[#fcfaf7] p-4 text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600">Confirmação MFA</p>
-            <p className="mt-1 text-xs text-slate-500">
+          <div className="rounded-md border border-stone-300 dark:border-stone-700/50 bg-white dark:bg-stone-800/50 p-4 text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-stone-400">Confirmação MFA</p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-stone-400">
               Confirme com o segundo fator antes de concluir a atualização de credenciais.
             </p>
             <div className="mt-3 flex flex-wrap justify-center gap-3">
               {otpConfigured && (
-                <label className="flex cursor-pointer items-center gap-2 rounded border border-stone-300 bg-white px-3 py-2 text-xs uppercase tracking-[0.2em] text-slate-700">
+                <label className="flex cursor-pointer items-center gap-2 rounded border border-stone-300 bg-white dark:bg-stone-800/50 px-3 py-2 text-xs uppercase tracking-[0.2em] text-slate-700 dark:text-stone-300">
                   <input
                     type="radio"
                     name="password-mfa-method"
@@ -552,7 +551,7 @@ export const UserSettingsPage = () => {
                   Aplicativo autenticador
                 </label>
               )}
-              <label className="flex cursor-pointer items-center gap-2 rounded border border-stone-300 bg-white px-3 py-2 text-xs uppercase tracking-[0.2em] text-slate-700">
+              <label className="flex cursor-pointer items-center gap-2 rounded border border-stone-300 bg-white dark:bg-stone-800/50 px-3 py-2 text-xs uppercase tracking-[0.2em] text-slate-700 dark:text-stone-300">
                 <input
                   type="radio"
                   name="password-mfa-method"
@@ -581,7 +580,7 @@ export const UserSettingsPage = () => {
                     labelClassName={`${lightLabelClass} text-center items-center`}
                   />
                 </div>
-                <p className="mt-2 text-xs text-slate-500">
+                <p className="mt-2 text-xs text-slate-500 dark:text-stone-400">
                   Use o aplicativo autenticador configurado para esta conta.
                 </p>
               </div>
@@ -597,10 +596,10 @@ export const UserSettingsPage = () => {
                     {passwordChallengeLoading ? 'Enviando...' : 'Enviar código para meu e-mail'}
                   </Button>
                 </div>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 dark:text-stone-400">
                   {`O código será enviado para o e-mail de cadastro: ${profile?.email ?? 'seu e-mail de cadastro'}.`}
                 </p>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 dark:text-stone-400">
                   {passwordChallengeExpiresLabel
                     ? `Expira às ${passwordChallengeExpiresLabel}.`
                       : 'Código válido por aproximadamente 5 minutos para segurança da operação.'}
@@ -635,7 +634,7 @@ export const UserSettingsPage = () => {
         </form>
       </section>
 
-      <section id="autenticador" className="mx-auto w-full max-w-4xl rounded-md border border-red-300 bg-red-50/60 p-6 text-sm text-slate-700">
+      <section id="autenticador" className="mx-auto w-full max-w-4xl rounded-md border border-red-300 bg-red-50/60 p-6 text-sm text-slate-700 dark:text-stone-300">
         <header className="mb-3 text-center">
           <h2 className="text-lg font-semibold text-red-800">Aplicativo autenticador (MFA)</h2>
           <p className="text-xs text-red-700/90">
@@ -669,15 +668,15 @@ export const UserSettingsPage = () => {
         )}
 
         {enrollment ? (
-          <div className="mt-6 flex flex-col gap-4 rounded-md border border-stone-300 bg-white p-4">
-            <p className="text-sm text-slate-700">
+          <div className="mt-6 flex flex-col gap-4 rounded-md border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
+            <p className="text-sm text-slate-700 dark:text-stone-300">
               Escaneie o QR Code abaixo ou utilize a chave secreta no aplicativo autenticador para proteger o acesso ao console de telemetria.
             </p>
             <div className="flex flex-col items-center gap-3">
               {enrollment.uri ? (
                 <QRCodeComponent value={enrollment.uri} size={180} bgColor="#0f172a" fgColor="#ef4444" />
               ) : null}
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-stone-400">
                 Conta: {enrollment.accountName} • Emissor: {enrollment.issuer}
               </p>
               <p className="break-all rounded-md bg-red-50 px-3 py-2 font-mono text-base tracking-wider text-red-700">
@@ -733,7 +732,7 @@ export const UserSettingsPage = () => {
       ) : null}
 
       {isMasterOwner ? (
-        <section id="organizacao-master" className="mx-auto w-full max-w-4xl rounded-md border border-rose-400 bg-rose-100 p-6 text-sm text-rose-900">
+        <section id="organização-master" className="mx-auto w-full max-w-4xl rounded-md border border-rose-400 bg-rose-100 p-6 text-sm text-rose-900">
           <header className="mb-3 text-center">
             <h2 className="text-lg font-semibold">Administrador master: exclusão da organização</h2>
             <p className="text-xs text-rose-800">
@@ -749,7 +748,7 @@ export const UserSettingsPage = () => {
           ) : null}
 
           {orgDeleteError ? (
-            <p className="mb-3 rounded border border-rose-300 bg-white px-3 py-2 text-center text-sm text-rose-700">
+            <p className="mb-3 rounded border border-rose-300 bg-white dark:bg-stone-900/35 px-3 py-2 text-center text-sm text-rose-700">
               {orgDeleteError}
             </p>
           ) : null}
@@ -764,6 +763,9 @@ export const UserSettingsPage = () => {
       </>
       ) : null}
 
+          </div>
+        </section>
+
       <ConfirmDialog
         open={confirmSaveProfile}
         title="Confirmar atualização"
@@ -774,14 +776,12 @@ export const UserSettingsPage = () => {
       <ConfirmDialog
         open={confirmDeletion}
         title="Excluir meu perfil neste ambiente"
-        description="Esta ação registra a exclusão do seu perfil de acesso e dos seus dados pessoais neste ambiente, conforme LGPD. O processo mantém apenas dados mínimos exigidos por obrigação legal."
-        confirmLabel="Solicitar exclusão do perfil"
-        onCancel={() => setConfirmDeletion(false)}
+        description="Esta ação registra a exclusão do seu perfil de acesso no Plantelligence. Você será desconectado imediatamente."
         onConfirm={handleDeletionRequest}
+        onCancel={() => setConfirmDeletion(false)}
+        confirmLabel="Confirmar exclusão"
+        cancelLabel="Cancelar"
       />
-          </div>
-          </section>
-      </div>
-    </div>
+    </>
   );
 };

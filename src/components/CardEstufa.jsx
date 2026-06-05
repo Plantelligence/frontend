@@ -11,36 +11,36 @@ export const CardEstufa = ({
   const responsibleCount = greenhouse.watchersDetails?.length ?? 0;
 
   return (
-    <article className={`flex h-full min-h-[230px] flex-col rounded-3xl border bg-[#fcfaf7] p-3.5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${typeVisual.ring}`}>
+    <article className={`flex h-full min-h-[230px] flex-col rounded-3xl border bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-3.5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${typeVisual.ring}`}>
       <header className="flex flex-col items-center gap-2 text-center">
         <div className="flex min-w-0 items-center justify-center gap-2.5">
           <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-base ${logoVisual.wrap}`}>
             <i className={logoVisual.icon} aria-hidden="true" />
           </div>
           <div className="min-w-0">
-            <h3 className="truncate text-base leading-tight font-semibold text-slate-800" title={greenhouse.name || 'Estufa sem nome'}>
+            <h3 className="truncate text-base leading-tight font-semibold text-slate-800 dark:text-stone-100" title={greenhouse.name || 'Estufa sem nome'}>
               {greenhouse.name || 'Estufa sem nome'}
             </h3>
-            <p className="mt-0.5 truncate text-xs text-slate-500" title={`Cultivo: ${typeVisual.label}`}>
+            <p className="mt-0.5 truncate text-xs text-slate-500 dark:text-stone-400" title={`Cultivo: ${typeVisual.label}`}>
               Cultivo: {typeVisual.label}
             </p>
           </div>
         </div>
-        <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${hasProfile ? 'bg-emerald-100 text-emerald-700' : 'bg-stone-100 text-stone-600'}`}>
+        <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${hasProfile ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-stone-100 text-stone-600 dark:bg-stone-700 dark:text-stone-400'}`}>
           <span className={`h-2 w-2 rounded-full ${hasProfile ? 'bg-emerald-500' : 'bg-stone-400'}`} />
           {hasProfile ? 'Perfil configurado' : 'Sem perfil'}
         </span>
       </header>
 
-      <div className="mt-3 space-y-1.5 border-t border-slate-200 pt-2.5">
-        <p className="flex items-center justify-center gap-1 text-xs leading-snug text-slate-600">
-          <span className="font-medium text-slate-500">Localização:</span>
+      <div className="mt-3 space-y-1.5 border-t border-slate-200 dark:border-stone-800/40 pt-2.5">
+        <p className="flex items-center justify-center gap-1 text-xs leading-snug text-slate-600 dark:text-stone-400">
+          <span className="font-medium text-slate-500 dark:text-stone-400">Localização:</span>
           <span className="max-w-[185px] truncate" title={`${greenhouse.city || '—'} / ${greenhouse.state || '—'}`}>
             {greenhouse.city || '—'} / {greenhouse.state || '—'}
           </span>
         </p>
-        <p className="flex items-center justify-center gap-1 text-xs leading-snug text-slate-600">
-          <span className="font-medium text-slate-500">Equipe responsável:</span>
+        <p className="flex items-center justify-center gap-1 text-xs leading-snug text-slate-600 dark:text-stone-400">
+          <span className="font-medium text-slate-500 dark:text-stone-400">Equipe responsável:</span>
           <span className="max-w-[160px] truncate" title={responsibleCount > 0 ? `${responsibleCount} pessoa${responsibleCount > 1 ? 's' : ''}` : 'não definida'}>
             {responsibleCount > 0 ? `${responsibleCount} pessoa${responsibleCount > 1 ? 's' : ''}` : 'não definida'}
           </span>
