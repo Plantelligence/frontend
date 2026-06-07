@@ -1,4 +1,4 @@
-# Plantelligence — Frontend
+# Plantelligence - Frontend
 
 Dashboard React para o sistema de monitoramento de estufas.
 
