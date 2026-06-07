@@ -35,25 +35,25 @@ const cropOptions = [
     id: 'champignon',
     title: 'Champignon',
     description: 'Cogumelo champignon em ambiente mais fresco e úmido.',
-    style: 'border-red-200 bg-red-50/70'
+    style: 'border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35'
   },
   {
     id: 'shimeji',
     title: 'Shimeji',
     description: 'Shimeji com boa ventilação e umidade alta.',
-    style: 'border-stone-800/60 bg-stone-900/35 dark:border-stone-700/60 dark:bg-stone-900/40'
+    style: 'border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35'
   },
   {
     id: 'shiitake',
     title: 'Shiitake',
     description: 'Shiitake em fase de produção, com umidade alta e ventilação controlada.',
-    style: 'border-stone-800/60 bg-stone-900/35 dark:border-stone-700/60 dark:bg-stone-900/40'
+    style: 'border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35'
   },
   {
     id: 'personalizado',
     title: 'Personalizado',
     description: 'Você escolhe manualmente os limites do seu cultivo.',
-    style: 'border-stone-800/60 bg-stone-900/35 dark:border-stone-700/60 dark:bg-stone-900/40'
+    style: 'border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35'
   }
 ];
 
@@ -220,7 +220,7 @@ export const WizardOnboardingCriarEstufa = ({
   };
 
   return (
-    <section className="rounded-3xl border border-stone-800/60 bg-stone-900/35 p-6 shadow-sm md:p-8">
+    <section className="rounded-3xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-[#0f0c0c] p-6 shadow-sm md:p-8">
       <header className="mb-6">
         <p className="text-xs font-semibold uppercase tracking-wide text-red-600">
           Onboarding guiado
@@ -259,10 +259,10 @@ export const WizardOnboardingCriarEstufa = ({
                   key={option.id}
                   type="button"
                   onClick={() => setCropType(option.id)}
-                  className={`rounded-2xl border p-4 text-left transition ${selected ? 'ring-2 ring-red-500' : ''} ${option.style}`}
+                  className={`rounded-2xl border p-4 text-left transition-all w-full ${selected ? 'border-red-500/70 bg-red-500/8 ring-1 ring-red-500/40' : 'border-stone-200 bg-white hover:border-stone-300 dark:border-stone-800/60 dark:bg-stone-900/35 dark:hover:border-stone-700/60'}`}
                 >
-                  <p className="text-sm font-semibold text-slate-800 dark:text-stone-100">{option.title}</p>
-                  <p className="mt-1 text-xs text-slate-600 dark:text-stone-400">{option.description}</p>
+                  <p className="text-sm font-semibold text-stone-800 dark:text-stone-100">{option.title}</p>
+                  <p className="mt-1 text-xs text-stone-600 dark:text-stone-400">{option.description}</p>
                 </button>
               );
             })}
@@ -364,7 +364,7 @@ export const WizardOnboardingCriarEstufa = ({
           </dl>
 
           {cropType === 'personalizado' ? (
-            <div className="space-y-3 rounded-xl border border-stone-800/60 bg-stone-900/40 p-4">
+            <div className="space-y-3 rounded-xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/40 p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-sm font-semibold text-amber-900">Perfil de cultivo personalizado</h3>
                 <div className="inline-flex rounded-lg border border-amber-300 bg-white dark:bg-stone-900 p-1 text-xs">

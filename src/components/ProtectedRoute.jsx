@@ -1,3 +1,11 @@
+/**
+ * ProtectedRoute - Guard de rota para usuários autenticados.
+ *
+ * Verifica se há tokens válidos no authStore.
+ * Se não estiver autenticado, redireciona para /login.
+ * Envolve todas as rotas do dashboard no App.jsx.
+ */
+
 // Rota protegida que redireciona para /login se o usuario nao estiver autenticado.
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';

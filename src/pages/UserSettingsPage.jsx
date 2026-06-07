@@ -1,3 +1,14 @@
+/**
+ * UserSettingsPage - Configurações da conta do usuário.
+ *
+ * Organizada em duas abas:
+ *   - Perfil: nome, e-mail, LGPD, informações da conta
+ *   - Configurações: trocar senha (exige MFA), configurar autenticador TOTP,
+ *                    preferências de notificação, tema claro/escuro
+ *
+ * Rota: /settings
+ */
+
 import React, { useEffect, useState } from 'react';
 import QRCode from 'react-qr-code';
 import { useSearchParams } from 'react-router-dom';
@@ -346,10 +357,10 @@ export const UserSettingsPage = () => {
 
   return (
     <>
-          <section className="overflow-hidden rounded-[26px] dark:bg-[#0f0c0c] p-4 md:p-6">
-          <div className="flex h-full flex-col gap-8 overflow-y-auto rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-6 pr-4">
+          <section className="rounded-[26px] bg-stone-50/30 dark:bg-[#0f0c0c] p-4 md:p-6">
+          <div className="flex h-full flex-col gap-8 overflow-y-auto rounded-2xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-6 pr-4">
       <header className="text-center">
-        <h1 className="text-2xl font-semibold text-slate-800 dark:text-stone-100">
+        <h1 className="text-2xl font-bold text-stone-800 dark:text-stone-100">
           {activeTab === 'perfil' ? 'Perfil da Conta' : 'Configurações e Segurança'}
         </h1>
         <p className="mt-2 text-sm text-slate-600 dark:text-stone-400">
@@ -384,13 +395,13 @@ export const UserSettingsPage = () => {
       </header>
 
       {requiresPasswordReset && (
-        <div className="rounded border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/8 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
           Sua senha expirada precisa ser atualizada para manter o acesso ao monitoramento e automação das estufas.
         </div>
       )}
 
       {profileError && (
-        <div className="rounded border border-rose-300 bg-rose-50 p-4 text-sm text-rose-800">
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:text-red-300">
           {profileError}
         </div>
       )}
@@ -487,17 +498,17 @@ export const UserSettingsPage = () => {
           <p className="text-xs text-slate-500 dark:text-stone-400">Trocar a senha invalida tokens antigos e registra evento de auditoria operacional.</p>
         </header>
         {passwordError && (
-          <p className="mb-4 rounded border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">
+          <p className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300">
             {passwordError}
           </p>
         )}
         {passwordChallengeError && (
-          <p className="mb-4 rounded border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">
+          <p className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300">
             {passwordChallengeError}
           </p>
         )}
         {passwordFeedback && (
-          <p className="mb-4 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">
+          <p className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300">
             {passwordFeedback}
           </p>
         )}
@@ -532,14 +543,14 @@ export const UserSettingsPage = () => {
               labelClassName={`${lightLabelClass} text-center items-center`}
             />
           </div>
-          <div className="rounded-md border border-stone-300 dark:border-stone-700/50 bg-white dark:bg-stone-800/50 p-4 text-center">
+          <div className="rounded-xl border border-stone-200 bg-stone-50 dark:border-stone-700/50 dark:bg-stone-800/40 p-4 text-center">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-stone-400">Confirmação MFA</p>
             <p className="mt-1 text-xs text-slate-500 dark:text-stone-400">
               Confirme com o segundo fator antes de concluir a atualização de credenciais.
             </p>
             <div className="mt-3 flex flex-wrap justify-center gap-3">
               {otpConfigured && (
-                <label className="flex cursor-pointer items-center gap-2 rounded border border-stone-300 bg-white dark:bg-stone-800/50 px-3 py-2 text-xs uppercase tracking-[0.2em] text-slate-700 dark:text-stone-300">
+                <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-stone-300 dark:border-stone-700/60 bg-white dark:bg-stone-800/50 px-3 py-2 text-xs uppercase tracking-[0.2em] text-stone-700 dark:text-stone-300">
                   <input
                     type="radio"
                     name="password-mfa-method"
@@ -551,7 +562,7 @@ export const UserSettingsPage = () => {
                   Aplicativo autenticador
                 </label>
               )}
-              <label className="flex cursor-pointer items-center gap-2 rounded border border-stone-300 bg-white dark:bg-stone-800/50 px-3 py-2 text-xs uppercase tracking-[0.2em] text-slate-700 dark:text-stone-300">
+              <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-stone-300 dark:border-stone-700/60 bg-white dark:bg-stone-800/50 px-3 py-2 text-xs uppercase tracking-[0.2em] text-stone-700 dark:text-stone-300">
                 <input
                   type="radio"
                   name="password-mfa-method"
@@ -642,10 +653,10 @@ export const UserSettingsPage = () => {
           </p>
         </header>
         {otpError && (
-          <p className="mb-4 rounded border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">{otpError}</p>
+          <p className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300">{otpError}</p>
         )}
         {otpMessage && (
-          <p className="mb-4 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">{otpMessage}</p>
+          <p className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300">{otpMessage}</p>
         )}
         <p className="text-center text-xs text-red-700/90">
           Status atual: {otpConfiguredAt ? `Configurado em ${new Date(otpConfiguredAt).toLocaleString()}` : 'Ainda não configurado'}.

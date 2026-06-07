@@ -1,3 +1,11 @@
+/**
+ * GridEstufas - Grade responsiva de cards de estufas.
+ *
+ * Renderiza uma grade CSS de CardEstufa.jsx.
+ * Se não houver estufas, exibe um estado vazio com instrução.
+ * Responsivo: 1 coluna no mobile, 2 no tablet, 3-4 no desktop.
+ */
+
 // Grade de cards que lista as estufas cadastradas, repassando ações de edição e exclusão para cada item.
 import React from 'react';
 import { CardEstufa } from './CardEstufa.jsx';

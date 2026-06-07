@@ -1,3 +1,11 @@
+/**
+ * FiltroEstufas - Barra de filtros da grade de estufas.
+ *
+ * Permite filtrar estufas por tipo de cultivo e buscar por nome.
+ * Exibe contagem de resultados visíveis vs total.
+ * Usado em GreenhousesPage.jsx logo acima do GridEstufas.
+ */
+
 // Barra de busca e filtro das estufas.
 import React from 'react';
 

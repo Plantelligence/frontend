@@ -1,3 +1,16 @@
+/**
+ * errorMessages.js - Mensagens de erro amigáveis para o usuário.
+ *
+ * Converte erros técnicos da API em mensagens legíveis em português.
+ * Função principal: getFriendlyErrorMessage(error, fallback)
+ *
+ * Hierarquia de extração:
+ *   1. error.response.data.message (mensagem do backend FastAPI)
+ *   2. error.response.data.detail  (mensagem técnica da API)
+ *   3. error.message               (erro genérico do Axios)
+ *   4. fallback                    (mensagem padrão passada pelo chamador)
+ */
+
 const TECHNICAL_MESSAGE_PATTERN = /(traceback|exception|sql|stack|runtimeerror|internal server error|backend|fastapi|uvicorn|psycopg|axios|connection refused)/i;
 
 const extractApiMessage = (error) => {

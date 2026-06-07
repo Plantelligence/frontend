@@ -1,3 +1,19 @@
+/**
+ * ConfirmDialog - Modal de confirmação genérico.
+ *
+ * Exibido antes de ações destrutivas (remover estufa, remover relatório etc.)
+ * para evitar cliques acidentais. Renderizado via createPortal diretamente
+ * no document.body para não ser afetado por overflow:hidden dos containers.
+ *
+ * Props:
+ *   open         {boolean}  - Controla visibilidade
+ *   title        {string}   - Título do modal
+ *   description  {string}   - Mensagem de confirmação
+ *   onConfirm    {Function} - Callback ao confirmar
+ *   onCancel     {Function} - Callback ao cancelar
+ *   confirmLabel {string}   - Texto do botão de confirmação
+ */
+
 // Dialog de confirmacao generico usado para acoes criticas que exigem aprovacao do usuario.
 import React from 'react';
 import { createPortal } from 'react-dom';

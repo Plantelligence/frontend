@@ -1,3 +1,11 @@
+/**
+ * InputField - Campo de input com label integrado.
+ *
+ * Componente wrapper que combina <label> + <input> com estilos consistentes.
+ * Aceita todas as props nativas do <input> via spread.
+ * Usado principalmente nos formulários de autenticação (Login, Register).
+ */
+
 import React from 'react';
 import clsx from 'clsx';
 

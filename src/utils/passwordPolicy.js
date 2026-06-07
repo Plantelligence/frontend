@@ -1,3 +1,16 @@
+/**
+ * passwordPolicy.js - Validação de força de senha no frontend.
+ *
+ * Define e valida as regras de senha do Plantelligence:
+ *   - Mínimo 8 caracteres
+ *   - Pelo menos 1 letra maiúscula
+ *   - Pelo menos 1 número
+ *   - Pelo menos 1 caractere especial
+ *
+ * Usado nos formulários de cadastro, primeiro acesso e troca de senha
+ * para validação em tempo real antes de enviar ao backend.
+ */
+
 // Política de senha usada tanto na validação client-side quanto no atributo pattern dos inputs.
 
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;

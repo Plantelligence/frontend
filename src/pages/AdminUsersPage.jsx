@@ -1,3 +1,19 @@
+/**
+ * AdminUsersPage - Painel de gestão de usuários (somente Admin).
+ *
+ * Permite ao administrador:
+ *   - Criar novos usuários (envia convite por e-mail)
+ *   - Alterar papel (Admin/Colaborador/Leitor)
+ *   - Bloquear/desbloquear contas
+ *   - Reenviar convite de primeiro acesso
+ *   - Excluir usuários (requer MFA recente)
+ *   - Delegar estufas para usuários Leitor
+ *   - Desativar a organização
+ *
+ * Rota: /admin/usuários
+ * Guard: AdminRoute (somente role=Admin)
+ */
+
 // Painel administrativo simplificado para criar usuários, ajustar nível e bloquear acesso.
 import React, { useEffect, useMemo, useState } from 'react';
 import { Button } from '../components/Button.jsx';
@@ -469,14 +485,14 @@ export const AdminUsersPage = () => {
 
   return (
     <>
-        <header className="rounded-[26px] dark:bg-[#0f0c0c] p-5 md:p-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-700">Administração do Sistema</p>
-          <h1 className="mt-1 text-2xl font-semibold text-slate-800 dark:text-stone-100">Acesso de usuários</h1>
-          <p className="mt-2 text-sm text-slate-600 dark:text-stone-400">
+        <header className="rounded-[26px] bg-stone-50/50 dark:bg-[#0f0c0c] p-5 md:p-6">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-red-500">Administração do Sistema</p>
+          <h1 className="mt-1 text-2xl font-bold text-stone-800 dark:text-stone-100">Acesso de usuários</h1>
+          <p className="mt-1.5 text-sm text-stone-500 dark:text-stone-400">
             Defina nível de acesso, bloqueie contas e delegue estufas para usuários leitores.
           </p>
 
-          <div className="mt-4 rounded-xl border border-stone-200 dark:border-stone-800/60 bg-white dark:bg-stone-900/35 p-4 text-xs text-slate-600 dark:text-stone-400">
+          <div className="mt-4 rounded-xl border border-stone-200 bg-stone-50 dark:border-stone-800/40 dark:bg-stone-800/30 p-4 text-xs text-stone-600 dark:text-stone-400">
             <p className="font-semibold uppercase tracking-[0.15em] text-slate-700 dark:text-stone-300">Níveis de acesso</p>
             <ul className="mt-2 space-y-1">
               <li>
@@ -495,52 +511,52 @@ export const AdminUsersPage = () => {
           </div>
 
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-            <article className="rounded-xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
-              <p className="text-xs uppercase tracking-wide text-red-700">Usuários</p>
-              <p className="mt-1 text-2xl font-semibold text-slate-800 dark:text-stone-100">{users.length}</p>
+            <article className="rounded-2xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-red-500">Usuários</p>
+              <p className="mt-1 text-2xl font-bold text-stone-800 dark:text-stone-100">{users.length}</p>
             </article>
-            <article className="rounded-xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
-              <p className="text-xs uppercase tracking-wide text-red-700">Administradores</p>
-              <p className="mt-1 text-2xl font-semibold text-slate-800 dark:text-stone-100">{adminCount}</p>
+            <article className="rounded-2xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-red-500">Administradores</p>
+              <p className="mt-1 text-2xl font-bold text-stone-800 dark:text-stone-100">{adminCount}</p>
             </article>
-            <article className="rounded-xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
-              <p className="text-xs uppercase tracking-wide text-red-700">Colaboradores</p>
-              <p className="mt-1 text-2xl font-semibold text-slate-800 dark:text-stone-100">{collaboratorCount}</p>
+            <article className="rounded-2xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-red-500">Colaboradores</p>
+              <p className="mt-1 text-2xl font-bold text-stone-800 dark:text-stone-100">{collaboratorCount}</p>
             </article>
-            <article className="rounded-xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
-              <p className="text-xs uppercase tracking-wide text-red-700">Leitores</p>
-              <p className="mt-1 text-2xl font-semibold text-slate-800 dark:text-stone-100">{readerCount}</p>
+            <article className="rounded-2xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-red-500">Leitores</p>
+              <p className="mt-1 text-2xl font-bold text-stone-800 dark:text-stone-100">{readerCount}</p>
             </article>
-            <article className="rounded-xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
-              <p className="text-xs uppercase tracking-wide text-red-700">Bloqueados</p>
-              <p className="mt-1 text-2xl font-semibold text-slate-800 dark:text-stone-100">{blockedCount}</p>
+            <article className="rounded-2xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-red-500">Bloqueados</p>
+              <p className="mt-1 text-2xl font-bold text-stone-800 dark:text-stone-100">{blockedCount}</p>
             </article>
           </div>
 
           {roleFeedback && (
-            <p className="mt-4 rounded border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+            <p className="mt-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-300 dark:text-emerald-300">
               {roleFeedback}
             </p>
           )}
           {roleError && (
-            <p className="mt-4 rounded border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+            <p className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300">
               {roleError}
             </p>
           )}
           {userActionFeedback && (
-            <p className="mt-4 rounded border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+            <p className="mt-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-300 dark:text-emerald-300">
               {userActionFeedback}
             </p>
           )}
           {userActionError && (
-            <p className="mt-4 rounded border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+            <p className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300">
               {userActionError}
             </p>
           )}
         </header>
 
         <section className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
-          <article className="rounded-[26px] dark:bg-[#0f0c0c] p-5 md:p-6 lg:col-span-2">
+          <article className="rounded-[26px] bg-stone-50/50 dark:bg-[#0f0c0c] p-5 md:p-6 lg:col-span-2">
             <header className="mb-4">
               <h2 className="text-lg font-semibold text-slate-800 dark:text-stone-100">Criar usuário</h2>
               <p className="text-xs text-slate-500 dark:text-stone-400">
@@ -556,7 +572,7 @@ export const AdminUsersPage = () => {
                   name="fullName"
                   value={createUserForm.fullName}
                   onChange={handleCreateUserChange}
-                  className="w-full rounded-md border border-stone-300 bg-white dark:bg-stone-800 px-3 py-2 text-sm text-slate-800 dark:text-stone-100 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-100"
+                  className="w-full rounded-xl border border-stone-300 bg-white dark:bg-stone-800/60 px-3 py-2 text-sm text-slate-800 dark:text-stone-100 focus:border-red-400 focus:outline-none focus:ring-1 focus:ring-red-500/20"
                   placeholder="Ex.: Ana Souza"
                   required
                 />
@@ -568,7 +584,7 @@ export const AdminUsersPage = () => {
                   name="email"
                   value={createUserForm.email}
                   onChange={handleCreateUserChange}
-                  className="w-full rounded-md border border-stone-300 bg-white dark:bg-stone-800 px-3 py-2 text-sm text-slate-800 dark:text-stone-100 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-100"
+                  className="w-full rounded-xl border border-stone-300 bg-white dark:bg-stone-800/60 px-3 py-2 text-sm text-slate-800 dark:text-stone-100 focus:border-red-400 focus:outline-none focus:ring-1 focus:ring-red-500/20"
                   placeholder="usuario@empresa.com"
                   required
                 />
@@ -579,7 +595,7 @@ export const AdminUsersPage = () => {
                   name="role"
                   value={createUserForm.role}
                   onChange={handleCreateUserChange}
-                  className="w-full rounded-md border border-stone-300 bg-white dark:bg-stone-800 px-3 py-2 text-sm text-slate-800 dark:text-stone-100 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-100"
+                  className="w-full rounded-xl border border-stone-300 bg-white dark:bg-stone-800/60 px-3 py-2 text-sm text-slate-800 dark:text-stone-100 focus:border-red-400 focus:outline-none focus:ring-1 focus:ring-red-500/20"
                 >
                   {roleOptions.map((option) => (
                     <option key={option.value} value={option.value}>{option.label}</option>
@@ -630,25 +646,25 @@ export const AdminUsersPage = () => {
             )}
 
             {createUserFeedback && (
-              <p className="mt-3 rounded border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+              <p className="mt-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-300 dark:text-emerald-300">
                 {createUserFeedback}
               </p>
             )}
             {createUserError && (
-              <p className="mt-3 rounded border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+              <p className="mt-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300">
                 {createUserError}
               </p>
             )}
           </article>
 
-          <article className="rounded-[26px] dark:bg-[#0f0c0c] p-5 md:p-6">
+          <article className="rounded-[26px] bg-stone-50/50 dark:bg-[#0f0c0c] p-5 md:p-6">
             <header className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-slate-800 dark:text-stone-100">Usuários</h2>
               <span className="text-xs text-slate-500 dark:text-stone-400">{loadingUsers ? 'Carregando...' : `${users.length} registros`}</span>
             </header>
 
             {usersError ? (
-              <p className="rounded border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+              <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300">
                 {usersError}
               </p>
             ) : (
@@ -712,7 +728,7 @@ export const AdminUsersPage = () => {
                               }))
                             }
                             disabled={isSelf}
-                            className="rounded-md border border-stone-300 bg-white dark:bg-stone-800 px-2 py-1 text-xs text-slate-800 dark:text-stone-100"
+                            className="rounded-xl border border-stone-300 bg-white dark:bg-stone-800/60 px-2 py-1 text-xs text-slate-800 dark:text-stone-100"
                           >
                             {roleOptions.map((option) => (
                               <option key={option.value} value={option.value}>{option.label}</option>
@@ -761,7 +777,7 @@ export const AdminUsersPage = () => {
             )}
           </article>
 
-          <article className="rounded-[26px] dark:bg-[#0f0c0c] p-5 md:p-6">
+          <article className="rounded-[26px] bg-stone-50/50 dark:bg-[#0f0c0c] p-5 md:p-6">
             <header className="mb-4">
               <h2 className="text-lg font-semibold text-slate-800 dark:text-stone-100">Status de acesso</h2>
               <p className="text-xs text-slate-500 dark:text-stone-400">
@@ -797,19 +813,19 @@ export const AdminUsersPage = () => {
                       type="text"
                       value={accessDraft.reason}
                       onChange={(event) => setAccessDraft((prev) => ({ ...prev, reason: event.target.value }))}
-                      className="w-full rounded-md border border-stone-300 bg-white dark:bg-stone-800 px-3 py-2 text-sm text-slate-800 dark:text-stone-100 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-100"
+                      className="w-full rounded-xl border border-stone-300 bg-white dark:bg-stone-800/60 px-3 py-2 text-sm text-slate-800 dark:text-stone-100 focus:border-red-400 focus:outline-none focus:ring-1 focus:ring-red-500/20"
                       placeholder="Ex.: desligamento da empresa"
                     />
                   </label>
                 )}
 
                 {accessFeedback && (
-                  <p className="rounded border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+                  <p className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-300 dark:text-emerald-300">
                     {accessFeedback}
                   </p>
                 )}
                 {accessError && (
-                  <p className="rounded border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+                  <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300">
                     {accessError}
                   </p>
                 )}

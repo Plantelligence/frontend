@@ -1,3 +1,20 @@
+/**
+ * App.jsx - Componente raiz da aplicação Plantelligence.
+ *
+ * Define todas as rotas do sistema usando React Router v6.
+ * Estrutura de rotas:
+ *   - Públicas (Shell + TopNav + Footer): landing, sobre, contato, políticas
+ *   - Protegidas (DashboardLayout): dashboard, estufas, chat, relatórios
+ *   - Autenticação (AuthShell): login, registro, reset de senha
+ *
+ * Recursos implementados aqui:
+ *   - GuestRoute: redireciona usuários já logados para fora das páginas de auth
+ *   - ErrorBoundary: captura erros de renderização e exibe tela amigável
+ *   - Cookie consent banner: aparece 1,6s após o carregamento
+ *   - Lock screen: overlay de bloqueio por inatividade (useIdleTimer)
+ *   - Redirecionamento de first-access token via query string
+ */
+
 // Componente raiz da aplicacao, define as rotas e a estrutura principal do app.
 import React, { useEffect, useRef, useState, Component } from 'react';
 import { createPortal } from 'react-dom';
@@ -30,6 +47,8 @@ import { ScrollToTop } from './components/ScrollToTop.jsx';
 import { ProtectedRoute } from './components/ProtectedRoute.jsx';
 import { AdminRoute } from './components/AdminRoute.jsx';
 import { useAuthStore } from './store/authStore.js';
+import { useIdleTimer } from './hooks/useIdleTimer.js';
+import { LockScreen } from './components/LockScreen.jsx';
 
 const COOKIE_STORAGE_KEY = 'plantelligence-cookie-consent';
 
@@ -279,6 +298,22 @@ const App = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  // ── Politica de sessao: idle lock e SESSION_MAX_AGE ──────────────────────
+  const isAuthenticated = useAuthStore((s) => Boolean(s.tokens?.accessToken || s.tokens?.access_token));
+  const isLocked        = useAuthStore((s) => s.isLocked);
+  const lockSession     = useAuthStore((s) => s.lockSession);
+  const unlockSession   = useAuthStore((s) => s.unlockSession);
+  const clearSession    = useAuthStore((s) => s.clearSession);
+  const authUser        = useAuthStore((s) => s.user);
+
+
+  // Bloqueia apos 30 minutos de inatividade (so quando autenticado e nao bloqueado)
+  useIdleTimer(
+    30 * 60 * 1000,
+    () => lockSession('idle'),
+    isAuthenticated && !isLocked
+  );
+
   useEffect(() => {
     const search = new URLSearchParams(location.search || '');
     const firstAccessToken = (search.get('firstAccessToken') || search.get('token') || '').trim();
@@ -301,6 +336,15 @@ const App = () => {
   }, [location.pathname, location.search, navigate]);
 
   return (
+    <>
+      {/* Lock Screen: bloqueio por inatividade (nao destroi sessao) */}
+      {isLocked && isAuthenticated && (
+        <LockScreen
+          user={authUser}
+          onUnlock={unlockSession}
+          onLogout={() => { clearSession(); navigate('/login', { replace: true }); }}
+        />
+      )}
     <ErrorBoundary>
       <ScrollToTop />
       <Routes>
@@ -344,6 +388,7 @@ const App = () => {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </ErrorBoundary>
+    </>
   );
 };
 

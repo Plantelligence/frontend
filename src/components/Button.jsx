@@ -1,3 +1,12 @@
+/**
+ * Button - Componente de botão genérico reutilizável.
+ *
+ * Encapsula o elemento <button> com estilos padrão do design system.
+ * Aceita variantes (primary, secondary, danger) e estados (loading, disabled).
+ * Todas as páginas que precisam de botão devem usar este componente
+ * para garantir consistência visual.
+ */
+
 // Componente de botao reutilizavel com suporte a diferentes variantes e estados.
 import React from 'react';
 import clsx from 'clsx';

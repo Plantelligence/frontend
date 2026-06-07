@@ -10,7 +10,7 @@
  */
 
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import QRCode from 'react-qr-code';
 import {
   checkEmailExists,
@@ -157,6 +157,10 @@ const PasswordStrength = ({ password }) => {
 export const LoginPage = () => {
   const setSession = useAuthStore((s) => s.setSession);
   const navigate   = useNavigate();
+  const location   = useLocation();
+  // Detecta redirect do cliente apos SESSION_MAX_AGE_EXCEEDED
+  const sessionExpired = new URLSearchParams(location.search).get('reason') === 'session_expired';
+  const mfaRequiredForAction = new URLSearchParams(location.search).get('reason') === 'mfa_required_for_action';
 
   // ── Estado global do fluxo ───────────────────────────────────────────────────
   const [step, setStep]   = useState('email'); // email|password|mfa|forgot_verify|forgot_code|forgot_new_pw
@@ -580,7 +584,7 @@ export const LoginPage = () => {
                 <p className="text-sm font-semibold text-slate-100">Código por e-mail</p>
                 <p className="text-xs text-slate-400">
                   {initiatingMethod ? 'Enviando código...'
-                    : methodDetails ? <><strong className="text-slate-200">{email}</strong> — verifique sua caixa de entrada.</>
+                    : methodDetails ? <><strong className="text-slate-200">{email}</strong>: verifique sua caixa de entrada.</>
                     : 'Código de 6 dígitos enviado para o e-mail cadastrado.'}
                 </p>
                 {methodDetails?.expiresAt && (

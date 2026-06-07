@@ -1,5 +1,5 @@
 /**
- * HelpPage — Documentação completa do Plantelligence em linguagem acessível.
+ * HelpPage - Documentação completa do Plantelligence em linguagem acessível.
  * Cobre todas as funcionalidades implementadas, melhorias recentes e roadmap futuro.
  */
 
@@ -14,6 +14,10 @@ const SECTIONS = [
   { id: 'telemetria',    icon: 'fa-chart-line',      label: 'Telemetria e alertas' },
   { id: 'controles',     icon: 'fa-sliders',         label: 'Controles remotos' },
   { id: 'perfis',        icon: 'fa-leaf',            label: 'Perfis de cultivo' },
+  { id: 'comando',       icon: 'fa-gauge-high',      label: 'Centro de Comando' },
+  { id: 'fases',         icon: 'fa-seedling',        label: 'Fases biológicas' },
+  { id: 'automacao',     icon: 'fa-robot',           label: 'Automação inteligente' },
+  { id: 'ia-contextual', icon: 'fa-brain',           label: 'IA com contexto dinâmico' },
   { id: 'relatorios',    icon: 'fa-chart-bar',       label: 'Relatórios' },
   { id: 'chat',          icon: 'fa-robot',           label: 'Chat com IA' },
   { id: 'notificacoes',  icon: 'fa-bell',            label: 'Notificações' },
@@ -90,16 +94,69 @@ const FeatureCard = ({ icon, title, description, badge, badgeColor = 'green' }) 
 
 export const HelpPage = () => {
   const [activeSection, setActiveSection] = useState('inicio');
+  const scrollingRef = React.useRef(false);
+  const contentRef = React.useRef(null);
+
+  // Rastreia qual seção está visível usando scroll event no container real do dashboard.
+  // O DashboardLayout usa <main className="flex-1 overflow-y-auto"> como container.
+  // Encontramos o ancestral rolável do componente e escutamos seu evento scroll.
+  React.useEffect(() => {
+    // Sobe na árvore DOM até encontrar o primeiro ancestral com overflow-y scroll/auto
+    const findScrollContainer = (el) => {
+      if (!el || el === document.body) return window;
+      const style = window.getComputedStyle(el);
+      if (/(auto|scroll)/.test(style.overflowY)) return el;
+      return findScrollContainer(el.parentElement);
+    };
+
+    const container = findScrollContainer(contentRef.current);
+    const sectionIds = SECTIONS.map((s) => s.id);
+
+    const updateActive = () => {
+      if (scrollingRef.current) return;
+
+      // Pega o offset do topo do container
+      const containerTop = container === window
+        ? 0
+        : container.getBoundingClientRect().top;
+
+      // Encontra a seção cujo topo está mais próximo do topo visível (com margem de 120px)
+      let best = sectionIds[0];
+      let bestDist = Infinity;
+
+      sectionIds.forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const dist = Math.abs(rect.top - containerTop - 80);
+        // Só considera seções que já passaram pelo topo (top <= 120px abaixo do início)
+        if (rect.top - containerTop <= 120 && dist < bestDist) {
+          bestDist = dist;
+          best = id;
+        }
+      });
+
+      setActiveSection(best);
+    };
+
+    container.addEventListener('scroll', updateActive, { passive: true });
+    // Executa uma vez ao montar para definir o estado inicial
+    updateActive();
+
+    return () => container.removeEventListener('scroll', updateActive);
+  }, []);
 
   const scrollTo = (id) => {
+    scrollingRef.current = true;
     setActiveSection(id);
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    setTimeout(() => { scrollingRef.current = false; }, 900);
   };
 
   return (
     <div className="flex gap-8">
       {/* Índice lateral fixo */}
-      <aside className="hidden xl:flex w-56 flex-shrink-0 flex-col gap-1 sticky top-6 self-start">
+      <aside className="hidden lg:flex w-56 flex-shrink-0 flex-col gap-1 sticky top-4 self-start max-h-[calc(100vh-5rem)] overflow-y-auto pb-4">
         <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-stone-400">Documentação</p>
         {SECTIONS.map((s) => (
           <button
@@ -128,7 +185,7 @@ export const HelpPage = () => {
       </aside>
 
       {/* Conteúdo principal */}
-      <div className="min-w-0 flex-1 space-y-12">
+      <div ref={contentRef} className="min-w-0 flex-1 space-y-12">
 
         {/* Hero */}
         <div className="rounded-2xl bg-gradient-to-br from-red-600 to-red-800 p-8 text-white">
@@ -170,7 +227,7 @@ export const HelpPage = () => {
 
         {/* SECAO 2: Login */}
         <Section id="login" icon="fa-lock" title="Login e segurança">
-          <p>O acesso ao sistema usa um fluxo em etapas, similar ao Gmail ou Microsoft — mais seguro e organizado.</p>
+          <p>O acesso ao sistema usa um fluxo em etapas, similar ao Gmail ou Microsoft: mais seguro e organizado.</p>
 
           <div className="space-y-3 mt-2">
             <Step num={1} title="Digite seu e-mail">
@@ -194,6 +251,48 @@ export const HelpPage = () => {
           <div className="grid gap-3 sm:grid-cols-2 mt-4">
             <FeatureCard icon="fa-mobile-screen-button" title="Autenticador TOTP" description="Configure o app autenticador nas configurações da conta para ter acesso rápido sem depender do e-mail." badge="Recomendado" badgeColor="green" />
             <FeatureCard icon="fa-envelope" title="Código por e-mail" description="Alternativa ao autenticador. Receba o código de 6 dígitos no e-mail cadastrado." badge="Alternativo" badgeColor="blue" />
+          </div>
+
+          <h3 className="font-semibold text-stone-800 dark:text-stone-200 mt-6 mb-3">Política de sessão e bloqueio</h3>
+          <p>
+            O Plantelligence aplica uma política de segurança balanceada que protege o sistema sem interromper
+            o fluxo de trabalho dos operadores durante turnos longos.
+          </p>
+
+          <div className="space-y-3 mt-3">
+            <Step num={1} title="Bloqueio por inatividade (30 minutos)">
+              Após 30 minutos sem nenhuma interação (mouse, teclado ou toque), o painel é bloqueado automaticamente.
+              Um overlay de lock screen é exibido. Para retomar, informe apenas a sua <strong className="text-stone-800 dark:text-stone-200">senha</strong>.
+              O MFA não é exigido no desbloqueio porque a sessão continua válida. Você pode clicar em "Sair" para encerrar completamente.
+            </Step>
+            <Step num={2} title="Expiração de sessão prolongada (7 dias)">
+              Após 7 dias sem fazer login completo, a sessão é automaticamente expirada.
+              O sistema redireciona para a tela de login com a mensagem de sessão expirada.
+              Um novo login completo com senha e MFA é necessário para continuar.
+            </Step>
+            <Step num={3} title="MFA adaptativo por dispositivo">
+              O sistema identifica o dispositivo de acesso (combinação de navegador e rede).
+              Em dispositivos já utilizados recentemente, o fingerprint é reconhecido e registrado.
+              Em dispositivos novos ou redes desconhecidas, o MFA é sempre exigido independentemente
+              de sessões anteriores.
+            </Step>
+            <Step num={4} title="Ações críticas sempre exigem MFA">
+              Operações sensíveis como excluir estufas, alterar senhas ou revogar dispositivos
+              exigem confirmação MFA independentemente do dispositivo ou tempo de sessão.
+            </Step>
+          </div>
+
+          <InfoBox color="green" icon="fa-circle-check">
+            <strong>Por que só senha no desbloqueio?</strong> Exigir MFA a cada bloqueio de tela seria
+            impraticável para operadores que monitoram estufas por turnos de 8 horas. A senha confirma
+            presença sem interromper o trabalho. O MFA completo protege o login inicial.
+          </InfoBox>
+
+          <div className="grid gap-3 sm:grid-cols-2 mt-4">
+            <FeatureCard icon="fa-lock" title="Bloqueio automático" description="Interface bloqueada após 30 min de inatividade. Desbloqueio só com senha, sem MFA." badge="Novo" badgeColor="green" />
+            <FeatureCard icon="fa-clock-rotate-left" title="Sessão de 7 dias" description="Após 7 dias sem login completo, a sessão expira e exige novo acesso com MFA." badge="Novo" badgeColor="blue" />
+            <FeatureCard icon="fa-fingerprint" title="MFA adaptativo" description="Dispositivos conhecidos têm fluxo simplificado. Dispositivos novos sempre exigem MFA." badge="Novo" badgeColor="purple" />
+            <FeatureCard icon="fa-shield-halved" title="Logs de autenticação" description="Cada login, bloqueio, desbloqueio e falha fica registrado na trilha de auditoria." badge="LGPD" badgeColor="amber" />
           </div>
         </Section>
 
@@ -246,7 +345,7 @@ export const HelpPage = () => {
             <FeatureCard icon="fa-thermometer-half" title="Temperatura" description="Monitoramento contínuo em °C. Faixas: crítico baixo, alerta baixo, ideal, alerta alto, crítico alto." badge="Sensor IoT" />
             <FeatureCard icon="fa-droplet" title="Umidade do ar" description="Percentual de umidade relativa. Fundamental para o desenvolvimento dos cogumelos." badge="Sensor IoT" />
             <FeatureCard icon="fa-sun" title="Luminosidade" description="Intensidade de luz em lux. Controla o ciclo de frutificação dos cogumelos." badge="Sensor IoT" />
-            <FeatureCard icon="fa-cloud" title="Clima externo" description="Dados meteorológicos da cidade da estufa usados como referência comparativa." badge="Automatico" badgeColor="blue" />
+            <FeatureCard icon="fa-cloud" title="Clima externo" description="Dados meteorológicos da cidade da estufa usados como referência comparativa." badge="Automático" badgeColor="blue" />
           </div>
 
           <h3 className="font-semibold text-stone-800 dark:text-stone-200 mt-6 mb-2">Como funcionam os alertas</h3>
@@ -370,7 +469,7 @@ export const HelpPage = () => {
           </p>
 
           <div className="grid gap-3 sm:grid-cols-2 mt-4">
-            <FeatureCard icon="fa-comment-dots" title="Respostas em tempo real" description="As respostas são geradas com streaming — você vê o texto sendo construído palavra por palavra, sem esperar." badge="Streaming" badgeColor="green" />
+            <FeatureCard icon="fa-comment-dots" title="Respostas em tempo real" description="As respostas são geradas com streaming: você vê o texto sendo construído palavra por palavra, sem esperar." badge="Streaming" badgeColor="green" />
             <FeatureCard icon="fa-shield-halved" title="Privacidade" description="O chat é restrito a temas de cultivo. Não envie dados pessoais sensíveis nas mensagens." badge="LGPD" badgeColor="blue" />
           </div>
 
@@ -465,18 +564,104 @@ export const HelpPage = () => {
         </Section>
 
         {/* SECAO 12: Roadmap */}
+
+        <Section id="comando" icon="fa-gauge-high" title="Centro de Comando">
+          <p>
+            O Centro de Comando é a tela principal de cada estufa. Acesse-a pela aba <strong>Centro de Comando</strong> ao abrir qualquer estufa no dashboard.
+          </p>
+          <InfoBox color="blue" icon="fa-circle-info">
+            Esta é a aba padrão ao abrir uma estufa. Foi projetada para responder em segundos: a estufa está saudável? O que precisa de atenção agora?
+          </InfoBox>
+          <div className="grid gap-3 sm:grid-cols-2 mt-3">
+            <FeatureCard icon="fa-gauge-high" title="Health Score" description="Pontuação de 0 a 100 que indica o estado geral da estufa com base na aderência ao preset ativo." badge="Novo" badgeColor="green" />
+            <FeatureCard icon="fa-triangle-exclamation" title="Alertas prioritários" description="Até 3 itens críticos com causa identificada e ação sugerida. Sem ruído, direto ao ponto." badge="Novo" badgeColor="green" />
+            <FeatureCard icon="fa-leaf" title="Aderência ao preset" description="Para cada sensor: valor atual, faixa ideal, desvio percentual e barra de posição visual." badge="Novo" badgeColor="green" />
+            <FeatureCard icon="fa-clock-rotate-left" title="Timeline de eventos" description="Histórico unificado de comandos de atuadores, alertas e decisões de automação." badge="Novo" badgeColor="green" />
+          </div>
+          <Step num={1} title="Quick Actions">
+            Na parte inferior do Centro de Comando há ações rápidas: trocar fase biológica, suspender a automação por 60 minutos, abrir relatórios e chamar o assistente de IA.
+          </Step>
+          <Step num={2} title="Previsão de curto prazo">
+            O sistema analisa a tendência atual e exibe riscos de desvio nas próximas 4 horas com recomendação preventiva.
+          </Step>
+        </Section>
+
+        <Section id="fases" icon="fa-seedling" title="Fases biológicas">
+          <p>
+            Cada estufa possui uma fase biológica ativa que representa o estágio atual do cultivo.
+            A fase é usada pelo worker de automação e pelo assistente de IA para contextualizar decisões.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-3 mt-3">
+            <FeatureCard icon="fa-seedling" title="Incubação" description="Fase inicial. Micélio coloniza o substrato. Prioridade: temperatura estável e umidade controlada." badge="Fase 1" badgeColor="blue" />
+            <FeatureCard icon="fa-leaf" title="Frutificação" description="Formação dos corpos frutíferos. Alta umidade do ar e luminosidade controlada são críticas." badge="Fase 2" badgeColor="green" />
+            <FeatureCard icon="fa-basket-shopping" title="Colheita" description="Período de coleta. Monitoramento de picos de CO₂ e controle de ventilação são prioritários." badge="Fase 3" badgeColor="amber" />
+          </div>
+          <Step num={1} title="Como trocar de fase">
+            No Centro de Comando, clique em <strong>Trocar fase</strong> nas Quick Actions. Selecione a nova fase, adicione um motivo opcional e confirme. A transição fica registrada no histórico.
+          </Step>
+          <InfoBox color="amber" icon="fa-triangle-exclamation">
+            A troca de fase não altera o preset vinculado automaticamente. Recomenda-se vincular um preset específico para cada fase.
+          </InfoBox>
+        </Section>
+
+        <Section id="automacao" icon="fa-robot" title="Automação inteligente">
+          <p>
+            O Plantelligence possui um worker de automação que roda em background a cada 90 segundos,
+            avaliando a telemetria dos sensores e acionando atuadores automaticamente.
+          </p>
+          <InfoBox color="blue" icon="fa-circle-info">
+            A automação só funciona quando: (1) a estufa tem um preset vinculado, (2) há dispositivos atuadores ativos e registrados no IoT Hub, e (3) o modo manual não está ativo.
+          </InfoBox>
+          <div className="grid gap-3 sm:grid-cols-2 mt-3">
+            <FeatureCard icon="fa-droplet" title="Umidade baixa" description="Aciona o nebulizador automaticamente quando a umidade do ar cai abaixo do mínimo do preset." badge="Automático" badgeColor="blue" />
+            <FeatureCard icon="fa-wind" title="Temperatura alta" description="Aciona a ventilação forçada quando a temperatura ultrapassa o máximo do preset." badge="Automático" badgeColor="blue" />
+            <FeatureCard icon="fa-seedling" title="Substrato seco" description="Aciona a irrigação quando a umidade do substrato fica abaixo do limite mínimo." badge="Automático" badgeColor="blue" />
+            <FeatureCard icon="fa-sun" title="Luminosidade" description="Ajusta a iluminação AgroLED com base nos limites do preset de luminosidade." badge="Automático" badgeColor="blue" />
+          </div>
+          <Step num={1} title="Histerese e cooldown">
+            O sistema aplica uma margem de 5% dentro da faixa ideal antes de desligar um atuador (histerese),
+            e espera 5 minutos entre acionamentos do mesmo atuador (cooldown). Isso evita liga/desliga em loop.
+          </Step>
+          <Step num={2} title="Modo manual temporário">
+            No Centro de Comando, clique em <strong>Suspender automação</strong> para pausar o worker por 60 minutos.
+            Todas as decisões automáticas ficam registradas na timeline de eventos.
+          </Step>
+          <Step num={3} title="Fail-safe">
+            Se um sensor não enviar dados há mais de 5 minutos, o worker não toma nenhuma ação automática
+            para aquela métrica e entra em estado seguro para evitar acionamentos errados.
+          </Step>
+        </Section>
+
+        <Section id="ia-contextual" icon="fa-brain" title="IA com contexto dinâmico">
+          <p>
+            O assistente de IA do Plantelligence agora recebe o contexto real da sua estufa antes de responder.
+            Isso significa que ele já sabe a fase atual, o preset ativo e as últimas leituras dos sensores.
+          </p>
+          <InfoBox color="green" icon="fa-circle-check">
+            Para ativar o contexto dinâmico, abra o Chat com IA a partir da aba da estufa. O sistema injeta automaticamente os dados operacionais no prompt.
+          </InfoBox>
+          <div className="grid gap-3 sm:grid-cols-2 mt-3">
+            <FeatureCard icon="fa-temperature-half" title="Leituras em tempo real" description="Temperatura, umidade, substrato e luminosidade são injetadas no contexto antes de cada resposta." badge="Novo" badgeColor="green" />
+            <FeatureCard icon="fa-leaf" title="Fase e preset" description="A IA sabe em qual fase o cultivo está e quais são as faixas ideais do preset ativo." badge="Novo" badgeColor="green" />
+            <FeatureCard icon="fa-shield-halved" title="Proteção contra injeção" description="Todos os dados injetados são sanitizados para prevenir manipulação do comportamento da IA." badge="Segurança" badgeColor="red" />
+            <FeatureCard icon="fa-ban" title="Zero Data Retention" description="As conversas não são armazenadas pelo provedor de IA (OpenRouter ZDR ativo)." badge="LGPD" badgeColor="blue" />
+          </div>
+        </Section>
+
         <Section id="roadmap" icon="fa-rocket" title="Próximas melhorias">
           <p>
             O Plantelligence está em desenvolvimento ativo. Aqui estão as funcionalidades planejadas para as próximas versões:
           </p>
 
           <div className="grid gap-3 sm:grid-cols-2 mt-4">
-            <FeatureCard icon="fa-chart-area" title="Gráficos históricos" description="Visualização de temperatura, umidade e luminosidade ao longo do tempo com filtros por período." badge="Breve" badgeColor="purple" />
-            <FeatureCard icon="fa-file-pdf" title="Relatórios em PDF" description="Exportação de relatórios de cultivo em PDF, incluindo gráficos e resumo do período." badge="Planejado" badgeColor="purple" />
-            <FeatureCard icon="fa-mobile" title="App mobile nativo" description="Aplicativo para iOS e Android com notificações push em tempo real." badge="Futuro" badgeColor="amber" />
-            <FeatureCard icon="fa-envelope-open-text" title="Relatórios por e-mail" description="Receba um resumo semanal ou mensal das suas estufas diretamente no e-mail." badge="Planejado" badgeColor="purple" />
-            <FeatureCard icon="fa-plug" title="Integrações externas" description="Conexão com sistemas de automação industrial e ERPs agrícolas." badge="Futuro" badgeColor="amber" />
-            <FeatureCard icon="fa-brain" title="IA preditiva" description="Análise preditiva que antecipa problemas antes que ocorram, baseada no histórico da estufa." badge="Futuro" badgeColor="amber" />
+            <FeatureCard icon="fa-gauge-high" title="Centro de Comando" description="Cockpit operacional com health score, timeline de eventos e quick actions." badge="Implementado" badgeColor="green" />
+            <FeatureCard icon="fa-chart-area" title="Gráficos históricos" description="Linha e área com Recharts mostrando histórico real de telemetria com filtros de 6h a 7 dias." badge="Implementado" badgeColor="green" />
+            <FeatureCard icon="fa-robot" title="Worker de automação" description="Automação com histerese, cooldown e fail-safe integrada ao IoT Hub." badge="Implementado" badgeColor="green" />
+            <FeatureCard icon="fa-seedling" title="Fases biológicas" description="Incubação, frutificação e colheita com histórico de transições." badge="Implementado" badgeColor="green" />
+            <FeatureCard icon="fa-brain" title="IA contextual" description="Assistente com injeção de telemetria e fase em tempo real no prompt." badge="Implementado" badgeColor="green" />
+            <FeatureCard icon="fa-file-pdf" title="Exportação PDF" description="Exportação de relatórios de cultivo em PDF com gráficos." badge="Planejado" badgeColor="purple" />
+            <FeatureCard icon="fa-mobile" title="App mobile" description="Aplicativo iOS e Android com notificações push em tempo real." badge="Futuro" badgeColor="amber" />
+            <FeatureCard icon="fa-plug" title="Integrações externas" description="Conexão com ERPs agrícolas e sistemas de automação industrial." badge="Futuro" badgeColor="amber" />
           </div>
 
           <InfoBox color="green" icon="fa-lightbulb">

@@ -100,110 +100,99 @@ export const ContactPage = () => {
                 <p className="text-xs font-semibold text-stone-400 mb-3 uppercase tracking-wider">Também nos encontre</p>
                 <div className="space-y-2 text-sm text-stone-400">
                   <div className="flex items-center gap-2">
-                    <i className="fa-solid fa-seedling text-lime-500 w-4 text-center" />
-                    <span>Especialistas em fungicultura IoT</span>
+                    <i className="fa-solid fa-globe text-red-400/60 text-xs" />
+                    <span>plantelligence.cloud</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <i className="fa-solid fa-cloud text-blue-500 w-4 text-center" />
-                    <span>Infraestrutura Azure IoT Hub</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <i className="fa-solid fa-lock text-emerald-500 w-4 text-center" />
-                    <span>Conformidade LGPD garantida</span>
+                    <i className="fa-brands fa-github text-stone-500 text-xs" />
+                    <span>github.com/plantelligence</span>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Coluna direita — formulário */}
-            <div className="rounded-2xl border border-stone-800/60 bg-stone-900/35 p-8">
+            </div>{/* col esquerda */}
+
+            {/* Coluna direita: formulario */}
+            <div>
               {success ? (
-                <div className="flex flex-col items-center justify-center gap-5 py-12 text-center">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 border border-emerald-500/20">
-                    <i className="fa-solid fa-check text-2xl text-emerald-400" />
-                  </div>
-                  <div>
-                    <p className="text-lg font-semibold text-stone-100 mb-2">Mensagem enviada!</p>
-                    <p className="text-sm text-stone-400">Nossa equipe retornará em até 24 horas úteis.</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setSuccess(false)}
-                    className="rounded-xl border border-stone-700 px-6 py-2.5 text-sm font-medium text-stone-300 hover:border-stone-500 hover:text-white transition"
-                  >
+                <div className="flex flex-col items-center gap-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/8 p-10 text-center">
+                  <i className="fa-solid fa-circle-check text-3xl text-emerald-400" />
+                  <p className="text-base font-semibold text-emerald-300">Mensagem enviada com sucesso!</p>
+                  <p className="text-sm text-stone-400">Retornamos em ate 24 horas uteis.</p>
+                  <button type="button" onClick={() => { setSuccess(false); setForm(initialForm); }}
+                    className="rounded-xl border border-stone-700 px-5 py-2 text-sm text-stone-300 hover:text-white transition">
                     Enviar outra mensagem
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-5">
-                  <div>
-                    <p className="text-base font-semibold text-stone-100 mb-1">Envie uma mensagem</p>
-                    <p className="text-xs text-stone-500">Todos os campos são obrigatórios, exceto empresa.</p>
-                  </div>
-
+                <form onSubmit={handleSubmit} className="space-y-4">
                   {error && (
-                    <div className="flex items-start gap-2 rounded-xl border border-red-500/30 bg-red-500/8 px-4 py-3 text-sm text-red-300">
-                      <i className="fa-solid fa-circle-exclamation mt-0.5 flex-shrink-0" />{error}
+                    <div className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/8 px-4 py-3 text-sm text-red-300">
+                      <i className="fa-solid fa-circle-exclamation flex-shrink-0" /> {error}
                     </div>
                   )}
-
                   <div className="grid sm:grid-cols-2 gap-4">
                     <label className="flex flex-col gap-1.5">
-                      <span className="text-[11px] font-semibold uppercase tracking-widest text-stone-500">Nome</span>
-                      <input name="name" value={form.name} onChange={handleChange} required placeholder="Seu nome completo"
-                        className="rounded-xl border border-stone-700/60 bg-stone-800/50 px-4 py-3 text-sm text-stone-100 placeholder:text-stone-600 outline-none transition focus:border-red-500/60 focus:ring-1 focus:ring-red-500/20" />
+                      <span className="text-[10px] font-semibold uppercase tracking-widest text-stone-500">Nome</span>
+                      <input name="name" value={form.name} onChange={handleChange} required
+                        placeholder="Seu nome"
+                        className="rounded-xl border border-stone-700/60 bg-stone-800/50 px-4 py-2.5 text-sm text-stone-100 placeholder:text-stone-600 outline-none focus:border-red-500/60 transition" />
                     </label>
                     <label className="flex flex-col gap-1.5">
-                      <span className="text-[11px] font-semibold uppercase tracking-widest text-stone-500">E-mail</span>
-                      <input name="email" type="email" value={form.email} onChange={handleChange} required placeholder="seu@email.com"
-                        className="rounded-xl border border-stone-700/60 bg-stone-800/50 px-4 py-3 text-sm text-stone-100 placeholder:text-stone-600 outline-none transition focus:border-red-500/60 focus:ring-1 focus:ring-red-500/20" />
+                      <span className="text-[10px] font-semibold uppercase tracking-widest text-stone-500">E-mail</span>
+                      <input name="email" type="email" value={form.email} onChange={handleChange} required
+                        placeholder="seu@email.com"
+                        className="rounded-xl border border-stone-700/60 bg-stone-800/50 px-4 py-2.5 text-sm text-stone-100 placeholder:text-stone-600 outline-none focus:border-red-500/60 transition" />
                     </label>
                   </div>
-
                   <label className="flex flex-col gap-1.5">
-                    <span className="text-[11px] font-semibold uppercase tracking-widest text-stone-500">Empresa <span className="normal-case text-stone-600">(opcional)</span></span>
-                    <input name="company" value={form.company} onChange={handleChange} placeholder="Nome da empresa ou operação"
-                      className="rounded-xl border border-stone-700/60 bg-stone-800/50 px-4 py-3 text-sm text-stone-100 placeholder:text-stone-600 outline-none transition focus:border-red-500/60 focus:ring-1 focus:ring-red-500/20" />
+                    <span className="text-[10px] font-semibold uppercase tracking-widest text-stone-500">Empresa (opcional)</span>
+                    <input name="company" value={form.company} onChange={handleChange}
+                      placeholder="Nome da sua empresa ou producao"
+                      className="rounded-xl border border-stone-700/60 bg-stone-800/50 px-4 py-2.5 text-sm text-stone-100 placeholder:text-stone-600 outline-none focus:border-red-500/60 transition" />
                   </label>
-
                   <label className="flex flex-col gap-1.5">
-                    <span className="text-[11px] font-semibold uppercase tracking-widest text-stone-500">Assunto</span>
+                    <span className="text-[10px] font-semibold uppercase tracking-widest text-stone-500">Assunto</span>
                     <select name="subject" value={form.subject} onChange={handleChange} required
-                      className="rounded-xl border border-stone-700/60 bg-stone-800/60 px-4 py-3 text-sm text-stone-100 outline-none transition focus:border-red-500/60 focus:ring-1 focus:ring-red-500/20">
-                      <option value="" className="bg-stone-900">Selecione um assunto</option>
-                      <option value="Demonstração do produto" className="bg-stone-900">Demonstração do produto</option>
-                      <option value="Dúvida técnica" className="bg-stone-900">Dúvida técnica</option>
-                      <option value="Suporte e implantação" className="bg-stone-900">Suporte e implantação</option>
-                      <option value="Proposta comercial" className="bg-stone-900">Proposta comercial</option>
-                      <option value="Outro" className="bg-stone-900">Outro</option>
+                      className="rounded-xl border border-stone-700/60 bg-stone-800/60 px-4 py-2.5 text-sm text-stone-100 outline-none focus:border-red-500/60 transition">
+                      <option value="" disabled>Selecione o assunto</option>
+                      <option value="suporte">Suporte tecnico</option>
+                      <option value="duvida">Duvida sobre a plataforma</option>
+                      <option value="parceria">Proposta de parceria</option>
+                      <option value="feedback">Feedback ou sugestao</option>
+                      <option value="outro">Outro</option>
                     </select>
                   </label>
-
                   <label className="flex flex-col gap-1.5">
-                    <span className="text-[11px] font-semibold uppercase tracking-widest text-stone-500">Mensagem</span>
+                    <span className="text-[10px] font-semibold uppercase tracking-widest text-stone-500">Mensagem</span>
                     <textarea name="message" value={form.message} onChange={handleChange} required rows={5}
-                      placeholder="Descreva sua dúvida, necessidade ou proposta..."
-                      className="rounded-xl border border-stone-700/60 bg-stone-800/50 px-4 py-3 text-sm text-stone-100 placeholder:text-stone-600 outline-none transition focus:border-red-500/60 focus:ring-1 focus:ring-red-500/20 resize-none" />
+                      placeholder="Descreva sua duvida, sugestao ou necessidade..."
+                      className="resize-none rounded-xl border border-stone-700/60 bg-stone-800/50 px-4 py-3 text-sm text-stone-100 placeholder:text-stone-600 outline-none focus:border-red-500/60 transition" />
                   </label>
-
-                  <button type="submit" disabled={loading}
-                    className="w-full rounded-xl bg-red-600 py-3.5 text-sm font-semibold text-white shadow-lg transition hover:bg-red-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50">
-                    {loading
-                      ? <><i className="fa-solid fa-circle-notch fa-spin mr-2" />Enviando...</>
-                      : <><i className="fa-solid fa-paper-plane mr-2" />Enviar mensagem</>
-                    }
-                  </button>
-
-                  <p className="text-center text-[10px] text-stone-600">
-                    <i className="fa-solid fa-lock mr-1" />Seus dados são protegidos conforme a LGPD.
+                  <p className="text-[10px] text-stone-600">
+                    Ao enviar, voce concorda com nossa{' '}
+                    <a href="/privacidade" className="text-stone-500 hover:text-stone-300 underline">Politica de Privacidade</a>.
+                    Nenhum dado sera compartilhado com terceiros.
                   </p>
+                  <button type="submit" disabled={loading}
+                    className="w-full rounded-xl bg-red-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-red-500 active:scale-[0.98] disabled:opacity-40">
+                    {loading ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <i className="fa-solid fa-spinner fa-spin" /> Enviando...
+                      </span>
+                    ) : (
+                      <span className="flex items-center justify-center gap-2">
+                        <i className="fa-solid fa-paper-plane" /> Enviar mensagem
+                      </span>
+                    )}
+                  </button>
                 </form>
               )}
-            </div>
-          </div>
-        </div>
-      </section>
+            </div>{/* col direita */}
 
+          </div>{/* grid */}
+        </div>{/* max-w */}
+      </section>
     </div>
   );
 };

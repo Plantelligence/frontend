@@ -175,7 +175,7 @@ const SidebarContent = ({ expanded, activeKey, onNavigate }) => {
         {/* Ajuda */}
         <FooterBtn
           icon="fa-circle-question"
-          label="Ajuda e documentacao"
+          label="Ajuda e documentação"
           expanded={expanded}
           linkTo="/help"
           onClick={onNavigate}

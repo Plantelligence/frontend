@@ -13,7 +13,7 @@ export const DashboardLayout = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-stone-50 text-stone-800 dark:bg-[#0c0909] dark:text-stone-100 overflow-hidden">
+    <div className="flex h-screen bg-stone-50 text-stone-800 dark:bg-[#0c0909] dark:text-stone-100 overflow-hidden" style={{ height: "100dvh" }}>
       {/* Sidebar */}
       <AppSidebar
         mobileOpen={mobileMenuOpen}

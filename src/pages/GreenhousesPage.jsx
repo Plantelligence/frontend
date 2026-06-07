@@ -1,3 +1,17 @@
+/**
+ * GreenhousesPage - Lista de estufas da organização.
+ *
+ * Tela inicial do dashboard pós-login. Exibe todas as estufas com:
+ *   - Cards com status, tipo de cultivo e equipe
+ *   - Filtros por tipo e busca por nome
+ *   - Cards de resumo (com perfil, com equipe, total)
+ *
+ * Se não houver estufas, redireciona automaticamente para o onboarding
+ * de criação da primeira estufa.
+ *
+ * Rota: /dashboard
+ */
+
 // Lista as estufas do usuario e permite filtrar, buscar e acessar cada uma delas.
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';

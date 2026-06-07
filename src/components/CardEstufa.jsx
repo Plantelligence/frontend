@@ -1,3 +1,18 @@
+/**
+ * CardEstufa - Card de exibição de uma estufa na grade de estufas.
+ *
+ * Exibe: nome, tipo de cultivo, status do perfil, localização,
+ * equipe responsável e botão "Abrir estufa".
+ *
+ * Usado em GridEstufas.jsx que é renderizado em GreenhousesPage.jsx.
+ *
+ * Props:
+ *   greenhouse   {object} - Dados da estufa do backend
+ *   typeVisual   {object} - Configuração visual do tipo de cultivo
+ *   logoVisual   {object} - Ícone e cor do logo da estufa
+ *   onOpen       {Function} - Callback ao clicar em "Abrir estufa"
+ */
+
 import React from 'react';
 import { Button } from './Button.jsx';
 

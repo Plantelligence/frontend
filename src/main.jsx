@@ -1,3 +1,11 @@
+/**
+ * main.jsx - Entry point da aplicação React.
+ *
+ * Monta o componente raiz (App) no elemento #root do index.html.
+ * BrowserRouter envolve tudo para habilitar o roteamento client-side.
+ * StrictMode ativado para detectar efeitos colaterais indesejados em desenvolvimento.
+ */
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';

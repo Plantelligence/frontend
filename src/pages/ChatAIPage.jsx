@@ -47,7 +47,7 @@ const API_BASE = (() => {
 const INITIAL_MESSAGE = {
   id: 'init',
   role: 'assistant',
-  text: 'Olá! Sou o assistente da **Plantelligence**. Posso te ajudar com dúvidas sobre cultivo de cogumelos, interpretar alertas das suas estufas ou sugerir ajustes nos parâmetros ambientais.\n\nComo posso ajudar?',
+  text: 'Olá! Sou o Assistente de Cultivo da plataforma **Plantelligence**. Posso te ajudar com dúvidas sobre cultivo de cogumelos, interpretar alertas das suas estufas ou sugerir ajustes nos parâmetros ambientais.\n\nComo posso ajudar?',
   timestamp: new Date().toISOString(),
   streaming: false,
 };
@@ -118,7 +118,7 @@ const MessageBubble = ({ message }) => {
           : 'border border-stone-200 bg-white text-slate-800 dark:border-stone-700/40 dark:bg-stone-800/40 dark:text-stone-100 rounded-bl-md'
       }`}>
         {!isUser && (
-          <p className="mb-1 text-[9px] font-semibold uppercase tracking-widest text-red-600">Assistente</p>
+          <p className="mb-1 text-[9px] font-semibold uppercase tracking-widest text-red-400">Assistente</p>
         )}
         {isUser ? (
           <p className="whitespace-pre-wrap break-words leading-relaxed">{message.text}</p>
@@ -126,11 +126,14 @@ const MessageBubble = ({ message }) => {
           <div className="break-words leading-relaxed
             [&_p]:my-1 [&_ul]:my-1.5 [&_ul]:list-disc [&_ul]:pl-4
             [&_ol]:my-1.5 [&_ol]:list-decimal [&_ol]:pl-4
-            [&_li]:my-0.5 [&_strong]:font-semibold [&_strong]:text-slate-900 dark:text-stone-100
+            [&_li]:my-0.5 dark:text-stone-100
             [&_code]:rounded [&_code]:bg-stone-100 [&_code]:px-1 [&_code]:text-[11px] [&_code]:text-red-700">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
+                strong: ({ children }) => (
+                  <strong className="font-bold text-red-600 dark:text-red-500">{children}</strong>
+                ),
                 h3: ({ children }) => {
                   const title = String(children ?? '').replace(/^#+\s*/, '').trim();
                   return (
@@ -307,7 +310,7 @@ export const ChatAIPage = () => {
 
   return (
     <div
-      className="flex flex-col rounded-2xl border border-stone-200 bg-white shadow-sm dark:border-stone-800/60 dark:bg-stone-900/35"
+      className="flex flex-col rounded-2xl border border-stone-200 bg-white shadow-sm dark:border-stone-800/60 dark:bg-[#0f0c0c]"
       style={{ height: 'calc(100vh - 7rem)', minHeight: '480px' }}
     >
       {/* Cabeçalho */}
@@ -318,7 +321,7 @@ export const ChatAIPage = () => {
           </div>
           <div>
             <p className="text-sm font-semibold text-stone-800 dark:text-stone-100">Assistente de Cultivo</p>
-            <p className="text-[10px] text-stone-400">Especializado em estufas de cogumelos · LGPD compliant</p>
+            <p className="text-[10px] text-stone-400">Especializado em fungicultura · Conformidade LGPD</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -353,7 +356,7 @@ export const ChatAIPage = () => {
       </div>
 
       {/* Input */}
-      <div className="flex-shrink-0 border-t border-stone-200 bg-stone-50/80 px-4 py-3 dark:border-stone-700/50 dark:bg-stone-800/40 md:px-6">
+      <div className="flex-shrink-0 border-t border-stone-200 bg-stone-50/80 px-4 py-3 bg-white dark:border-stone-700/50 dark:bg-stone-800/40 md:px-6">
         <div className="flex gap-2">
           <textarea
             ref={inputRef}

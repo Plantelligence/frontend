@@ -28,3 +28,15 @@ export const enviarTelemetria = (estufaId, leitura) =>
       luminosidade: leitura.luminosidade ?? null,
     })
     .then(() => null);
+
+/**
+ * Busca a serie temporal dos sensores para renderizar graficos.
+ *
+ * @param {string} estufaId  - ID da estufa
+ * @param {number} horas     - Janela de historico em horas (1-168, default: 24)
+ * @param {number} janela    - Granularidade em minutos (5-360, default: 30)
+ */
+export const getHistoricoTelemetria = (estufaId, horas = 24, janela = 30) =>
+  api
+    .get(`/estufas/${estufaId}/telemetria/historico`, { params: { horas, janela } })
+    .then((res) => res.data);

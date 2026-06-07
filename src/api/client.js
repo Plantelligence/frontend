@@ -94,7 +94,17 @@ const refreshSession = async () => {
         return nextToken;
       })
       .catch((error) => {
-        clearSession();
+        // SESSION_MAX_AGE_EXCEEDED: sessao muito antiga, logout forcado com aviso
+        const detail = error?.response?.data?.message || error?.response?.data?.detail || '';
+        if (detail === 'SESSION_MAX_AGE_EXCEEDED') {
+          clearSession();
+          // Redireciona para login com aviso de sessao expirada
+          if (typeof window !== 'undefined') {
+            window.location.href = '/login?reason=session_expired';
+          }
+        } else {
+          clearSession();
+        }
         throw error;
       })
       .finally(() => {
@@ -119,6 +129,15 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
+    // Acao critica com sessao MFA expirada: forca novo login completo
+    if (error.response?.status === 403 && error.response?.data?.message === 'MFA_RECONFIRMATION_REQUIRED') {
+      useAuthStore.getState().clearSession();
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login?reason=mfa_required_for_action';
+      }
+      return Promise.reject(error);
+    }
+
     const originalRequest = error.config;
     const { tokens } = useAuthStore.getState();
 

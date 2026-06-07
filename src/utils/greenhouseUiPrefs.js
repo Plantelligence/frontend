@@ -1,3 +1,15 @@
+/**
+ * greenhouseUiPrefs.js - Preferências visuais dos cards de estufa.
+ *
+ * Mapeia tipos de cultivo (cogumelo, personalizado, etc.) para:
+ *   - Cores de badge e borda
+ *   - Ícone do logo
+ *   - Label legível
+ *
+ * Centralizado aqui para que CardEstufa e GreenhousesPage usem
+ * a mesma identidade visual sem duplicação.
+ */
+
 // preferências visuais das estufas: tipo de cultivo, logos, status
 const STORAGE_KEY = 'plantelligence-greenhouse-ui-prefs';
 
@@ -134,24 +146,8 @@ export const resolveStatusVisual = (greenhouse) => {
     return {
       label: 'Sem dados',
       dot: 'bg-slate-400',
-      text: 'text-slate-600',
-      chip: 'bg-slate-100 text-slate-700'
+      text: 'Aguardando dados do sensor',
     };
   }
-
-  if (greenhouse?.alertsEnabled === false) {
-    return {
-      label: 'Atenção',
-      dot: 'bg-amber-500',
-      text: 'text-amber-700',
-      chip: 'bg-amber-100 text-amber-700'
-    };
-  }
-
-  return {
-    label: 'OK',
-    dot: 'bg-red-500',
-    text: 'text-red-700',
-    chip: 'bg-red-100 text-red-700'
-  };
-};
+  return resolveGreenhouseType(greenhouse);
+}

@@ -1,3 +1,14 @@
+/**
+ * SecurityLogsPage - Trilha de auditoria do sistema.
+ *
+ * Exibe os eventos de segurança registrados no banco:
+ *   login, logout, MFA, troca de senha, alterações de organização etc.
+ * Admin vê logs de toda a organização; usuário comum vê apenas os seus.
+ * Filtros: por ação e por período de data.
+ *
+ * Rota: /settings/logs
+ */
+
 import React, { useEffect, useState } from 'react';
 import { Button } from '../components/Button.jsx';
 import { useAuthStore } from '../store/authStore.js';
@@ -176,7 +187,7 @@ export const SecurityLogsPage = () => {
 
   if (!isAdmin) {
     return (
-          <div className="rounded-[26px] dark:bg-stone-900/35 p-6">
+          <div className="rounded-[26px] bg-stone-50/30 dark:bg-[#0f0c0c] p-4 md:p-6">
             <h1 className="text-2xl font-semibold text-slate-800 dark:text-stone-100">Logs de segurança</h1>
             <p className="mt-2 text-sm text-slate-600 dark:text-stone-400">
               Apenas administradores podem acessar trilhas de auditoria e eventos sensíveis do sistema.
@@ -187,7 +198,7 @@ export const SecurityLogsPage = () => {
 
   return (
     <>
-        <header className="rounded-[26px] dark:bg-[#0f0c0c] p-5 md:p-6 space-y-4">
+        <header className="rounded-[26px] bg-stone-50/50 dark:bg-[#0f0c0c] p-5 md:p-6 space-y-4">
           {/* Título */}
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
@@ -201,7 +212,7 @@ export const SecurityLogsPage = () => {
               type="button"
               onClick={() => fetchLogs(fromDate, untilDate)}
               disabled={loading}
-              className="flex items-center gap-2 rounded-lg border border-stone-200 px-4 py-2 text-sm font-medium text-stone-600 hover:border-stone-300 hover:bg-stone-50 disabled:opacity-50 transition dark:border-stone-700 dark:text-stone-400 dark:hover:bg-stone-800"
+              className="inline-flex items-center gap-2 rounded-xl border border-stone-300 dark:border-stone-700/60 px-4 py-2 text-sm font-medium text-stone-600 dark:text-stone-400 hover:border-red-400 hover:text-red-600 dark:hover:border-red-500/40 dark:hover:text-red-400 disabled:opacity-40 transition"
             >
               <i className={`fa-solid fa-rotate-right text-xs ${loading ? 'animate-spin' : ''}`} />
               {loading ? 'Atualizando...' : 'Atualizar'}
@@ -229,7 +240,7 @@ export const SecurityLogsPage = () => {
                 min={minDate}
                 max={untilDate || maxDate}
                 onChange={(e) => setFromDate(e.target.value)}
-                className="rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700 outline-none transition focus:border-red-400 focus:ring-1 focus:ring-red-400/30 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200"
+                className="rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm text-stone-700 outline-none transition focus:border-red-500/60 focus:ring-1 focus:ring-red-500/20 dark:border-stone-700/60 dark:bg-stone-800/60 dark:text-stone-100"
               />
             </div>
             <div className="flex flex-col gap-1">
@@ -240,7 +251,7 @@ export const SecurityLogsPage = () => {
                 min={fromDate || minDate}
                 max={maxDate}
                 onChange={(e) => setUntilDate(e.target.value)}
-                className="rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700 outline-none transition focus:border-red-400 focus:ring-1 focus:ring-red-400/30 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200"
+                className="rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm text-stone-700 outline-none transition focus:border-red-500/60 focus:ring-1 focus:ring-red-500/20 dark:border-stone-700/60 dark:bg-stone-800/60 dark:text-stone-100"
               />
             </div>
             <button
@@ -273,9 +284,9 @@ export const SecurityLogsPage = () => {
           ) : null}
         </header>
 
-        <section className="mt-4 rounded-[26px] dark:bg-stone-900/35 p-5 md:p-6">
+        <section className="mt-4 rounded-2xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-5">
           {logs.length === 0 && !loading ? (
-            <p className="rounded border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 px-4 py-3 text-sm text-slate-600 dark:text-stone-400">
+            <p className="rounded-xl border border-stone-200 bg-stone-50 dark:border-stone-800/40 dark:bg-stone-900/25 px-4 py-3 text-sm text-stone-600 dark:text-stone-400">
               Nenhum evento encontrado no período consultado.
             </p>
           ) : (
@@ -284,7 +295,7 @@ export const SecurityLogsPage = () => {
                 const actionView = getActionView(entry.action);
                 const context = buildContext(entry);
                 return (
-                  <article key={entry.id} className="rounded-xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
+                  <article key={entry.id} className="rounded-2xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
                     <header className="flex flex-wrap items-center justify-between gap-2">
                       <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${actionView.tone}`}>
                         {actionView.title}

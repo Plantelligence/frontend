@@ -20,9 +20,9 @@ const FILTERS = [
 ];
 
 const badgeClassByType = {
-  inUse: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-  custom: 'border-amber-200 bg-amber-50 text-amber-700',
-  default: 'border-stone-200 bg-stone-100 text-stone-600'
+  inUse: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400',
+  custom: 'border-amber-500/30 bg-amber-500/10 text-amber-400',
+  default: 'border-stone-300 bg-stone-100 text-stone-600 dark:border-stone-700/50 dark:bg-stone-800/40 dark:text-stone-400'
 };
 
 const makeDefaultRanges = () => ({
@@ -202,22 +202,22 @@ function PresetCard({ preset, selected, onSelect, onEdit, onDuplicate, onDelete,
           <div className="flex min-h-[80px] flex-col justify-between rounded-md border border-stone-200 dark:border-stone-700/40 bg-stone-50 dark:bg-stone-800/40 p-3">
             <p className="text-[10px] font-semibold leading-tight text-red-700">Temperatura</p>
             <p className="text-lg font-semibold leading-none text-stone-900 dark:text-stone-100">{preset.ui.temperature}<span className="ml-0.5 text-[10px] font-normal text-stone-400">°C</span></p>
-            <p className="text-[10px] font-mono text-stone-400">{preset.ui.tempRange}°C</p>
+            <p className="text-[10px] font-mono text-stone-500 dark:text-stone-400">{preset.ui.tempRange}°C</p>
           </div>
           <div className="flex min-h-[80px] flex-col justify-between rounded-md border border-stone-200 dark:border-stone-700/40 bg-stone-50 dark:bg-stone-800/40 p-3">
             <p className="text-[10px] font-semibold leading-tight text-red-700">Umidade do ar</p>
             <p className="text-lg font-semibold leading-none text-stone-900 dark:text-stone-100">{preset.ui.humidity}<span className="ml-0.5 text-[10px] font-normal text-stone-400">%</span></p>
-            <p className="text-[10px] font-mono text-stone-400">{preset.ui.humidityRange}%</p>
+            <p className="text-[10px] font-mono text-stone-500 dark:text-stone-400">{preset.ui.humidityRange}%</p>
           </div>
           <div className="flex min-h-[80px] flex-col justify-between rounded-md border border-stone-200 dark:border-stone-700/40 bg-stone-50 dark:bg-stone-800/40 p-3">
             <p className="text-[10px] font-semibold leading-tight text-red-700">Umidade do solo</p>
             <p className="text-lg font-semibold leading-none text-stone-900 dark:text-stone-100">{preset.ui.soilMoisture || '—'}<span className="ml-0.5 text-[10px] font-normal text-stone-400">%</span></p>
-            <p className="text-[10px] font-mono text-stone-400">{preset.ui.soilRange}</p>
+            <p className="text-[10px] font-mono text-stone-500 dark:text-stone-400">{preset.ui.soilRange}</p>
           </div>
           <div className="flex min-h-[80px] flex-col justify-between rounded-md border border-stone-200 dark:border-stone-700/40 bg-stone-50 dark:bg-stone-800/40 p-3">
             <p className="text-[10px] font-semibold leading-tight text-red-700">Luminosidade</p>
             <p className="text-lg font-semibold leading-none text-stone-900 dark:text-stone-100">{preset.ui.luminosity}<span className="ml-0.5 text-[10px] font-normal text-stone-400">lux</span></p>
-            <p className="text-[10px] font-mono text-stone-400">{preset.ui.lightRange}</p>
+            <p className="text-[10px] font-mono text-stone-500 dark:text-stone-400">{preset.ui.lightRange}</p>
           </div>
         </div>
 
@@ -230,7 +230,7 @@ function PresetCard({ preset, selected, onSelect, onEdit, onDuplicate, onDelete,
               {!preset.sistema ? (
                 <button
                   onClick={() => onEdit(preset)}
-                  className="rounded border border-stone-200 dark:border-stone-700 px-2 py-1.5 text-[10px] text-stone-600 dark:text-stone-400 transition hover:bg-stone-100 dark:hover:bg-stone-800"
+                  className="rounded border border-stone-300 dark:border-stone-700 px-2 py-1.5 text-[10px] font-medium text-stone-700 dark:text-stone-400 transition hover:bg-stone-100 dark:hover:bg-stone-800"
                   title="Editar"
                 >
                   Editar
@@ -238,7 +238,7 @@ function PresetCard({ preset, selected, onSelect, onEdit, onDuplicate, onDelete,
               ) : null}
               <button
                 onClick={() => onDuplicate(preset)}
-                className="rounded border border-stone-200 dark:border-stone-700 px-2 py-1.5 text-[10px] text-stone-600 dark:text-stone-400 transition hover:bg-stone-100 dark:hover:bg-stone-800"
+                className="rounded border border-stone-300 dark:border-stone-700 px-2 py-1.5 text-[10px] font-medium text-stone-700 dark:text-stone-400 transition hover:bg-stone-100 dark:hover:bg-stone-800"
                 title="Criar cópia"
               >
                 Copiar
@@ -836,10 +836,10 @@ export const PresetsPage = () => {
 
             <section className="mb-4 rounded-lg border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 px-4 py-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-stone-400">Legenda dos indicadores</p>
-              <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-600 dark:text-stone-400">
-                <span className="rounded-full border border-red-200 bg-red-50 px-2.5 py-1">Temperatura: valor em °C</span>
-                <span className="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1">Umidade: valor em %</span>
-                <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1">Luminosidade: valor em lux</span>
+              <div className="mt-2 flex flex-wrap gap-2 text-xs text-stone-400">
+                <span className="rounded-full border border-stone-300 bg-stone-100 text-stone-600 dark:border-stone-700/50 dark:bg-stone-800/50 dark:text-stone-400 px-2.5 py-1 text-[11px]">Temperatura: valor em °C</span>
+                <span className="rounded-full border border-stone-300 bg-stone-100 text-stone-600 dark:border-stone-700/50 dark:bg-stone-800/50 dark:text-stone-400 px-2.5 py-1 text-[11px]">Umidade: valor em %</span>
+                <span className="rounded-full border border-stone-300 bg-stone-100 text-stone-600 dark:border-stone-700/50 dark:bg-stone-800/50 dark:text-stone-400 px-2.5 py-1 text-[11px]">Luminosidade: valor em lux</span>
               </div>
             </section>
 
@@ -934,10 +934,11 @@ export const PresetsPage = () => {
             description={deleteTarget ? `Deseja remover o perfil ${deleteTarget.nome_cultura}?` : ''}
             onConfirm={handleConfirmDelete}
             onCancel={() => setDeleteTarget(null)}
-            confirmDisabled={saving}
-            cancelDisabled={saving}
+            confirmLabel='Remover'
+            cancelLabel='Cancelar'
           />
-        </section>
+
+          </section>
     </>
   );
 };

@@ -1,3 +1,15 @@
+/**
+ * useEmailCooldown - Hook para controle de cooldown no reenvio de e-mail.
+ *
+ * Evita spam de requisições de reenvio de código MFA ou convite.
+ * Retorna: {canSend, countdown, startCooldown}
+ *   - canSend: boolean indicando se pode enviar
+ *   - countdown: segundos restantes até liberar
+ *   - startCooldown: inicia o timer (chamar após envio bem-sucedido)
+ *
+ * O timer padrão é de 60 segundos, configurável via parâmetro.
+ */
+
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 const COOLDOWN_STEPS = [0, 30, 60, 120, 300]; // seconds after each consecutive send

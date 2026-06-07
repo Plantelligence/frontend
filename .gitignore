@@ -48,3 +48,17 @@ vite.config.js.timestamp-*.mjs
 *contexto*.md
 *Contexto*.md
 *CONTEXTO*.md
+
+# Dependências
+node_modules/
+
+# Build
+dist/
+.vite/
+
+# Env local
+.env.local
+.env.*.local
+
+# Cache
+.eslintcache

@@ -1,3 +1,11 @@
+/**
+ * TopNav - Barra de navegação das páginas públicas (pré-login).
+ *
+ * Exibe logo, links de navegação (Tecnologia, Sobre Nós, Fale Conosco)
+ * e botão de login. Versão mobile com menu hamburguer.
+ * Diferente do AppTopBar.jsx que é o header do dashboard pós-login.
+ */
+
 // Barra de navegacao superior com menu do usuario, bell de notificações e links principais.
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';

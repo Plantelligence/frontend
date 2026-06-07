@@ -26,6 +26,8 @@ import { listCulturePresets } from '../api/presetService.js';
 import { listDevices, createDevice, updateDevice, deleteDevice } from '../api/deviceService.js';
 import { WizardOnboardingDispositivo } from '../components/WizardOnboardingDispositivo.jsx';
 import { ControlesPanel } from '../components/ControlesPanel.jsx';
+import { CentroComando } from '../components/CentroComando.jsx';
+import { MonitoramentoTab } from '../components/MonitoramentoTab.jsx';
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
@@ -433,10 +435,10 @@ const GreenhousePanel = ({
   const [draftResponsibleIds, setDraftResponsibleIds] = useState(greenhouse.responsibleUserIds ?? []);
   const [menuFeedback, setMenuFeedback] = useState(null);
   const [searchParams, setSearchParams] = useSearchParams();
-  const VALID_TABS = ['operacao', 'monitoramento', 'dispositivos', 'controles', 'guia'];
+  const VALID_TABS = ['comando', 'operacao', 'monitoramento', 'dispositivos', 'controles', 'guia'];
   const tabFromUrl = searchParams.get('tab');
   const [activeTopic, setActiveTopicState] = useState(
-    VALID_TABS.includes(tabFromUrl) ? tabFromUrl : 'operacao'
+    VALID_TABS.includes(tabFromUrl) ? tabFromUrl : 'comando'
   );
   const setActiveTopic = (tab) => {
     setActiveTopicState(tab);
@@ -472,7 +474,7 @@ const GreenhousePanel = ({
   }, [greenhouse.responsibleUserIds]);
 
   useEffect(() => {
-    setActiveTopic('operacao');
+    setActiveTopic('comando');
     setThresholdDraft(greenhouse.alertThresholds ?? {});
     setThresholdFeedback(null);
   }, [greenhouse.id]);
@@ -831,206 +833,44 @@ const GreenhousePanel = ({
 
       <div className="mt-4 flex flex-wrap items-center gap-2 overflow-x-auto rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-2">
         {[
-          { id: 'operacao', label: 'Operação' },
-          { id: 'monitoramento', label: 'Monitoramento' },
-          { id: 'dispositivos', label: 'Dispositivos' },
-          { id: 'controles', label: 'Controles' },
-          { id: 'guia', label: 'Guia rápido' }
+          { id: 'comando', label: 'Centro de Comando', icon: 'fa-gauge-high' },
+          { id: 'operacao', label: 'Operação', icon: null },
+          { id: 'monitoramento', label: 'Monitoramento', icon: null },
+          { id: 'dispositivos', label: 'Dispositivos', icon: null },
+          { id: 'controles', label: 'Controles', icon: null },
+          { id: 'guia', label: 'Guia rápido', icon: null }
         ].map((topic) => (
           <button
             key={topic.id}
             type="button"
             onClick={() => setActiveTopic(topic.id)}
-            className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
               activeTopic === topic.id
                 ? 'bg-red-600 text-white'
                 : 'border border-stone-300 bg-white dark:bg-stone-900/35 text-slate-700 dark:text-stone-300 hover:border-red-300 hover:text-red-700'
             }`}
           >
+            {topic.icon && <i className={`fa-solid ${topic.icon} text-[10px]`} />}
             {topic.label}
           </button>
         ))}
       </div>
 
+      {/* ── Centro de Comando ──────────────────────────────────────────────── */}
+      {activeTopic === 'comando' ? (
+        <CentroComando
+          estufaId={greenhouse.id}
+          isReader={readOnly}
+        />
+      ) : null}
+
       {activeTopic === 'monitoramento' ? (
-      <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
-        <article className="rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-5 flex flex-col gap-4">
-
-          {/* cabeçalho com horário da última leitura e status IoT */}
-          <header className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-slate-700 dark:text-stone-300">Como está sua estufa agora</span>
-            <span className={`text-[10px] px-2 py-1 rounded border font-medium ${
-              hasTelemetry
-                ? 'bg-green-50 border-green-200 text-green-700'
-                : 'bg-stone-100 dark:bg-stone-700/50 border-stone-200 dark:border-stone-700/40 text-stone-500 dark:text-stone-400'
-            }`}>
-              {hasTelemetry
-                ? `Atualizado às ${formatTimestamp(resolvedTelemetry.lastUpdate)}`
-                : 'Sem telemetria IoT disponível'}
-            </span>
-          </header>
-
-          {(() => {
-            // monta a configuração de cada sensor a partir dos dados reais
-            const sensors = [
-              {
-                key: 'temperatura',
-                label: 'Temperatura',
-                valor: resolvedTelemetry.temperature,
-                unidade: '°C',
-                ideal: currentProfile?.temperature ? [currentProfile.temperature.min, currentProfile.temperature.max] : null,
-                faixa: currentProfile?.temperature ? `${currentProfile.temperature.min}–${currentProfile.temperature.max}°C` : null,
-                cor: '#d43a2a',
-              },
-              {
-                key: 'umidade',
-                label: 'Umidade do ar',
-                valor: resolvedTelemetry.humidity,
-                unidade: '%',
-                ideal: currentProfile?.humidity ? [currentProfile.humidity.min, currentProfile.humidity.max] : null,
-                faixa: currentProfile?.humidity ? `${currentProfile.humidity.min}–${currentProfile.humidity.max}%` : null,
-                cor: '#3b82f6',
-              },
-              {
-                key: 'umidade_solo',
-                label: 'Umidade do solo',
-                valor: resolvedTelemetry.soilMoisture,
-                unidade: '%',
-                ideal: currentProfile?.soilMoisture ? [currentProfile.soilMoisture.min, currentProfile.soilMoisture.max] : null,
-                faixa: currentProfile?.soilMoisture ? `${currentProfile.soilMoisture.min}–${currentProfile.soilMoisture.max}%` : null,
-                cor: '#10b981',
-              },
-              {
-                key: 'luminosidade',
-                label: 'Luminosidade',
-                valor: resolvedTelemetry.luminosidade,
-                unidade: 'lux',
-                ideal: currentProfile?.luminosity ? [currentProfile.luminosity.min, currentProfile.luminosity.max] : null,
-                faixa: currentProfile?.luminosity ? `${currentProfile.luminosity.min}–${currentProfile.luminosity.max} lux` : null,
-                cor: '#f59e0b',
-              },
-            ];
-
-            return (
-              <>
-                {/* gauges circulares em miniatura — resumo visual rápido */}
-                <div className="rounded-xl border border-stone-200 bg-white dark:bg-stone-800 p-4">
-                  <p className="text-[10px] font-semibold tracking-widest uppercase text-slate-400 dark:text-stone-500 mb-3">
-                    Resumo dos sensores
-                  </p>
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    {sensors.map(({ key, label, valor, unidade, ideal, cor }) => {
-                      const st = sensorStatus(valor, ideal);
-                      return (
-                        <div key={key} className="flex flex-col items-center gap-1">
-                          <Gauge valor={typeof valor === 'number' ? Number(valor.toFixed(valor % 1 === 0 ? 0 : 1)) : 0} unidade={unidade} ideal={ideal ?? [0, 100]} cor={cor} status={st} />
-                          <span className="text-[9px] text-slate-500 dark:text-stone-400 text-center leading-tight">{label}</span>
-                          <span className={`w-1.5 h-1.5 rounded-full ${st === 'ok' ? 'bg-green-500' : st === 'alerta' ? 'bg-amber-500' : 'bg-stone-300'}`} />
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* linhas detalhadas por sensor com barra de progresso */}
-                <div className="flex flex-col gap-2">
-                  {sensors.map(({ key, label, valor, unidade, ideal, faixa, cor }) => (
-                    <SensorRow
-                      key={key}
-                      label={label}
-                      valor={valor}
-                      unidade={unidade}
-                      ideal={ideal}
-                      faixa={faixa}
-                      cor={cor}
-                      status={sensorStatus(valor, ideal)}
-                    />
-                  ))}
-                </div>
-
-                {/* status de iluminação e ventilação — texto descritivo */}
-                {hasTelemetry && (
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <div className="rounded-lg border border-stone-200 bg-white dark:bg-stone-800 px-3 py-2">
-                      <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-stone-500">Ventilação</p>
-                      <p className="text-sm font-medium text-slate-700 dark:text-stone-300 mt-0.5">{resolvedTelemetry.ventilation}</p>
-                    </div>
-                    <div className="rounded-lg border border-stone-200 bg-white dark:bg-stone-800 px-3 py-2">
-                      <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-stone-500">Iluminação</p>
-                      <p className="text-sm font-medium text-slate-700 dark:text-stone-300 mt-0.5">{resolvedTelemetry.lighting}</p>
-                    </div>
-                  </div>
-                )}
-              </>
-            );
-          })()}
-
-          {/* clima externo via OpenWeather */}
-          <div className="rounded-xl border border-stone-200 bg-white dark:bg-stone-800 p-4">
-            <p className="text-[10px] font-semibold tracking-widest uppercase text-slate-400 dark:text-stone-500 mb-2">
-              Clima da cidade (OpenWeather)
-            </p>
-            {externalWeatherLoading ? (
-              <p className="text-sm text-slate-500 dark:text-stone-400">Consultando clima externo...</p>
-            ) : externalWeather ? (
-              <div className="grid gap-2 text-sm text-slate-700 dark:text-stone-300 grid-cols-2 sm:grid-cols-4">
-                <p>
-                  <span className="text-[10px] text-slate-400 dark:text-stone-500 block">Local</span>
-                  <span className="font-semibold">{externalWeather.cidade}/{externalWeather.estado}</span>
-                </p>
-                <p>
-                  <span className="text-[10px] text-slate-400 dark:text-stone-500 block">Temperatura</span>
-                  <span className="font-semibold">{externalWeather.temperatura}°C</span>
-                </p>
-                <p>
-                  <span className="text-[10px] text-slate-400 dark:text-stone-500 block">Umidade</span>
-                  <span className="font-semibold">{externalWeather.umidade}%</span>
-                </p>
-                <p>
-                  <span className="text-[10px] text-slate-400 dark:text-stone-500 block">Luminosidade estimada</span>
-                  <span className="font-semibold">
-                    {externalWeather.luminosidade_estimada != null
-                      ? `${externalWeather.luminosidade_estimada.toLocaleString('pt-BR')} lux`
-                      : externalWeather.descricao}
-                  </span>
-                  {externalWeather.nuvens != null && (
-                    <span className="block text-[10px] text-slate-400 dark:text-stone-500">{externalWeather.nuvens}% nuvens</span>
-                  )}
-                </p>
-              </div>
-            ) : (
-              <p className="text-sm text-slate-500 dark:text-stone-400">
-                Sem dados climáticos externos. Verifique se cidade/estado da estufa estão preenchidos.
-              </p>
-            )}
-          </div>
-
-        </article>
-
-        <article className="rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-5">
-          <header className="mb-3 flex items-center justify-between text-sm text-slate-700 dark:text-stone-300">
-            <h3 className="text-lg font-semibold text-slate-800 dark:text-stone-100">Últimas atualizações</h3>
-            <span className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-stone-400">Histórico</span>
-          </header>
-          <p className="text-xs text-slate-500 dark:text-stone-400">
-            Aqui aparece o que aconteceu na estufa nos últimos momentos.
-          </p>
-          <ul className="mt-4 max-h-72 space-y-3 overflow-y-auto pr-1 text-sm text-slate-700 dark:text-stone-300">
-            {resolvedLog.length > 0 ? (
-              resolvedLog.map((entry) => (
-                <li key={entry.id} className="rounded-md border border-stone-200 bg-white dark:border-stone-700/40 dark:bg-stone-800/40 p-3">
-                  <p className="text-xs text-slate-500 dark:text-stone-400">{formatTimestamp(entry.timestamp)}</p>
-                  <p className="mt-1 text-slate-700 dark:text-stone-300">{entry.message}</p>
-                </li>
-              ))
-            ) : (
-              <li className="rounded-md border border-dashed border-stone-300 dark:border-stone-700/40 bg-white dark:bg-stone-800/40 p-3 text-xs text-slate-500 dark:text-stone-400">
-                Integração de eventos IoT em implantação. As atualizações aparecerão aqui conforme os dispositivos forem conectados.
-              </li>
-            )}
-          </ul>
-        </article>
-      </div>
+        <MonitoramentoTab
+          estufaId={greenhouse.id}
+          telemetry={telemetry}
+          profile={normalizeProfile(profiles.find((p) => p.id === greenhouse.flowerProfileId) ?? null)}
+          externalWeather={externalWeather}
+        />
       ) : null}
 
       {activeTopic === 'guia' ? (
@@ -2601,19 +2441,49 @@ export const DashboardPage = () => {
             profiles={profiles}
             teamMembers={teamMembers}
             notifyFeedback={notifyFeedbackById[selectedGreenhouse.id]}
-            saving={Boolean(savingById[selectedGreenhouse.id])}
+            saving={savingById[selectedGreenhouse.id]}
+            teamSaving={teamSavingById[selectedGreenhouse.id]}
+            alertsSaving={alertsSavingById[selectedGreenhouse.id]}
+            notifyBusy={notifyBusyById[selectedGreenhouse.id]}
+            externalWeather={externalWeatherById[selectedGreenhouse.id]}
+            externalWeatherLoading={externalWeatherLoadingById[selectedGreenhouse.id]}
+            onSave={(payload) => handleSaveGreenhouse(selectedGreenhouse.id, payload)}
+            onUpdateTeam={(ids) => handleUpdateTeam(selectedGreenhouse.id, ids)}
+            onToggleAlerts={(enabled) => handleToggleAlerts(selectedGreenhouse.id, enabled)}
+            onNotify={() => handleNotifyTeam(selectedGreenhouse.id)}
+            onDeleteRequest={() => setDeleteTarget({ id: selectedGreenhouse.id, name: selectedGreenhouse.name })}
+            onUpdateAlertThresholds={(t) => handleUpdateAlertThresholds(selectedGreenhouse.id, t)}
+            devices={devicesById[selectedGreenhouse.id] ?? []}
+            devicesLoading={devicesLoadingById[selectedGreenhouse.id] ?? false}
+            onCreateDevice={(payload) => handleCreateDevice(selectedGreenhouse.id, payload)}
+            onDeleteDevice={(deviceId) => handleDeleteDevice(selectedGreenhouse.id, deviceId)}
+            onToggleDevice={(deviceId, active) => handleToggleDevice(selectedGreenhouse.id, deviceId, active)}
+            readOnly={isReader}
           />
         </div>
       ) : null}
 
       <ConfirmDialog
         open={!!deleteTarget}
-        title={`Remover estufa`}
-        description={deleteDialogDescription}
-        onConfirm={handleConfirmDeleteGreenhouse}
+        title="Remover estufa"
+        description={deleteTarget ? `Remover a estufa "${deleteTarget.name}"? Esta acao nao podera ser desfeita.` : ''}
+        onConfirm={async () => {
+          if (!deleteTarget) return;
+          setDeleteBusy(true);
+          try {
+            await deleteGreenhouse(deleteTarget.id);
+            setGreenhouses((prev) => prev.filter((g) => g.id !== deleteTarget.id));
+            setDeleteTarget(null);
+            navigate('/dashboard');
+          } catch {
+            setError('Nao foi possivel remover a estufa.');
+          } finally {
+            setDeleteBusy(false);
+          }
+        }}
         onCancel={() => setDeleteTarget(null)}
-        confirmDisabled={Boolean(savingById[deleteTarget?.id])}
-        cancelDisabled={Boolean(savingById[deleteTarget?.id])}
+        confirmLabel={deleteBusy ? 'Removendo...' : 'Remover'}
+        cancelLabel="Cancelar"
       />
     </>
   );
