@@ -399,11 +399,11 @@ export const CentroComando = ({ estufaId, isReader = false }) => {
             </div>
 
             {/* modo */}
-            <div className={`rounded-xl border p-3 col-span-2 sm:col-span-1 ${isManual ? 'border-amber-500/30 bg-amber-500/8' : 'border-stone-200 bg-stone-100 dark:border-stone-800/40 dark:bg-stone-800/30'}`}>
+            <div className={`rounded-xl border p-3 col-span-2 sm:col-span-1 ${isManual ? 'border-amber-500/30 bg-amber-500/8' : 'border-blue-300 bg-blue-50 dark:border-blue-500/30 dark:bg-blue-500/10'}`}>
               <p className="text-[9px] font-semibold uppercase tracking-widest text-stone-500 dark:text-stone-500 mb-1">Modo</p>
               <div className="flex items-center gap-1.5">
-                <i className={`fa-solid ${isManual ? 'fa-hand' : 'fa-robot'} text-sm ${isManual ? 'text-amber-400' : 'text-blue-400'}`} />
-                <span className={`text-sm font-semibold ${isManual ? 'text-amber-400' : 'text-blue-400'}`}>
+                <i className={`fa-solid ${isManual ? 'fa-hand' : 'fa-robot'} text-sm ${isManual ? 'text-amber-500' : 'text-blue-600 dark:text-blue-400'}`} />
+                <span className={`text-sm font-semibold ${isManual ? 'text-amber-500' : 'text-blue-600 dark:text-blue-400'}`}>
                   {isManual ? 'Manual' : 'Automático'}
                 </span>
               </div>
@@ -482,7 +482,7 @@ export const CentroComando = ({ estufaId, isReader = false }) => {
             <h3 className="text-sm font-semibold text-stone-800 dark:text-stone-100">Automacao</h3>
             <span className={`ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
               isManual
-                ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                ? 'bg-amber-50 border-amber-400 text-amber-700 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-400'
                 : 'bg-blue-500/10 border-blue-500/30 text-blue-400'
             }`}>
               {isManual ? 'Manual' : 'Automático'}
@@ -518,7 +518,7 @@ export const CentroComando = ({ estufaId, isReader = false }) => {
               className={`w-full rounded-xl border py-2.5 text-xs font-semibold transition ${
                 isManual
                   ? 'bg-emerald-600/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-600/20'
-                  : 'bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20'
+                  : 'bg-amber-50 border-amber-400 text-amber-700 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-400 hover:bg-amber-500/20'
               } disabled:opacity-40`}
             >
               {actionLoading === 'automation' ? (
@@ -571,7 +571,7 @@ export const CentroComando = ({ estufaId, isReader = false }) => {
               type="button"
               onClick={() => setPhaseModalOpen(true)}
               disabled={actionLoading === 'phase'}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-purple-500/30 bg-purple-500/10 px-4 py-2 text-xs font-semibold text-purple-400 hover:bg-purple-500/20 transition disabled:opacity-40"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-purple-400 bg-purple-50 dark:border-purple-500/30 dark:bg-purple-500/10 px-4 py-2 text-xs font-semibold text-purple-700 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-500/20 transition disabled:opacity-40"
             >
               <i className={`fa-solid ${actionLoading === 'phase' ? 'fa-spinner fa-spin' : 'fa-arrow-right-arrow-left'}`} />
               Trocar fase
@@ -584,7 +584,7 @@ export const CentroComando = ({ estufaId, isReader = false }) => {
               key={action.id}
               type="button"
               onClick={() => navigate(action.route)}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-stone-300 dark:border-stone-700/60 bg-stone-50 dark:bg-stone-800/40 px-4 py-2 text-xs font-semibold text-stone-700 dark:text-stone-300 hover:border-stone-400 dark:hover:border-stone-600 hover:text-stone-900 dark:hover:text-stone-100 transition"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-stone-300 dark:border-stone-700/60 bg-white dark:bg-stone-800/40 px-4 py-2 text-xs font-semibold text-stone-800 dark:text-stone-300 hover:border-stone-400 dark:hover:border-stone-600 hover:bg-stone-50 hover:text-stone-900 dark:hover:text-stone-100 shadow-sm transition"
             >
               <i className={`fa-solid ${action.icon}`} />
               {action.label}
