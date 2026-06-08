@@ -148,9 +148,12 @@ const MessageBubble = ({ message }) => {
                 },
               }}
             >
-              {message.text}
+              {message.text || (message.streaming ? '' : '')}
             </ReactMarkdown>
-            {message.streaming && (
+            {message.streaming && !message.text && (
+              <span className="text-xs text-stone-500 dark:text-stone-400 italic">Processando IA Plantelligence…</span>
+            )}
+            {message.streaming && message.text && (
               <span className="ml-0.5 inline-block h-3.5 w-0.5 animate-pulse bg-red-500 align-text-bottom" />
             )}
           </div>
@@ -164,10 +167,11 @@ const MessageBubble = ({ message }) => {
 const TypingIndicator = () => (
   <div className="mb-3 flex justify-start">
     <div className="mr-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-700 text-[9px] font-bold text-white">IA</div>
-    <div className="flex items-center gap-1.5 rounded-2xl rounded-bl-md border border-stone-200 bg-white dark:border-stone-700/40 dark:bg-stone-800/40 px-4 py-2.5 shadow-sm">
+    <div className="flex items-center gap-2 rounded-2xl rounded-bl-md border border-stone-200 bg-white dark:border-stone-700/40 dark:bg-stone-800/40 px-4 py-2.5 shadow-sm">
       {[0,1,2].map(i => (
-        <span key={i} className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400" style={{ animationDelay: `${i*150}ms` }} />
+        <span key={i} className="h-1.5 w-1.5 animate-bounce rounded-full bg-red-400" style={{ animationDelay: `${i*150}ms` }} />
       ))}
+      <span className="text-xs text-stone-500 dark:text-stone-400 ml-1">Processando IA Plantelligence…</span>
     </div>
   </div>
 );
@@ -380,4 +384,17 @@ export const ChatAIPage = () => {
             type="button"
             onClick={sendMessage}
             disabled={loading || !input.trim()}
-            className="flex h-10 w-10 flex-shrink-0 items-center justify-center self-end rounded-xl bg-red-600 text-white shadow-sm tr
+            className="flex h-10 w-10 flex-shrink-0 items-center justify-center self-end rounded-xl bg-red-600 text-white shadow-sm transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {loading
+              ? <i className="fa-solid fa-circle-notch fa-spin text-sm" />
+              : <i className="fa-solid fa-paper-plane text-sm" />}
+          </button>
+        </div>
+        <p className="mt-1.5 text-center text-[10px] text-stone-400">
+          Enter para enviar · Shift+Enter para nova linha
+        </p>
+      </div>
+    </div>
+  );
+};
