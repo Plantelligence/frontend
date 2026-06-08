@@ -117,7 +117,7 @@ const FooterBtn = ({ icon, label, expanded, onClick, linkTo, active }) => {
 };
 
 // Conteudo interno do sidebar
-const SidebarContent = ({ expanded, activeKey, onNavigate }) => {
+const SidebarContent = ({ expanded, activeKey, onNavigate, onPin, pinned }) => {
   const user     = useAuthStore((s) => s.user);
   const isReader = user?.role === 'Reader';
   const orgName  = user?.organizationName || 'Organizacao';
@@ -128,6 +128,20 @@ const SidebarContent = ({ expanded, activeKey, onNavigate }) => {
     <div className="flex h-full flex-col overflow-hidden">
       {/* Logo */}
       <div className={`flex flex-shrink-0 items-center border-b border-stone-200 dark:border-stone-700/60 transition-all duration-200 ${expanded ? 'gap-3 px-4 py-4' : 'justify-center px-0 py-4'}`}>
+        {expanded && onPin && (
+          <button
+            type="button"
+            onClick={onPin}
+            title={pinned ? 'Desafixar menu' : 'Fixar menu aberto'}
+            className={`ml-auto flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg transition-colors ${
+              pinned
+                ? 'bg-red-500/15 text-red-500 hover:bg-red-500/25'
+                : 'text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-700 dark:hover:text-stone-200'
+            }`}
+          >
+            <i className={`fa-solid ${pinned ? 'fa-thumbtack' : 'fa-thumbtack'} text-[11px] ${pinned ? '' : 'opacity-60'}`} style={pinned ? {} : { transform: 'rotate(45deg)' }} />
+          </button>
+        )}
         <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-red-950/80 border border-red-800/40">
           <LogoIcon size={20} />
         </div>
@@ -209,6 +223,19 @@ export const AppSidebar = ({ mobileOpen, onMobileClose }) => {
   const location  = useLocation();
   const activeKey = getActiveKey(location.pathname);
   const [hovered, setHovered] = useState(false);
+  const [pinned, setPinned] = useState(() => {
+    try { return localStorage.getItem('sidebar-pinned') === 'true'; } catch { return false; }
+  });
+
+  const expanded = hovered || pinned;
+
+  const togglePin = () => {
+    setPinned(prev => {
+      const next = !prev;
+      try { localStorage.setItem('sidebar-pinned', String(next)); } catch {}
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (!mobileOpen) return;
@@ -230,10 +257,10 @@ export const AppSidebar = ({ mobileOpen, onMobileClose }) => {
         bg-surface dark:bg-[#161210]
         border-r border-border
         shadow-sm transition-all duration-200 ease-in-out
-        ${hovered ? 'w-56' : 'w-14'}
+        ${expanded ? 'w-56' : 'w-14'}
       `}
     >
-      <SidebarContent expanded={hovered} activeKey={activeKey} onNavigate={() => {}} />
+      <SidebarContent expanded={expanded} activeKey={activeKey} onNavigate={() => {}} onPin={togglePin} pinned={pinned} />
     </aside>
   );
 
