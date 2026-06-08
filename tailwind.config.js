@@ -19,7 +19,6 @@ export default {
           DEFAULT: 'var(--color-primary)',
           hover: 'var(--color-primary-hover)',
           subtle: 'var(--color-primary-subtle)',
-          muted: 'var(--color-primary-muted)',
         },
         primary: {
           DEFAULT: '#C0392B',
