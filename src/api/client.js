@@ -155,16 +155,4 @@ api.interceptors.response.use(
     if (shouldTryRefresh) {
       originalRequest._retry = true;
       try {
-        const newAccessToken = await refreshSession();
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-        return api(originalRequest);
-      } catch (refreshError) {
-        return Promise.reject(refreshError);
-      }
-    }
-
-    return Promise.reject(error);
-  }
-);
-
-export default api;
+        const newAcce
