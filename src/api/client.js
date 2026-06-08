@@ -94,17 +94,22 @@ const refreshSession = async () => {
         return nextToken;
       })
       .catch((error) => {
-        // SESSION_MAX_AGE_EXCEEDED: sessao muito antiga, logout forcado com aviso
-        const detail = error?.response?.data?.message || error?.response?.data?.detail || '';
+        const status  = error?.response?.status;
+        const detail  = error?.response?.data?.message || error?.response?.data?.detail || '';
+
         if (detail === 'SESSION_MAX_AGE_EXCEEDED') {
+          // Sessão muito antiga — logout forçado com aviso
           clearSession();
-          // Redireciona para login com aviso de sessao expirada
           if (typeof window !== 'undefined') {
             window.location.href = '/login?reason=session_expired';
           }
-        } else {
+        } else if (status === 401 || status === 403) {
+          // Falha de autenticação real — refresh token inválido/revogado
           clearSession();
         }
+        // Erros de rede (sem status), 500, 503, timeout, CORS:
+        // NÃO limpar sessão — pode ser indisponibilidade temporária do servidor.
+        // O usuário tenta de novo e a sessão fica preservada.
         throw error;
       })
       .finally(() => {
