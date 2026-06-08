@@ -783,6 +783,12 @@ export const LoginPage = () => {
     <div className="w-full max-w-4xl overflow-hidden rounded-2xl shadow-[0_32px_80px_rgba(0,0,0,0.7)] ring-1 ring-red-900/20 md:grid md:grid-cols-[1fr_1.15fr]">
       {LeftPanel}
       <div className="flex flex-col justify-center gap-5 bg-[#171112]/96 p-8 md:p-10 min-h-[520px]">
+        {mfaRequiredForAction && (
+          <div className="flex items-start gap-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-300">
+            <i className="fa-solid fa-shield-halved mt-0.5 flex-shrink-0" />
+            <span>Esta ação requer re-autenticação. Faça login novamente para continuar.</span>
+          </div>
+        )}
         {renderStep()}
       </div>
     </div>

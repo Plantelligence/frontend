@@ -26,8 +26,8 @@ const TIPO_OPCOES = [
   { value: 'sensor-umidade',       label: 'Sensor de Umidade do Ar',  icon: 'fa-wind' },
   { value: 'sensor-solo',          label: 'Sensor de Umidade do Solo',icon: 'fa-seedling' },
   { value: 'sensor-luminosidade',  label: 'Sensor de Luminosidade',   icon: 'fa-sun' },
-  { value: 'atuador-lampada',      label: 'Atuador — Lâmpada',        icon: 'fa-lightbulb' },
-  { value: 'atuador-nebulizador',  label: 'Atuador — Nebulizador',    icon: 'fa-droplet' },
+  { value: 'atuador-lampada',      label: 'Atuador: Lâmpada',        icon: 'fa-lightbulb' },
+  { value: 'atuador-nebulizador',  label: 'Atuador: Nebulizador',    icon: 'fa-droplet' },
 ];
 
 const ETAPAS = [
@@ -372,7 +372,7 @@ export const WizardOnboardingDispositivo = ({ estufaId, onClose, onSuccess }) =>
               <div>
                 <p className="mb-2 text-xs font-semibold text-stone-300">
                   <i className="fa-solid fa-microchip mr-1.5 text-red-400" />
-                  Firmware gerado — grave os dois arquivos no ESP32:
+                  Firmware gerado. Grave os dois arquivos no ESP32:
                 </p>
                 <div className="space-y-3">
                   <CodeViewer label="Credenciais + Wi-Fi" filename="boot.py" code={firmware.boot_py} />
@@ -428,8 +428,8 @@ export const WizardOnboardingDispositivo = ({ estufaId, onClose, onSuccess }) =>
                     <div className="rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50 px-4 py-3 text-left">
                       <p className="text-[11px] font-semibold text-stone-300 mb-2">Status do onboarding:</p>
                       <div className="space-y-1 text-[11px] text-stone-400">
-                        <p><span className="text-stone-500">Status:</span> {pollStatus.onboarding_status || '—'}</p>
-                        <p><span className="text-stone-500">Device:</span> {pollStatus.device_id || '—'}</p>
+                        <p><span className="text-stone-500">Status:</span> {pollStatus.onboarding_status || 'aguardando'}</p>
+                        <p><span className="text-stone-500">Device:</span> {pollStatus.device_id || 'aguardando'}</p>
                         {pollStatus.last_seen_at && (
                           <p><span className="text-stone-500">Último contato:</span> {new Date(pollStatus.last_seen_at).toLocaleTimeString('pt-BR')}</p>
                         )}
