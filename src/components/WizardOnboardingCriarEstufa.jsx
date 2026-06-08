@@ -580,7 +580,8 @@ export const WizardOnboardingCriarEstufa = ({
         </div>
 
         <Button
-          type="submit"
+          type="button"
+          onClick={step === totalSteps ? handleCreate : goNext}
           disabled={busy}
           className="rounded-xl bg-gradient-to-r from-red-700 to-red-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:from-red-600 hover:to-red-500 transition disabled:opacity-40 disabled:cursor-not-allowed"
         >
