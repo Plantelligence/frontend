@@ -593,7 +593,7 @@ const GreenhousePanel = ({
 
   return (
     <section className="rounded-[26px] border border-stone-200 dark:border-stone-800/60 bg-stone-50 dark:bg-[#0f0c0c] p-4 shadow-sm md:p-6">
-      <header className="relative flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-stone-300 dark:border-stone-800/60 bg-white dark:bg-stone-900/35 p-4">
+      <header className="relative flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
         <div>
           <span className="text-xs font-semibold uppercase tracking-[0.18em] text-red-700">
             Visão geral da estufa
@@ -2387,7 +2387,7 @@ export const DashboardPage = () => {
 
   return (
     <>
-      <header className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-stone-300 dark:border-stone-800/60 bg-white dark:bg-stone-900/35 p-4">
+      <header className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
         <div>
           <span className="text-xs font-semibold uppercase tracking-[0.24em] text-red-700">Detalhes da estufa</span>
           <h1 className="text-3xl font-semibold text-slate-800 dark:text-stone-100">
@@ -2486,3 +2486,5 @@ export const DashboardPage = () => {
         cancelLabel="Cancelar"
       />
     </>
+  );
+};
