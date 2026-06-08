@@ -91,7 +91,7 @@ const AtuadorCard = ({ config, device, estadoAtual, onComando, readOnly }) => {
 
   return (
     <div className={`rounded-2xl border-2 p-5 flex flex-col gap-4 transition-all duration-300 ${
-      ligado ? `${c.on} ring-2 ${c.ring} ring-opacity-40` : 'dark:bg-stone-900/35 border-stone-200 dark:border-stone-800/60'
+      ligado ? `${c.on} ring-2 ${c.ring} ring-opacity-40` : 'bg-white dark:bg-stone-900/35 border-stone-200 dark:border-stone-800/60'
     }`}>
       {/* Cabeçalho */}
       <div className="flex items-start justify-between gap-3">
@@ -276,5 +276,3 @@ export const ControlesPanel = ({ _greenhouse, devices, devicesLoading, telemetry
         </>
       )}
     </div>
-  );
-};

@@ -592,7 +592,7 @@ const GreenhousePanel = ({
         : 'Sem avaliação';
 
   return (
-    <section className="rounded-[26px] border border-stone-300 dark:border-stone-800/60 dark:bg-[#0f0c0c] p-4 shadow-sm md:p-6">
+    <section className="rounded-[26px] border border-stone-200 dark:border-stone-800/60 bg-stone-50 dark:bg-[#0f0c0c] p-4 shadow-sm md:p-6">
       <header className="relative flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
         <div>
           <span className="text-xs font-semibold uppercase tracking-[0.18em] text-red-700">
@@ -2360,7 +2360,7 @@ export const DashboardPage = () => {
 
   if (requiresPasswordReset) {
     return (
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-16 text-slate-100 dark:text-stone-100">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-16 text-slate-800 dark:text-stone-100">
         <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-6">
           <h1 className="text-2xl font-semibold text-amber-200">Redefina sua senha</h1>
           <p className="mt-4 text-sm text-amber-100/90">
@@ -2485,6 +2485,4 @@ export const DashboardPage = () => {
         confirmLabel={deleteBusy ? 'Removendo...' : 'Remover'}
         cancelLabel="Cancelar"
       />
-    </>
-  );
-};
+    

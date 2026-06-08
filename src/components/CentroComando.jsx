@@ -50,7 +50,7 @@ const EVENT_COLOR_MAP = {
   amber: 'text-amber-400 bg-amber-500/10 border-amber-500/30',
   blue:  'text-blue-400  bg-blue-500/10  border-blue-500/30',
   green: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
-  stone: 'text-stone-400 bg-stone-800/40 border-stone-700/40',
+  stone: 'text-stone-600 dark:text-stone-400 bg-stone-100 dark:bg-stone-800/40 border-stone-200 dark:border-stone-700/40',
 };
 
 // ── Sub-componentes ───────────────────────────────────────────────────────────
@@ -119,17 +119,17 @@ function AdherenceBar({ item }) {
 
   return (
     <div className={`rounded-xl border p-3 transition-all ${
-      noData ? 'border-stone-800/40 bg-stone-900/20 opacity-60' :
-      isOk   ? 'border-stone-800/50 bg-stone-900/30' :
-      item.status === 'warning' ? 'border-amber-500/25 bg-amber-500/5' :
-      'border-red-500/30 bg-red-500/5'
+      noData ? 'border-stone-200 dark:border-stone-800/40 bg-stone-50 dark:bg-stone-900/20 opacity-60' :
+      isOk   ? 'border-stone-200 dark:border-stone-800/50 bg-white dark:bg-stone-900/30' :
+      item.status === 'warning' ? 'border-amber-300 dark:border-amber-500/25 bg-amber-50 dark:bg-amber-500/5' :
+      'border-red-300 dark:border-red-500/30 bg-red-50 dark:bg-red-500/5'
     }`}>
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[10px] font-semibold uppercase tracking-widest text-stone-500">
+        <span className="text-[10px] font-semibold uppercase tracking-widest text-stone-600 dark:text-stone-500">
           {item.label}
         </span>
         {noData ? (
-          <span className="text-[10px] text-stone-600">sem dados</span>
+          <span className="text-[10px] text-stone-500 dark:text-stone-600">sem dados</span>
         ) : (
           <div className="flex items-center gap-1.5">
             <i className={`fa-solid ${dir.icon} text-[10px] ${dir.color}`} />
@@ -141,12 +141,12 @@ function AdherenceBar({ item }) {
       </div>
 
       <div className="flex items-baseline gap-1.5 mb-2">
-        <span className="text-xl font-bold text-stone-100">
+        <span className="text-xl font-bold text-stone-900 dark:text-stone-100">
           {item.value != null ? item.value.toFixed(item.value % 1 === 0 ? 0 : 1) : '--'}
         </span>
         <span className="text-xs text-stone-500">{item.unit}</span>
         {item.rangeMin != null && (
-          <span className="text-[10px] text-stone-600 ml-auto">
+          <span className="text-[10px] text-stone-500 dark:text-stone-600 ml-auto">
             ideal: {item.rangeMin}-{item.rangeMax} {item.unit}
           </span>
         )}
@@ -154,12 +154,12 @@ function AdherenceBar({ item }) {
 
       {/* barra de posicao */}
       {!noData && item.rangeMin != null && (
-        <div className="relative h-1.5 rounded-full bg-stone-800/60">
+        <div className="relative h-1.5 rounded-full bg-stone-200 dark:bg-stone-800/60">
           {/* zona ideal */}
           <div className="absolute inset-y-0 left-0 right-0 rounded-full bg-emerald-500/15" />
           {/* cursor */}
           <div
-            className={`absolute top-1/2 -translate-y-1/2 h-3 w-3 -translate-x-1/2 rounded-full border-2 border-stone-900 ${
+            className={`absolute top-1/2 -translate-y-1/2 h-3 w-3 -translate-x-1/2 rounded-full border-2 border-white dark:border-stone-900 ${
               isOk ? 'bg-emerald-400' : item.status === 'warning' ? 'bg-amber-400' : 'bg-red-400'
             }`}
             style={{ left: `${pct}%`, transition: 'left 0.5s ease' }}
@@ -177,8 +177,8 @@ function CriticalItem({ item }) {
       <i className={`fa-solid ${cfg.icon} text-sm mt-0.5 flex-shrink-0 ${cfg.color}`} />
       <div className="min-w-0 flex-1">
         <p className={`text-sm font-semibold ${cfg.color}`}>{item.label}</p>
-        <p className="text-xs text-stone-400 mt-0.5">{item.cause}</p>
-        <p className="text-xs text-stone-300 mt-1.5 font-medium">
+        <p className="text-xs text-stone-600 dark:text-stone-400 mt-0.5">{item.cause}</p>
+        <p className="text-xs text-stone-700 dark:text-stone-300 mt-1.5 font-medium">
           <i className="fa-solid fa-arrow-right text-[9px] mr-1" />
           {item.suggestedAction}
         </p>
@@ -193,15 +193,15 @@ function TimelineEvent({ event }) {
   const ts = event.timestamp ? new Date(event.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '--';
 
   return (
-    <div className="flex items-start gap-3 py-2.5 border-b border-stone-800/40 last:border-0">
+    <div className="flex items-start gap-3 py-2.5 border-b border-stone-100 dark:border-stone-800/40 last:border-0">
       <div className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg border text-[11px] ${bgColor} ${borderColor}`}>
         <i className={`fa-solid ${event.icon} ${textColor}`} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-semibold text-stone-200 leading-tight">{event.title}</p>
+        <p className="text-xs font-semibold text-stone-800 dark:text-stone-200 leading-tight">{event.title}</p>
         <p className="text-[10px] text-stone-500 mt-0.5 line-clamp-1">{event.description}</p>
       </div>
-      <span className="text-[9px] text-stone-600 flex-shrink-0">{ts}</span>
+      <span className="text-[9px] text-stone-500 dark:text-stone-600 flex-shrink-0">{ts}</span>
     </div>
   );
 }
@@ -216,8 +216,8 @@ function PhaseModal({ currentPhase, onConfirm, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-sm rounded-2xl border border-stone-800/60 bg-[#1a1614] p-6 shadow-2xl">
-        <h3 className="text-base font-semibold text-stone-100 mb-4">Trocar fase biológica</h3>
+      <div className="w-full max-w-sm rounded-2xl border border-stone-200 dark:border-stone-800/60 bg-white dark:bg-[#1a1614] p-6 shadow-2xl">
+        <h3 className="text-base font-semibold text-stone-800 dark:text-stone-100 mb-4">Trocar fase biológica</h3>
         <div className="space-y-2 mb-4">
           {phases.map((phase) => {
             const cfg = PHASE_LABELS[phase];
@@ -230,7 +230,7 @@ function PhaseModal({ currentPhase, onConfirm, onClose }) {
                 className={`w-full flex items-center gap-3 rounded-xl border p-3 text-left transition-all ${
                   isSelected
                     ? `${cfg.bg} ${cfg.border} ${cfg.color}`
-                    : 'border-stone-800/50 bg-stone-900/30 text-stone-400 hover:border-stone-700/60'
+                    : 'border-stone-200 dark:border-stone-800/50 bg-white dark:bg-stone-900/30 text-stone-600 dark:text-stone-400 hover:border-stone-300 dark:hover:border-stone-700/60'
                 }`}
               >
                 <i className={`fa-solid ${cfg.icon} text-sm`} />
@@ -241,14 +241,14 @@ function PhaseModal({ currentPhase, onConfirm, onClose }) {
           })}
         </div>
         <textarea
-          className="w-full resize-none rounded-xl border border-stone-700/60 bg-stone-800/50 px-3 py-2.5 text-sm text-stone-100 placeholder:text-stone-600 outline-none focus:border-red-500/60 mb-4"
+          className="w-full resize-none rounded-xl border border-stone-300 dark:border-stone-700/60 bg-white dark:bg-stone-800/50 px-3 py-2.5 text-sm text-stone-800 dark:text-stone-100 placeholder:text-stone-400 dark:placeholder:text-stone-600 outline-none focus:border-red-400 dark:focus:border-red-500/60 mb-4"
           rows={2}
           placeholder="Motivo da troca (opcional)"
           value={motivo}
           onChange={(e) => setMotivo(e.target.value)}
         />
         <div className="flex gap-2">
-          <button type="button" onClick={onClose} className="flex-1 rounded-xl border border-stone-700/60 py-2.5 text-sm text-stone-400 hover:text-stone-200 transition">
+          <button type="button" onClick={onClose} className="flex-1 rounded-xl border border-stone-300 dark:border-stone-700/60 py-2.5 text-sm text-stone-600 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 transition">
             Cancelar
           </button>
           <button
@@ -336,7 +336,7 @@ export const CentroComando = ({ estufaId, isReader = false }) => {
     return (
       <div className="mt-5 space-y-4">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="h-28 animate-pulse rounded-2xl border border-stone-800/40 bg-stone-900/20" />
+          <div key={i} className="h-28 animate-pulse rounded-2xl border border-stone-200 dark:border-stone-800/40 bg-stone-100 dark:bg-stone-900/20" />
         ))}
       </div>
     );
@@ -371,7 +371,7 @@ export const CentroComando = ({ estufaId, isReader = false }) => {
       )}
 
       {/* ── HERO: Score + Status + Info ───────────────────────────────────── */}
-      <div className="rounded-2xl border border-stone-800/60 bg-stone-900/35 p-5">
+      <div className="rounded-2xl border border-stone-200 dark:border-stone-800/60 bg-white dark:bg-stone-900/35 p-5">
         <div className="flex flex-col sm:flex-row items-center gap-6">
 
           {/* gauge */}
@@ -383,7 +383,7 @@ export const CentroComando = ({ estufaId, isReader = false }) => {
           <div className="flex-1 min-w-0 grid grid-cols-2 sm:grid-cols-3 gap-3">
             {/* fase */}
             <div className={`rounded-xl border p-3 ${phaseCfg.bg} ${phaseCfg.border}`}>
-              <p className="text-[9px] font-semibold uppercase tracking-widest text-stone-500 mb-1">Fase</p>
+              <p className="text-[9px] font-semibold uppercase tracking-widest text-stone-500 dark:text-stone-500 mb-1">Fase</p>
               <div className="flex items-center gap-1.5">
                 <i className={`fa-solid ${phaseCfg.icon} text-sm ${phaseCfg.color}`} />
                 <span className={`text-sm font-semibold ${phaseCfg.color}`}>{phaseCfg.label}</span>
@@ -391,16 +391,16 @@ export const CentroComando = ({ estufaId, isReader = false }) => {
             </div>
 
             {/* preset */}
-            <div className="rounded-xl border border-stone-800/40 bg-stone-800/30 p-3">
-              <p className="text-[9px] font-semibold uppercase tracking-widest text-stone-500 mb-1">Preset</p>
-              <p className="text-sm font-semibold text-stone-200 truncate">
+            <div className="rounded-xl border border-stone-200 dark:border-stone-800/40 bg-stone-50 dark:bg-stone-800/30 p-3">
+              <p className="text-[9px] font-semibold uppercase tracking-widest text-stone-500 dark:text-stone-500 mb-1">Preset</p>
+              <p className="text-sm font-semibold text-stone-700 dark:text-stone-200 truncate">
                 {data.presetName || 'Nenhum'}
               </p>
             </div>
 
             {/* modo */}
             <div className={`rounded-xl border p-3 col-span-2 sm:col-span-1 ${isManual ? 'border-amber-500/30 bg-amber-500/8' : 'border-stone-800/40 bg-stone-800/30'}`}>
-              <p className="text-[9px] font-semibold uppercase tracking-widest text-stone-500 mb-1">Modo</p>
+              <p className="text-[9px] font-semibold uppercase tracking-widest text-stone-500 dark:text-stone-500 mb-1">Modo</p>
               <div className="flex items-center gap-1.5">
                 <i className={`fa-solid ${isManual ? 'fa-hand' : 'fa-robot'} text-sm ${isManual ? 'text-amber-400' : 'text-blue-400'}`} />
                 <span className={`text-sm font-semibold ${isManual ? 'text-amber-400' : 'text-blue-400'}`}>
@@ -416,12 +416,12 @@ export const CentroComando = ({ estufaId, isReader = false }) => {
       <div className="grid lg:grid-cols-2 gap-4">
 
         {/* Atencao Agora */}
-        <div className="rounded-2xl border border-stone-800/60 bg-stone-900/35 p-5">
+        <div className="rounded-2xl border border-stone-200 dark:border-stone-800/60 bg-white dark:bg-stone-900/35 p-5">
           <div className="flex items-center gap-2.5 mb-4">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-500/10">
               <i className="fa-solid fa-bell text-red-400 text-sm" />
             </div>
-            <h3 className="text-sm font-semibold text-stone-100">Atenção agora</h3>
+            <h3 className="text-sm font-semibold text-stone-800 dark:text-stone-100">Atenção agora</h3>
             {data.criticalItems?.length > 0 && (
               <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white">
                 {data.criticalItems.length}
@@ -444,17 +444,17 @@ export const CentroComando = ({ estufaId, isReader = false }) => {
         </div>
 
         {/* Aderencia ao Preset */}
-        <div className="rounded-2xl border border-stone-800/60 bg-stone-900/35 p-5">
+        <div className="rounded-2xl border border-stone-200 dark:border-stone-800/60 bg-white dark:bg-stone-900/35 p-5">
           <div className="flex items-center gap-2.5 mb-4">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-lime-500/10">
               <i className="fa-solid fa-leaf text-lime-400 text-sm" />
             </div>
-            <h3 className="text-sm font-semibold text-stone-100">Aderência ao preset</h3>
+            <h3 className="text-sm font-semibold text-stone-800 dark:text-stone-100">Aderência ao preset</h3>
           </div>
 
           {!data.presetName ? (
             <div className="flex flex-col items-center gap-2 py-6 text-center">
-              <i className="fa-solid fa-circle-xmark text-xl text-stone-600" />
+              <i className="fa-solid fa-circle-xmark text-xl text-stone-400 dark:text-stone-600" />
               <p className="text-sm text-stone-500">Nenhum preset ativo.</p>
               <Link to="/dashboard/presets" className="text-xs text-red-400 hover:underline">
                 Configurar preset
@@ -474,12 +474,12 @@ export const CentroComando = ({ estufaId, isReader = false }) => {
       <div className="grid lg:grid-cols-2 gap-4">
 
         {/* Automacao */}
-        <div className="rounded-2xl border border-stone-800/60 bg-stone-900/35 p-5">
+        <div className="rounded-2xl border border-stone-200 dark:border-stone-800/60 bg-white dark:bg-stone-900/35 p-5">
           <div className="flex items-center gap-2.5 mb-4">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10">
               <i className="fa-solid fa-robot text-blue-400 text-sm" />
             </div>
-            <h3 className="text-sm font-semibold text-stone-100">Automacao</h3>
+            <h3 className="text-sm font-semibold text-stone-800 dark:text-stone-100">Automacao</h3>
             <span className={`ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
               isManual
                 ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
@@ -492,20 +492,20 @@ export const CentroComando = ({ estufaId, isReader = false }) => {
           {/* ultima acao */}
           {data.automationState?.last_action ? (
             <div className="rounded-xl border border-stone-800/40 bg-stone-800/30 p-3 mb-3">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-stone-600 mb-1">Última ação</p>
-              <p className="text-xs text-stone-300">{data.automationState.last_action.reason}</p>
-              <p className="text-[10px] text-stone-600 mt-1">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-stone-500 dark:text-stone-600 mb-1">Última ação</p>
+              <p className="text-xs text-stone-700 dark:text-stone-300">{data.automationState.last_action.reason}</p>
+              <p className="text-[10px] text-stone-500 dark:text-stone-600 mt-1">
                 {data.automationState.last_action.timestamp
                   ? new Date(data.automationState.last_action.timestamp).toLocaleString('pt-BR')
                   : '--'}
               </p>
             </div>
           ) : (
-            <p className="text-xs text-stone-500 mb-3">Nenhuma ação registrada ainda.</p>
+            <p className="text-xs text-stone-500 dark:text-stone-500 mb-3">Nenhuma ação registrada ainda.</p>
           )}
 
           {/* cooldown info */}
-          <p className="text-[10px] text-stone-600 mb-3">
+          <p className="text-[10px] text-stone-500 dark:text-stone-600 mb-3">
             Ciclo de avaliação: 90s | Cooldown: 5min por atuador
           </p>
 
@@ -532,17 +532,17 @@ export const CentroComando = ({ estufaId, isReader = false }) => {
         </div>
 
         {/* Timeline de Eventos */}
-        <div className="rounded-2xl border border-stone-800/60 bg-stone-900/35 p-5">
+        <div className="rounded-2xl border border-stone-200 dark:border-stone-800/60 bg-white dark:bg-stone-900/35 p-5">
           <div className="flex items-center gap-2.5 mb-4">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/10">
               <i className="fa-solid fa-clock-rotate-left text-purple-400 text-sm" />
             </div>
-            <h3 className="text-sm font-semibold text-stone-100">Eventos recentes</h3>
+            <h3 className="text-sm font-semibold text-stone-800 dark:text-stone-100">Eventos recentes</h3>
           </div>
 
           {data.recentEvents?.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-6 text-center">
-              <i className="fa-solid fa-inbox text-xl text-stone-600" />
+              <i className="fa-solid fa-inbox text-xl text-stone-400 dark:text-stone-600" />
               <p className="text-xs text-stone-500">Sem eventos registrados.</p>
             </div>
           ) : (
@@ -556,10 +556,10 @@ export const CentroComando = ({ estufaId, isReader = false }) => {
       </div>
 
       {/* ── Quick Actions ─────────────────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-stone-800/60 bg-stone-900/35 p-5">
+      <div className="rounded-2xl border border-stone-200 dark:border-stone-800/60 bg-white dark:bg-stone-900/35 p-5">
         <div className="flex items-center gap-2.5 mb-4">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-stone-800/60">
-            <i className="fa-solid fa-bolt text-stone-400 text-sm" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-stone-100 dark:bg-stone-800/60">
+            <i className="fa-solid fa-bolt text-stone-500 dark:text-stone-400 text-sm" />
           </div>
           <h3 className="text-sm font-semibold text-stone-100">Ações rápidas</h3>
         </div>
@@ -584,42 +584,4 @@ export const CentroComando = ({ estufaId, isReader = false }) => {
               key={action.id}
               type="button"
               onClick={() => navigate(action.route)}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-stone-700/60 bg-stone-800/40 px-4 py-2 text-xs font-semibold text-stone-300 hover:border-stone-600 hover:text-stone-100 transition"
-            >
-              <i className={`fa-solid ${action.icon}`} />
-              {action.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Previsão de curto prazo ───────────────────────────────────────────── */}
-      {data.forecastWindow?.risks?.length > 0 && (
-        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
-          <div className="flex items-start gap-3">
-            <i className="fa-solid fa-chart-line text-amber-400 mt-0.5 flex-shrink-0" />
-            <div>
-              <p className="text-xs font-semibold text-amber-400 mb-1">
-                Previsão das próximas {data.forecastWindow.windowHours}h
-              </p>
-              {data.forecastWindow.risks.map((risk, i) => (
-                <p key={i} className="text-xs text-stone-400">{risk.label}: {risk.risk}</p>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de troca de fase */}
-      {phaseModalOpen && (
-        <PhaseModal
-          currentPhase={data.phase}
-          onConfirm={handlePhaseConfirm}
-          onClose={() => setPhaseModalOpen(false)}
-        />
-      )}
-    </div>
-  );
-};
-
-export default CentroComando;
+              className="inline-flex items-center gap-1.5 rounded-xl border border-stone-300 dark:border-stone-700/60 bg-stone-50 dark:bg-stone-800/40 px

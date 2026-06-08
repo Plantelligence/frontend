@@ -47,7 +47,7 @@ const STATUS = {
   green: { card: 'border-emerald-500/25 bg-emerald-500/8', val: 'text-emerald-400', dot: 'bg-emerald-400', badge: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400', label: 'OK' },
   amber: { card: 'border-amber-500/25 bg-amber-500/8',   val: 'text-amber-400',   dot: 'bg-amber-400',   badge: 'border-amber-500/30 bg-amber-500/10 text-amber-400',   label: 'Atencao' },
   red:   { card: 'border-red-500/25 bg-red-500/8',       val: 'text-red-400',     dot: 'bg-red-400',     badge: 'border-red-500/30 bg-red-500/10 text-red-400',         label: 'Risco' },
-  stone: { card: 'border-stone-800/50 bg-stone-900/25',  val: 'text-stone-300',   dot: 'bg-stone-500',   badge: 'border-stone-700/50 bg-stone-800/50 text-stone-400',   label: 'Sem dados' },
+  stone: { card: 'border-stone-200 dark:border-stone-800/50 bg-stone-50 dark:bg-stone-900/25',  val: 'text-stone-600 dark:text-stone-300',   dot: 'bg-stone-400 dark:bg-stone-500',   badge: 'border-stone-300 dark:border-stone-700/50 bg-stone-100 dark:bg-stone-800/50 text-stone-500 dark:text-stone-400',   label: 'Sem dados' },
 };
 
 // ── KPI Card ─────────────────────────────────────────────────────────────────
@@ -58,7 +58,7 @@ function KpiCard({ icon, label, value, unit, range, color }) {
     <div className={`rounded-2xl border p-4 transition-all ${st.card}`}>
       <div className="flex items-start justify-between mb-3">
         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-stone-100 dark:bg-stone-800/60">
-          <i className={`fa-solid ${icon} text-sm ${st.val}`} />
+          <i className={`fa-solid ${icon} text-sm ${st.val} dark:${st.val}`} />
         </div>
         <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase ${st.badge}`}>
           <span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} />{st.label}
@@ -69,7 +69,7 @@ function KpiCard({ icon, label, value, unit, range, color }) {
         <span className={`text-3xl font-bold ${st.val}`}>{value}</span>
         <span className="text-sm text-stone-500">{unit}</span>
       </div>
-      {range && <p className="text-[10px] text-stone-600 mt-1.5">Meta: {range.min}-{range.max} {unit}</p>}
+      {range && <p className="text-[10px] text-stone-500 dark:text-stone-600 mt-1.5">Meta: {range.min}-{range.max} {unit}</p>}
     </div>
   );
 }
@@ -331,9 +331,9 @@ export const MonitoramentoTab = ({ estufaId, telemetry, profile, externalWeather
   if (loading) return (
     <div className="mt-5 space-y-4">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {[0,1,2,3].map((i) => <div key={i} className="h-28 animate-pulse rounded-2xl border border-stone-800/40 bg-stone-900/20" />)}
+        {[0,1,2,3].map((i) => <div key={i} className="h-28 animate-pulse rounded-2xl border border-stone-200 dark:border-stone-800/40 bg-stone-100 dark:bg-stone-900/20" />)}
       </div>
-      <div className="h-56 animate-pulse rounded-2xl border border-stone-800/40 bg-stone-900/20" />
+      <div className="h-56 animate-pulse rounded-2xl border border-stone-200 dark:border-stone-800/40 bg-stone-100 dark:bg-stone-900/20" />
     </div>
   );
 
@@ -342,18 +342,18 @@ export const MonitoramentoTab = ({ estufaId, telemetry, profile, externalWeather
 
       {/* Seletor de janela */}
       <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold text-stone-500 uppercase tracking-widest">Telemetria em tempo real</p>
+        <p className="text-xs font-semibold text-stone-600 dark:text-stone-500 uppercase tracking-widest">Telemetria em tempo real</p>
         <div className="flex items-center gap-1">
           {WINDOWS.map((w, i) => (
             <button key={w.label} type="button" onClick={() => setWinIdx(i)}
               className={`rounded-lg px-3 py-1 text-xs font-semibold transition ${
-                i === winIdx ? 'bg-red-600 text-white' : 'border border-stone-700/60 text-stone-400 hover:border-stone-600 hover:text-stone-200'
+                i === winIdx ? 'bg-red-600 text-white' : 'border border-stone-300 dark:border-stone-700/60 text-stone-600 dark:text-stone-400 hover:border-stone-400 dark:hover:border-stone-600 hover:text-stone-800 dark:hover:text-stone-200'
               }`}>
               {w.label}
             </button>
           ))}
           <button type="button" onClick={loadSeries}
-            className="ml-1 rounded-lg border border-stone-700/60 p-1.5 text-stone-500 hover:text-stone-300 transition" title="Atualizar">
+            className="ml-1 rounded-lg border border-stone-300 dark:border-stone-700/60 p-1.5 text-stone-500 hover:text-stone-700 dark:hover:text-stone-300 transition" title="Atualizar">
             <i className="fa-solid fa-arrows-rotate text-xs" />
           </button>
         </div>
@@ -375,13 +375,13 @@ export const MonitoramentoTab = ({ estufaId, telemetry, profile, externalWeather
       )}
 
       {/* Grafico 1: Temperatura + Umidade */}
-      <div className="rounded-2xl border border-stone-800/60 bg-stone-900/35 p-5">
+      <div className="rounded-2xl border border-stone-200 dark:border-stone-800/60 bg-white dark:bg-stone-900/35 p-5">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <p className="text-xs font-semibold text-stone-100">Temperatura e Umidade do ar</p>
+            <p className="text-xs font-semibold text-stone-800 dark:text-stone-100">Temperatura e Umidade do ar</p>
             <p className="text-[10px] text-stone-500 mt-0.5">Evolucao - ultimas {win.label}</p>
           </div>
-          <div className="flex items-center gap-3 text-[10px] text-stone-500">
+          <div className="flex items-center gap-3 text-[10px] text-stone-500 dark:text-stone-500">
             <span className="flex items-center gap-1"><span className="h-2 w-4 rounded-full inline-block bg-red-400" />Temp (C)</span>
             <span className="flex items-center gap-1"><span className="h-2 w-4 rounded-full inline-block bg-blue-400" />Umidade (%)</span>
           </div>
@@ -401,9 +401,9 @@ export const MonitoramentoTab = ({ estufaId, telemetry, profile, externalWeather
       {/* Graficos 2 e 3 */}
       <div className="grid lg:grid-cols-2 gap-4">
 
-        <div className="rounded-2xl border border-stone-800/60 bg-stone-900/35 p-5">
+        <div className="rounded-2xl border border-stone-200 dark:border-stone-800/60 bg-white dark:bg-stone-900/35 p-5">
           <div className="mb-4">
-            <p className="text-xs font-semibold text-stone-100">Umidade do substrato</p>
+            <p className="text-xs font-semibold text-stone-800 dark:text-stone-100">Umidade do substrato</p>
             <p className="text-[10px] text-stone-500 mt-0.5">Tendencia - ultimas {win.label}</p>
           </div>
           <SvgAreaChart
@@ -415,9 +415,9 @@ export const MonitoramentoTab = ({ estufaId, telemetry, profile, externalWeather
           />
         </div>
 
-        <div className="rounded-2xl border border-stone-800/60 bg-stone-900/35 p-5">
+        <div className="rounded-2xl border border-stone-200 dark:border-stone-800/60 bg-white dark:bg-stone-900/35 p-5">
           <div className="mb-4">
-            <p className="text-xs font-semibold text-stone-100">Comparativo de periodos</p>
+            <p className="text-xs font-semibold text-stone-800 dark:text-stone-100">Comparativo de periodos</p>
             <p className="text-[10px] text-stone-500 mt-0.5">Ultimos 6 pontos</p>
           </div>
           <SvgBarChart
@@ -430,32 +430,16 @@ export const MonitoramentoTab = ({ estufaId, telemetry, profile, externalWeather
 
       {/* Clima externo */}
       {externalWeather && (
-        <div className="rounded-2xl border border-stone-800/60 bg-stone-900/35 p-4">
+        <div className="rounded-2xl border border-stone-200 dark:border-stone-800/60 bg-white dark:bg-stone-900/35 p-4">
           <div className="flex items-center gap-2.5 mb-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10">
-              <i className="fa-solid fa-cloud-sun text-blue-400 text-sm" />
+              <i className="fa-solid fa-cloud-sun text-blue-500 dark:text-blue-400 text-sm" />
             </div>
-            <p className="text-xs font-semibold text-stone-100">Clima externo</p>
+            <p className="text-xs font-semibold text-stone-800 dark:text-stone-100">Clima externo</p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
               { label: 'Temperatura', value: externalWeather.temperatura, unit: 'C', color: 'text-red-400' },
               { label: 'Umidade', value: externalWeather.umidade, unit: '%', color: 'text-blue-400' },
               { label: 'Condicao', value: externalWeather.descricao, unit: '', color: 'text-stone-400' },
-              { label: 'Nuvens', value: externalWeather.nuvens, unit: '%', color: 'text-stone-400' },
-            ].filter((i) => i.value != null).map((item) => (
-              <div key={item.label} className="rounded-xl border border-stone-800/40 bg-stone-800/30 p-3">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-stone-600 mb-1">{item.label}</p>
-                <span className={`text-sm font-semibold ${item.color}`}>{item.value}</span>
-                <span className="text-xs text-stone-500 ml-0.5">{item.unit}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-    </div>
-  );
-};
-
-export default MonitoramentoTab;
+              { la
