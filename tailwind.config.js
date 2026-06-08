@@ -10,4 +10,28 @@ export default {
           DEFAULT: 'var(--color-surface)',
           alt: 'var(--color-surface-alt)',
           raised: 'var(--color-surface-raised)',
-        
+        },
+        'token-border': {
+          DEFAULT: 'var(--color-border)',
+          strong: 'var(--color-border-strong)',
+        },
+        brand: {
+          DEFAULT: 'var(--color-primary)',
+          hover: 'var(--color-primary-hover)',
+          subtle: 'var(--color-primary-subtle)',
+          muted: 'var(--color-primary-muted)',
+        },
+        primary: {
+          DEFAULT: '#C0392B',
+          foreground: '#FFFFFF',
+        },
+      },
+      boxShadow: {
+        token: 'var(--shadow-sm)',
+        'token-md': 'var(--shadow-md)',
+        'token-lg': 'var(--shadow-lg)',
+      },
+    },
+  },
+  plugins: [],
+};
