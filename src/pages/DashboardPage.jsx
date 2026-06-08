@@ -2486,3 +2486,5 @@ export const DashboardPage = () => {
         cancelLabel="Cancelar"
       />
     </>
+  );
+};

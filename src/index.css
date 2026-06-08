@@ -19,4 +19,153 @@
   --color-text-primary:   #1A1A2E; /* títulos, labels obrigatórias */
   --color-text-secondary: #4A5568; /* descrições, labels opcionais */
   --color-text-muted:     #718096; /* placeholders, timestamps */
-  --color-text
+  --color-text-disabled:  #A0AEC0; /* campos desativados */
+  --color-text-inverse:   #FFFFFF; /* texto em fundos escuros/primários */
+
+  /* ── Brand / Primary ─────────────────────────────────────────────────── */
+  --color-primary:        #C0392B; /* vermelho Plantelligence */
+  --color-primary-hover:  #A93226;
+  --color-primary-subtle: #FEF0EE; /* bg muito claro do primary */
+  --color-primary-muted:  #FADBD8; /* borda/badge suave primary */
+
+  /* ── Bordas e separadores ────────────────────────────────────────────── */
+  --color-border:         #E2E8F0;
+  --color-border-strong:  #CBD5E0;
+  --color-divider:        #EDF2F7;
+
+  /* ── Feedback semântico ──────────────────────────────────────────────── */
+  --color-success:        #27AE60;
+  --color-success-subtle: #EAFAF1;
+  --color-warning:        #D68910;
+  --color-warning-subtle: #FEF9E7;
+  --color-error:          #E74C3C;
+  --color-error-subtle:   #FDEDEC;
+  --color-info:           #2980B9;
+  --color-info-subtle:    #EBF5FB;
+
+  /* ── Sombras ─────────────────────────────────────────────────────────── */
+  --shadow-sm:   0 1px 2px rgba(0,0,0,.06);
+  --shadow-md:   0 2px 8px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-lg:   0 4px 20px rgba(0,0,0,.10), 0 2px 6px rgba(0,0,0,.06);
+
+  /* ── Raios ───────────────────────────────────────────────────────────── */
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   16px;
+  --radius-xl:   20px;
+
+  color-scheme: light;
+}
+
+/* ── Modo escuro ────────────────────────────────────────────────────────── */
+.dark {
+  --color-bg:           #0C0909;
+  --color-surface:      rgba(28,22,22,.95);
+  --color-surface-alt:  rgba(41,32,32,.80);
+  --color-surface-raised: #1C1614;
+
+  --color-text-primary:   #F5F0EF;
+  --color-text-secondary: #A89E9C;
+  --color-text-muted:     #6B5E5C;
+  --color-text-disabled:  #4A3E3C;
+  --color-text-inverse:   #1A1010;
+
+  --color-primary:        #EF4444;
+  --color-primary-hover:  #DC2626;
+  --color-primary-subtle: rgba(239,68,68,.12);
+  --color-primary-muted:  rgba(239,68,68,.25);
+
+  --color-border:         rgba(68,52,50,.60);
+  --color-border-strong:  rgba(87,68,65,.80);
+  --color-divider:        rgba(44,34,32,.50);
+
+  --color-success:        #34D399;
+  --color-success-subtle: rgba(52,211,153,.12);
+  --color-warning:        #FBBF24;
+  --color-warning-subtle: rgba(251,191,36,.12);
+  --color-error:          #F87171;
+  --color-error-subtle:   rgba(248,113,113,.12);
+  --color-info:           #60A5FA;
+  --color-info-subtle:    rgba(96,165,250,.12);
+
+  --shadow-sm:   0 1px 3px rgba(0,0,0,.40);
+  --shadow-md:   0 2px 10px rgba(0,0,0,.50);
+  --shadow-lg:   0 4px 24px rgba(0,0,0,.60);
+
+  color-scheme: dark;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CLASSES UTILITÁRIAS DE TOKEN
+   Uso: className="bg-surface text-primary-text border-token"
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer utilities {
+  /* Backgrounds */
+  .bg-token          { background-color: var(--color-bg); }
+  .bg-surface        { background-color: var(--color-surface); }
+  .bg-surface-alt    { background-color: var(--color-surface-alt); }
+  .bg-surface-raised { background-color: var(--color-surface-raised); }
+
+  /* Texto */
+  .text-primary-text   { color: var(--color-text-primary); }
+  .text-secondary-text { color: var(--color-text-secondary); }
+  .text-muted-text     { color: var(--color-text-muted); }
+  .text-disabled-text  { color: var(--color-text-disabled); }
+  .text-inverse        { color: var(--color-text-inverse); }
+
+  /* Bordas */
+  .border-token        { border-color: var(--color-border); }
+  .border-token-strong { border-color: var(--color-border-strong); }
+  .divide-token > * + * { border-color: var(--color-divider); }
+
+  /* Feedback */
+  .bg-success-subtle  { background-color: var(--color-success-subtle); }
+  .bg-warning-subtle  { background-color: var(--color-warning-subtle); }
+  .bg-error-subtle    { background-color: var(--color-error-subtle); }
+  .bg-info-subtle     { background-color: var(--color-info-subtle); }
+
+  /* Sombras */
+  .shadow-token-sm { box-shadow: var(--shadow-sm); }
+  .shadow-token-md { box-shadow: var(--shadow-md); }
+  .shadow-token-lg { box-shadow: var(--shadow-lg); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COMPONENTES BASE — aplicam tokens globalmente
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer base {
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text-primary);
+  }
+
+  /* Inputs e selects herdam tokens */
+  input, textarea, select {
+    background-color: var(--color-surface);
+    color: var(--color-text-primary);
+    border-color: var(--color-border);
+  }
+  input::placeholder, textarea::placeholder {
+    color: var(--color-text-muted);
+  }
+  input:focus, textarea:focus, select:focus {
+    outline-color: var(--color-primary);
+    border-color: var(--color-primary);
+  }
+}
+
+/* ── Transição suave de tema ─────────────────────────────────────────────── */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
+}
+.animate-spin, .animate-bounce, .animate-pulse, [class*="fa-spin"] {
+  transition: none !important;
+}
+
+/* ── Scrollbars ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar        { width: 5px; height: 5px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: var(--color-border-strong); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }

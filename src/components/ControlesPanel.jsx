@@ -276,3 +276,5 @@ export const ControlesPanel = ({ _greenhouse, devices, devicesLoading, telemetry
         </>
       )}
     </div>
+  );
+};

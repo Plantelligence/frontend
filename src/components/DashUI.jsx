@@ -1,34 +1,35 @@
 /**
  * DashUI — Sistema de design compartilhado para todas as telas pós-login.
- * Baseado na estética da HelpPage (referência de qualidade).
  *
- * TOKENS DE DESIGN:
- *   bg-[#0c0909] / bg-[#0f0c0c] — fundos de seção
- *   stone-900/35 + stone-800/60 — cards
- *   stone-100 / stone-400 / stone-500 — hierarquia de texto
- *   red-500 / red-400 — accent
+ * DESIGN TOKENS (CSS custom properties definidos em index.css):
+ *   --color-bg / --color-surface / --color-surface-alt — fundos
+ *   --color-text-primary / secondary / muted          — texto
+ *   --color-border / --color-border-strong             — bordas
+ *   --color-primary                                    — accent vermelho
+ *
+ * Modo claro é o padrão; .dark sobrescreve para tema escuro.
  */
 
 import React from 'react';
 
-// ── Tokens tipados como constantes (use via className diretamente) ──────────────
+// ── Tokens semânticos ─────────────────────────────────────────────────────────
 export const DS = {
-  // Fundos
-  pageBg:      'bg-stone-50 dark:bg-[#0c0909]',
-  sectionAlt:  'bg-gray-100 dark:bg-[#0f0c0c]',
-  cardBg:      'rounded-2xl border border-stone-200 dark:border-stone-800/60 bg-white dark:bg-stone-900/35',
-  cardInner:   'rounded-xl border border-stone-200 dark:border-stone-700/40 bg-stone-50 dark:bg-stone-800/40',
-  cardHover:   'hover:border-stone-300 dark:hover:border-stone-700/80 transition-all',
+  // Fundos (usam CSS vars → automático light/dark)
+  pageBg:      'bg-token',
+  sectionAlt:  'bg-surface-alt',
+  cardBg:      'rounded-2xl border border-border bg-surface shadow-token',
+  cardInner:   'rounded-xl border border-border bg-surface-alt',
+  cardHover:   'hover:border-border-strong transition-all',
   // Dividers
-  divider:     'border-stone-200 dark:border-stone-800/40',
-  // Texto
-  label:       'text-[11px] font-semibold uppercase tracking-[0.24em] text-red-500',
-  h1:          'text-3xl sm:text-4xl font-bold text-stone-900 dark:text-white',
-  h2:          'text-xl font-semibold text-stone-800 dark:text-stone-100',
-  h3:          'text-base font-semibold text-stone-800 dark:text-stone-100',
-  h4:          'text-sm font-semibold text-stone-800 dark:text-stone-100',
-  body:        'text-sm text-stone-600 dark:text-stone-400 leading-relaxed',
-  muted:       'text-xs text-stone-500 dark:text-stone-500',
+  divider:     'border-border',
+  // Texto semântico
+  label:       'text-[11px] font-semibold uppercase tracking-[0.24em] text-red-600 dark:text-red-500',
+  h1:          'text-3xl sm:text-4xl font-bold text-[var(--color-text-primary)]',
+  h2:          'text-xl font-semibold text-[var(--color-text-primary)]',
+  h3:          'text-base font-semibold text-[var(--color-text-primary)]',
+  h4:          'text-sm font-semibold text-[var(--color-text-primary)]',
+  body:        'text-sm text-[var(--color-text-secondary)] leading-relaxed',
+  muted:       'text-xs text-[var(--color-text-muted)]',
   // Badges
   badge:       'inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
 };
@@ -164,4 +165,27 @@ export const DashSelectCard = ({ selected, onClick, title, description, disabled
     } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
   >
     <p className={`text-sm font-semibold mb-1 ${selected ? 'text-stone-800 dark:text-stone-100' : 'text-stone-700 dark:text-stone-200'}`}>{title}</p>
-  
+    {description && <p className={`text-xs ${selected ? 'text-stone-600 dark:text-stone-400' : 'text-stone-500'}`}>{description}</p>}
+  </button>
+);
+
+// ── DashInput — input padrão ───────────────────────────────────────────────────
+export const inputClass = 'rounded-xl border border-stone-300 dark:border-stone-700/60 bg-white dark:bg-stone-800/50 px-4 py-2.5 text-sm text-stone-800 dark:text-stone-100 placeholder:text-stone-400 dark:placeholder:text-stone-600 outline-none transition focus:border-red-400 dark:focus:border-red-500/60 focus:ring-1 focus:ring-red-500/20 disabled:opacity-50';
+
+// ── DashLabel — label de campo ─────────────────────────────────────────────────
+export const DashLabel = ({ children, optional }) => (
+  <span className="text-[11px] font-semibold uppercase tracking-widest text-stone-600 dark:text-stone-500">
+    {children}
+    {optional && <span className="ml-1 normal-case text-stone-500 dark:text-stone-600">(opcional)</span>}
+  </span>
+);
+
+// ── DashGrid — grid responsivo padrão ─────────────────────────────────────────
+export const DashGrid = ({ cols = 3, children, className = '' }) => {
+  const colMap = { 1: 'grid-cols-1', 2: 'sm:grid-cols-2', 3: 'sm:grid-cols-2 lg:grid-cols-3', 4: 'sm:grid-cols-2 lg:grid-cols-4' };
+  return (
+    <div className={`grid gap-4 ${colMap[cols] || colMap[3]} ${className}`}>
+      {children}
+    </div>
+  );
+};

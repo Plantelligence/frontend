@@ -442,4 +442,20 @@ export const MonitoramentoTab = ({ estufaId, telemetry, profile, externalWeather
               { label: 'Temperatura', value: externalWeather.temperatura, unit: 'C', color: 'text-red-400' },
               { label: 'Umidade', value: externalWeather.umidade, unit: '%', color: 'text-blue-400' },
               { label: 'Condicao', value: externalWeather.descricao, unit: '', color: 'text-stone-400' },
-              { labe
+              { label: 'Nuvens', value: externalWeather.nuvens, unit: '%', color: 'text-stone-400' },
+            ].filter((i) => i.value != null).map((item) => (
+              <div key={item.label} className="rounded-xl border border-stone-200 dark:border-stone-800/40 bg-stone-50 dark:bg-stone-800/30 p-3">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-stone-500 dark:text-stone-600 mb-1">{item.label}</p>
+                <span className={`text-sm font-semibold ${item.color}`}>{item.value}</span>
+                <span className="text-xs text-stone-500 ml-0.5">{item.unit}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+};
+
+export default MonitoramentoTab;
