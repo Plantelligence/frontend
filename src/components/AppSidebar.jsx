@@ -257,7 +257,7 @@ export const AppSidebar = ({ mobileOpen, onMobileClose }) => {
       onMouseLeave={() => setHovered(false)}
       className={`fixed inset-y-0 left-0 z-40 hidden lg:flex flex-col
         bg-surface dark:bg-[#161210]
-        border-r border-border
+        border-r border-stone-200 dark:border-stone-800/60
         shadow-sm transition-all duration-200 ease-in-out
         ${expanded ? 'w-56' : 'w-14'}
       `}

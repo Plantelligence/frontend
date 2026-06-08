@@ -593,7 +593,7 @@ const GreenhousePanel = ({
 
   return (
     <section className="rounded-[26px] border border-stone-200 dark:border-stone-800/60 bg-stone-50 dark:bg-[#0f0c0c] p-4 shadow-sm md:p-6">
-      <header className="relative flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
+      <header className="relative flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-stone-300 dark:border-stone-800/60 bg-white dark:bg-stone-900/35 p-4">
         <div>
           <span className="text-xs font-semibold uppercase tracking-[0.18em] text-red-700">
             Visão geral da estufa
@@ -646,7 +646,7 @@ const GreenhousePanel = ({
           }}
         >
           <div className="w-full max-w-2xl rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4 shadow-2xl sm:p-5">
-            <div className="mb-4 flex items-start justify-between gap-3 border-b border-stone-200 pb-3">
+            <div className="mb-4 flex items-start justify-between gap-3 border-b border-stone-200 dark:border-stone-800/50 pb-3">
               <div>
                 <h3 className="text-lg font-semibold text-slate-800 dark:text-stone-100">Editar estufa</h3>
                 <p className="text-xs text-slate-500 dark:text-stone-400">Atualize nome, perfil de cultivo e equipe responsável.</p>
@@ -731,7 +731,7 @@ const GreenhousePanel = ({
                 </div>
               ) : null}
 
-              <div className="flex flex-col-reverse gap-2 border-t border-stone-200 pt-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col-reverse gap-2 border-t border-stone-200 dark:border-stone-800/50 pt-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <span className="text-[11px] uppercase tracking-[0.2em] text-rose-600">
                     Remoção de estufa
@@ -766,7 +766,7 @@ const GreenhousePanel = ({
           onMouseDown={(e) => { if (e.target === e.currentTarget) setTeamModalOpen(false); }}
         >
           <div className="w-full max-w-lg rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-5 shadow-2xl">
-            <div className="mb-4 flex items-start justify-between gap-3 border-b border-stone-200 pb-3">
+            <div className="mb-4 flex items-start justify-between gap-3 border-b border-stone-200 dark:border-stone-800/50 pb-3">
               <div>
                 <h3 className="text-lg font-semibold text-slate-800 dark:text-stone-100">Gerenciar equipe</h3>
                 <p className="text-xs text-slate-500 dark:text-stone-400">Defina quem recebe alertas e notificações desta estufa.</p>
@@ -819,7 +819,7 @@ const GreenhousePanel = ({
                 </div>
               )}
 
-              <div className="flex justify-end gap-2 border-t border-stone-200 pt-3">
+              <div className="flex justify-end gap-2 border-t border-stone-200 dark:border-stone-800/50 pt-3">
                 <Button variant="secondary" type="button" onClick={() => setTeamModalOpen(false)}>Cancelar</Button>
                 <Button type="button" onClick={handleSaveTeam} disabled={teamSaving}>
                   {teamSaving ? 'Salvando...' : 'Salvar equipe'}
@@ -880,27 +880,27 @@ const GreenhousePanel = ({
           Este guia rápido ajuda a entender para que serve cada opção no cultivo diário.
         </p>
         <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          <div className="rounded border border-stone-200 bg-white dark:bg-stone-800 p-3">
+          <div className="rounded border border-stone-200 dark:border-stone-800/50 bg-white dark:bg-stone-800 p-3">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600 dark:text-stone-300">Temperatura</p>
             <p className="mt-1 text-xs text-slate-600 dark:text-stone-400">Mostra se o ambiente está quente ou frio para o cultivo.</p>
           </div>
-          <div className="rounded border border-stone-200 bg-white dark:bg-stone-800 p-3">
+          <div className="rounded border border-stone-200 dark:border-stone-800/50 bg-white dark:bg-stone-800 p-3">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600 dark:text-stone-300">Umidade do ambiente</p>
             <p className="mt-1 text-xs text-slate-600 dark:text-stone-400">Ajuda a manter o ar no ponto certo para o crescimento.</p>
           </div>
-          <div className="rounded border border-stone-200 bg-white dark:bg-stone-800 p-3">
+          <div className="rounded border border-stone-200 dark:border-stone-800/50 bg-white dark:bg-stone-800 p-3">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600 dark:text-stone-300">Umidade do solo/substrato</p>
             <p className="mt-1 text-xs text-slate-600 dark:text-stone-400">Indica se precisa molhar mais ou menos o meio de cultivo.</p>
           </div>
-          <div className="rounded border border-stone-200 bg-white dark:bg-stone-800 p-3">
+          <div className="rounded border border-stone-200 dark:border-stone-800/50 bg-white dark:bg-stone-800 p-3">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600 dark:text-stone-300">Luminosidade</p>
             <p className="mt-1 text-xs text-slate-600 dark:text-stone-400">Nível de luz medido em lux. Cogumelos precisam de pouca luz — excesso prejudica o crescimento.</p>
           </div>
-          <div className="rounded border border-stone-200 bg-white dark:bg-stone-800 p-3">
+          <div className="rounded border border-stone-200 dark:border-stone-800/50 bg-white dark:bg-stone-800 p-3">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600 dark:text-stone-300">Perfil de cultivo</p>
             <p className="mt-1 text-xs text-slate-600 dark:text-stone-400">É a meta que a estufa deve seguir para esse tipo de cultivo.</p>
           </div>
-          <div className="rounded border border-stone-200 bg-white dark:bg-stone-800 p-3">
+          <div className="rounded border border-stone-200 dark:border-stone-800/50 bg-white dark:bg-stone-800 p-3">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600 dark:text-stone-300">Equipe responsável</p>
             <p className="mt-1 text-xs text-slate-600 dark:text-stone-400">As pessoas marcadas aqui recebem aviso quando algo sair do esperado.</p>
           </div>
@@ -924,25 +924,25 @@ const GreenhousePanel = ({
             <>
               <p className="mt-1 text-xs text-slate-500 dark:text-stone-400">{currentProfile.summary}</p>
               <dl className="mt-3 grid gap-3 text-xs text-slate-700 dark:text-stone-300 grid-cols-2 sm:grid-cols-4">
-                <div className="rounded border border-stone-200 bg-white dark:bg-stone-800 p-3">
+                <div className="rounded border border-stone-200 dark:border-stone-800/50 bg-white dark:bg-stone-800 p-3">
                   <dt className="text-[11px] uppercase tracking-widest text-slate-500 dark:text-stone-400">Temperatura</dt>
                   <dd>
                     {currentProfile.temperature?.min ?? '—'}°C — {currentProfile.temperature?.max ?? '—'}°C
                   </dd>
                 </div>
-                <div className="rounded border border-stone-200 bg-white dark:bg-stone-800 p-3">
+                <div className="rounded border border-stone-200 dark:border-stone-800/50 bg-white dark:bg-stone-800 p-3">
                   <dt className="text-[11px] uppercase tracking-widest text-slate-500 dark:text-stone-400">Umidade do ambiente</dt>
                   <dd>
                     {currentProfile.humidity?.min ?? '—'}% — {currentProfile.humidity?.max ?? '—'}%
                   </dd>
                 </div>
-                <div className="rounded border border-stone-200 bg-white dark:bg-stone-800 p-3">
+                <div className="rounded border border-stone-200 dark:border-stone-800/50 bg-white dark:bg-stone-800 p-3">
                   <dt className="text-[11px] uppercase tracking-widest text-slate-500 dark:text-stone-400">Umidade do solo</dt>
                   <dd>
                     {currentProfile.soilMoisture?.min ?? '—'}% — {currentProfile.soilMoisture?.max ?? '—'}%
                   </dd>
                 </div>
-                <div className="rounded border border-stone-200 bg-white dark:bg-stone-800 p-3">
+                <div className="rounded border border-stone-200 dark:border-stone-800/50 bg-white dark:bg-stone-800 p-3">
                   <dt className="text-[11px] uppercase tracking-widest text-slate-500 dark:text-stone-400">Luminosidade</dt>
                   <dd>
                     {currentProfile.luminosity?.min ?? '—'} lux — {currentProfile.luminosity?.max ?? '—'} lux
@@ -955,7 +955,7 @@ const GreenhousePanel = ({
               Clique em Editar estufa e escolha um perfil de cultivo para ativar os limites ideais.
             </p>
           )}
-          <div className="mt-3 rounded-xl border border-stone-200 bg-white dark:bg-stone-800 p-3">
+          <div className="mt-3 rounded-xl border border-stone-200 dark:border-stone-800/50 bg-white dark:bg-stone-800 p-3">
             <h4 className="text-[11px] uppercase tracking-[0.18em] text-slate-500 dark:text-stone-400">Equipe responsável</h4>
             <ul className="mt-1.5 flex flex-wrap gap-1.5">
               {greenhouse.watchersDetails?.length > 0 ? (
@@ -1073,7 +1073,7 @@ const GreenhousePanel = ({
               ) : null}
             </>
           )}
-          <div className="mt-3 rounded-xl border border-stone-200 bg-white dark:bg-stone-800 p-3">
+          <div className="mt-3 rounded-xl border border-stone-200 dark:border-stone-800/50 bg-white dark:bg-stone-800 p-3">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <Button
                 variant="secondary"
@@ -1134,7 +1134,7 @@ const GreenhousePanel = ({
                 { key: 'umidade_solo', label: 'Umidade do solo', unit: '%' },
                 { key: 'luminosidade', label: 'Luminosidade', unit: 'lux' }
               ].map(({ key, label, unit }) => (
-                <div key={key} className="rounded-xl border border-stone-200 bg-white dark:bg-stone-800 p-4">
+                <div key={key} className="rounded-xl border border-stone-200 dark:border-stone-800/50 bg-white dark:bg-stone-800 p-4">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-red-700">{label}</p>
                   <div className="mt-2 grid grid-cols-2 gap-2">
                     <div>
@@ -1146,7 +1146,7 @@ const GreenhousePanel = ({
                           ...prev,
                           [key]: { ...prev[key], min: event.target.value === '' ? undefined : Number(event.target.value) }
                         }))}
-                        className="mt-0.5 w-full rounded border border-stone-300 bg-white dark:bg-stone-800 px-2 py-1.5 text-sm text-slate-800 dark:text-stone-100 outline-none focus:border-red-400"
+                        className="mt-0.5 w-full rounded border border-stone-300 dark:border-stone-700/50 bg-white dark:bg-stone-800 px-2 py-1.5 text-sm text-slate-800 dark:text-stone-100 outline-none focus:border-red-400"
                         placeholder={`min ${unit}`}
                       />
                     </div>
@@ -1159,7 +1159,7 @@ const GreenhousePanel = ({
                           ...prev,
                           [key]: { ...prev[key], max: event.target.value === '' ? undefined : Number(event.target.value) }
                         }))}
-                        className="mt-0.5 w-full rounded border border-stone-300 bg-white dark:bg-stone-800 px-2 py-1.5 text-sm text-slate-800 dark:text-stone-100 outline-none focus:border-red-400"
+                        className="mt-0.5 w-full rounded border border-stone-300 dark:border-stone-700/50 bg-white dark:bg-stone-800 px-2 py-1.5 text-sm text-slate-800 dark:text-stone-100 outline-none focus:border-red-400"
                         placeholder={`max ${unit}`}
                       />
                     </div>
@@ -2387,7 +2387,7 @@ export const DashboardPage = () => {
 
   return (
     <>
-      <header className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
+      <header className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-stone-300 dark:border-stone-800/60 bg-white dark:bg-stone-900/35 p-4">
         <div>
           <span className="text-xs font-semibold uppercase tracking-[0.24em] text-red-700">Detalhes da estufa</span>
           <h1 className="text-3xl font-semibold text-slate-800 dark:text-stone-100">
@@ -2486,5 +2486,3 @@ export const DashboardPage = () => {
         cancelLabel="Cancelar"
       />
     </>
-  );
-};
