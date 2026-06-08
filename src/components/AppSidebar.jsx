@@ -128,27 +128,29 @@ const SidebarContent = ({ expanded, activeKey, onNavigate, onPin, pinned }) => {
     <div className="flex h-full flex-col overflow-hidden">
       {/* Logo */}
       <div className={`flex flex-shrink-0 items-center border-b border-stone-200 dark:border-stone-700/60 transition-all duration-200 ${expanded ? 'gap-3 px-4 py-4' : 'justify-center px-0 py-4'}`}>
-        {expanded && onPin && (
-          <button
-            type="button"
-            onClick={onPin}
-            title={pinned ? 'Desafixar menu' : 'Fixar menu aberto'}
-            className={`ml-auto flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg transition-colors ${
-              pinned
-                ? 'bg-red-500/15 text-red-500 hover:bg-red-500/25'
-                : 'text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-700 dark:hover:text-stone-200'
-            }`}
-          >
-            <i className={`fa-solid ${pinned ? 'fa-thumbtack' : 'fa-thumbtack'} text-[11px] ${pinned ? '' : 'opacity-60'}`} style={pinned ? {} : { transform: 'rotate(45deg)' }} />
-          </button>
-        )}
         <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-red-950/80 border border-red-800/40">
           <LogoIcon size={20} />
         </div>
         {expanded && (
-          <div className="min-w-0">
-            <p className="truncate text-xs font-bold tracking-widest text-red-500">PLANTELLIGENCE</p>
-            <p className="truncate text-[10px] text-stone-500 dark:text-stone-400">{orgName}</p>
+          <div className="flex-1 min-w-0 flex items-center justify-between gap-1">
+            <div className="min-w-0">
+              <p className="text-xs font-bold tracking-widest text-red-500 whitespace-nowrap">PLANTELLIGENCE</p>
+              <p className="truncate text-[10px] text-stone-500 dark:text-stone-400">{orgName}</p>
+            </div>
+            {onPin && (
+              <button
+                type="button"
+                onClick={onPin}
+                title={pinned ? 'Desafixar menu' : 'Fixar menu aberto'}
+                className={`flex-shrink-0 flex h-7 w-7 items-center justify-center rounded-lg transition-colors ${
+                  pinned
+                    ? 'bg-red-500/15 text-red-500 hover:bg-red-500/25'
+                    : 'text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-700 dark:hover:text-stone-200'
+                }`}
+              >
+                <i className={`fa-solid fa-thumbtack text-[11px] ${pinned ? '' : 'opacity-60'}`} style={pinned ? {} : { transform: 'rotate(45deg)' }} />
+              </button>
+            )}
           </div>
         )}
       </div>
