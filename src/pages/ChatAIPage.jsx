@@ -380,17 +380,4 @@ export const ChatAIPage = () => {
             type="button"
             onClick={sendMessage}
             disabled={loading || !input.trim()}
-            className="flex h-10 w-10 flex-shrink-0 items-center justify-center self-end rounded-xl bg-red-600 text-white shadow-sm transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            {loading
-              ? <i className="fa-solid fa-circle-notch fa-spin text-sm" />
-              : <i className="fa-solid fa-paper-plane text-sm" />}
-          </button>
-        </div>
-        <p className="mt-1.5 text-center text-[10px] text-stone-400">
-          Enter para enviar · Shift+Enter para nova linha
-        </p>
-      </div>
-    </div>
-  );
-};
+            className="flex h-10 w-10 flex-shrink-0 items-center justify-center self-end rounded-xl bg-red-600 text-white shadow-sm tr

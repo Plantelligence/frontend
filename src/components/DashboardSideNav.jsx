@@ -130,21 +130,4 @@ export const DashboardSideNav = ({ active = 'dashboard', footerText }) => {
         />
       </aside>
     </div>,
-    document.body
-  ) : null;
-
-  // ── Sidebar desktop ────────────────────────────────────────────────────────
-  const DesktopSide = (
-    <aside className="hidden h-full flex-col rounded-[26px] border border-stone-200 dark:border-stone-800 bg-white dark:bg-gradient-to-b dark:from-[#2a1b1a] dark:to-[#1c1312] lg:flex">
-      <NavContent active={active} footerText={footerText} onClose={() => {}} />
-    </aside>
-  );
-
-  return (
-    <>
-      {MobileBar}
-      {Drawer}
-      {DesktopSide}
-    </>
-  );
-};
+    document.bo

@@ -152,7 +152,7 @@ const buildEventMessage = (stats) => {
 
 const formatTimestamp = (iso) => {
   if (!iso) {
-    return '--';
+    return '';
   }
 
   try {
@@ -162,7 +162,7 @@ const formatTimestamp = (iso) => {
       second: '2-digit'
     });
   } catch (_error) {
-    return '--';
+    return '';
   }
 };
 
@@ -2486,5 +2486,3 @@ export const DashboardPage = () => {
         cancelLabel="Cancelar"
       />
     </>
-  );
-};
