@@ -2485,4 +2485,6 @@ export const DashboardPage = () => {
         confirmLabel={deleteBusy ? 'Removendo...' : 'Remover'}
         cancelLabel="Cancelar"
       />
-    
+    </>
+  );
+};

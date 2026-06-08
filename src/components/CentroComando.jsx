@@ -584,4 +584,42 @@ export const CentroComando = ({ estufaId, isReader = false }) => {
               key={action.id}
               type="button"
               onClick={() => navigate(action.route)}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-stone-300 dark:border-stone-700/60 bg-stone-50 dark:bg-stone-800/40 px
+              className="inline-flex items-center gap-1.5 rounded-xl border border-stone-300 dark:border-stone-700/60 bg-stone-50 dark:bg-stone-800/40 px-4 py-2 text-xs font-semibold text-stone-700 dark:text-stone-300 hover:border-stone-400 dark:hover:border-stone-600 hover:text-stone-900 dark:hover:text-stone-100 transition"
+            >
+              <i className={`fa-solid ${action.icon}`} />
+              {action.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Previsão de curto prazo ───────────────────────────────────────────── */}
+      {data.forecastWindow?.risks?.length > 0 && (
+        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
+          <div className="flex items-start gap-3">
+            <i className="fa-solid fa-chart-line text-amber-400 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-xs font-semibold text-amber-400 mb-1">
+                Previsão das próximas {data.forecastWindow.windowHours}h
+              </p>
+              {data.forecastWindow.risks.map((risk, i) => (
+                <p key={i} className="text-xs text-stone-400">{risk.label}: {risk.risk}</p>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de troca de fase */}
+      {phaseModalOpen && (
+        <PhaseModal
+          currentPhase={data.phase}
+          onConfirm={handlePhaseConfirm}
+          onClose={() => setPhaseModalOpen(false)}
+        />
+      )}
+    </div>
+  );
+};
+
+export default CentroComando;

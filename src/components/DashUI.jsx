@@ -164,4 +164,27 @@ export const DashSelectCard = ({ selected, onClick, title, description, disabled
     } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
   >
     <p className={`text-sm font-semibold mb-1 ${selected ? 'text-stone-800 dark:text-stone-100' : 'text-stone-700 dark:text-stone-200'}`}>{title}</p>
-  
+    {description && <p className={`text-xs ${selected ? 'text-stone-600 dark:text-stone-400' : 'text-stone-500'}`}>{description}</p>}
+  </button>
+);
+
+// ── DashInput — input padrão ───────────────────────────────────────────────────
+export const inputClass = 'rounded-xl border border-stone-300 dark:border-stone-700/60 bg-white dark:bg-stone-800/50 px-4 py-2.5 text-sm text-stone-800 dark:text-stone-100 placeholder:text-stone-400 dark:placeholder:text-stone-600 outline-none transition focus:border-red-400 dark:focus:border-red-500/60 focus:ring-1 focus:ring-red-500/20 disabled:opacity-50';
+
+// ── DashLabel — label de campo ─────────────────────────────────────────────────
+export const DashLabel = ({ children, optional }) => (
+  <span className="text-[11px] font-semibold uppercase tracking-widest text-stone-600 dark:text-stone-500">
+    {children}
+    {optional && <span className="ml-1 normal-case text-stone-500 dark:text-stone-600">(opcional)</span>}
+  </span>
+);
+
+// ── DashGrid — grid responsivo padrão ─────────────────────────────────────────
+export const DashGrid = ({ cols = 3, children, className = '' }) => {
+  const colMap = { 1: 'grid-cols-1', 2: 'sm:grid-cols-2', 3: 'sm:grid-cols-2 lg:grid-cols-3', 4: 'sm:grid-cols-2 lg:grid-cols-4' };
+  return (
+    <div className={`grid gap-4 ${colMap[cols] || colMap[3]} ${className}`}>
+      {children}
+    </div>
+  );
+};

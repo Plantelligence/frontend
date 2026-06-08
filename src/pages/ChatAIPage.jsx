@@ -279,6 +279,11 @@ export const ChatAIPage = () => {
               setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, streaming: false } : m));
               setStreaming(false);
             }
+            if (parsed.error) {
+              const errText = fullText || parsed.error || 'Assistente indisponível. Tente novamente.';
+              setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, text: errText, streaming: false } : m));
+              setStreaming(false);
+            }
           } catch {}
         }
       }
@@ -293,6 +298,8 @@ export const ChatAIPage = () => {
     } finally {
       setLoading(false);
       setStreaming(false);
+      // Garante que o cursor some mesmo sem parsed.done
+      setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, streaming: false } : m));
       setTimeout(() => inputRef.current?.focus(), 100);
     }
   };
