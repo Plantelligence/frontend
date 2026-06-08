@@ -198,7 +198,7 @@ export const AppTopBar = ({ onMenuOpen }) => {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-surface/95 px-4 backdrop-blur">
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-white/95 dark:bg-[#0c0909]/95 px-4 backdrop-blur">
       {/* Hamburguer — só mobile */}
       <button
         type="button"
