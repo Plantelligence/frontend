@@ -117,7 +117,7 @@ const NotificationBell = ({ userId }) => {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-11 z-50 w-80 rounded-xl border border-stone-200 bg-white shadow-xl dark:border-stone-700 dark:bg-[#1e1a18]">
+        <div className="absolute right-0 top-11 z-50 w-80 rounded-xl border border-border bg-surface shadow-token-lg">
           <div className="flex items-center justify-between border-b border-stone-100 px-4 py-3 dark:border-stone-700">
             <div className="flex items-center gap-2">
               <i className="fa-solid fa-bell text-red-500 text-sm" />
@@ -198,7 +198,7 @@ export const AppTopBar = ({ onMenuOpen }) => {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-stone-200 bg-white/95 px-4 backdrop-blur dark:border-stone-800/40 dark:bg-[#0c0909]/95">
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-surface/95 px-4 backdrop-blur">
       {/* Hamburguer — só mobile */}
       <button
         type="button"
@@ -266,7 +266,7 @@ const UserMenu = ({ user, onLogout }) => {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-11 z-50 w-56 rounded-xl border border-stone-200 bg-white py-1 shadow-xl dark:border-stone-700 dark:bg-[#1e1a18]">
+        <div className="absolute right-0 top-11 z-50 w-56 rounded-xl border border-border bg-surface py-1 shadow-token-lg">
           <div className="border-b border-stone-100 px-4 py-3 dark:border-stone-700">
             <p className="text-xs font-semibold text-stone-800 dark:text-stone-100">{user?.fullName || user?.email}</p>
             <p className="text-[10px] text-stone-500">{user?.email}</p>

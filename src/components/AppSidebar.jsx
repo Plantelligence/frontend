@@ -227,8 +227,8 @@ export const AppSidebar = ({ mobileOpen, onMobileClose }) => {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       className={`fixed inset-y-0 left-0 z-40 hidden lg:flex flex-col
-        bg-white dark:bg-[#161210]
-        border-r border-stone-200 dark:border-stone-800
+        bg-surface dark:bg-[#161210]
+        border-r border-border
         shadow-sm transition-all duration-200 ease-in-out
         ${hovered ? 'w-56' : 'w-14'}
       `}
@@ -241,7 +241,7 @@ export const AppSidebar = ({ mobileOpen, onMobileClose }) => {
   const MobileDrawer = mobileOpen ? createPortal(
     <div className="fixed inset-0 z-[9998] lg:hidden">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onMobileClose} />
-      <aside className="absolute inset-y-0 left-0 w-64 flex flex-col bg-white dark:bg-[#161210] border-r border-stone-200 dark:border-stone-800 shadow-2xl">
+      <aside className="absolute inset-y-0 left-0 w-64 flex flex-col bg-surface dark:bg-[#161210] border-r border-border shadow-2xl">
         <button
           type="button"
           onClick={onMobileClose}

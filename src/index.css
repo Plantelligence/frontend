@@ -2,30 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Tema escuro padrão na raiz (dashboard) ─────────────────────────────── */
-html { color-scheme: dark; }
-html.light { color-scheme: light; }
+/* ═══════════════════════════════════════════════════════════════════════════
+   DESIGN TOKENS — Plantelligence
+   Tokens semânticos aplicados via CSS custom properties.
+   O modo claro é o padrão; .dark sobrescreve para tema escuro.
+   ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ── Transição suave de tema (dashboard) ────────────────────────────────── */
-*, *::before, *::after {
-  transition-property: background-color, border-color, color, box-shadow;
-  transition-duration: 150ms;
-  transition-timing-function: ease;
-}
+:root {
+  /* ── Backgrounds ─────────────────────────────────────────────────────── */
+  --color-bg:           #F7F9FC;   /* página/body */
+  --color-surface:      #FFFFFF;   /* cards, modais, painéis */
+  --color-surface-alt:  #F0F2F5;   /* surface secundária (hover, linhas alt.) */
+  --color-surface-raised: #FFFFFF; /* dropdowns, tooltips (elevação) */
 
-/* Remove transição de elementos animados */
-.animate-spin, .animate-bounce, .animate-pulse, [class*="fa-spin"] {
-  transition: none !important;
-}
-
-/* ── Scrollbar tema escuro (dashboard) ──────────────────────────────────── */
-.dark ::-webkit-scrollbar        { width: 5px; height: 5px; }
-.dark ::-webkit-scrollbar-track  { background: transparent; }
-.dark ::-webkit-scrollbar-thumb  { background: #44403c; border-radius: 99px; }
-.dark ::-webkit-scrollbar-thumb:hover { background: #57534e; }
-
-/* ── Scrollbar tema claro ───────────────────────────────────────────────── */
-::-webkit-scrollbar        { width: 5px; height: 5px; }
-::-webkit-scrollbar-track  { background: transparent; }
-::-webkit-scrollbar-thumb  { background: #d6d3d1; border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: #a8a29e; }
+  /* ── Texto ────────────────────────────────────────────────────────────── */
+  --color-text-primary:   #1A1A2E; /* títulos, labels obrigatórias */
+  --color-text-secondary: #4A5568; /* descrições, labels opcionais */
+  --color-text-muted:     #718096; /* placeholders, timestamps */
+  --color-text
