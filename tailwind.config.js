@@ -11,6 +11,7 @@ export default {
           alt: 'var(--color-surface-alt)',
           raised: 'var(--color-surface-raised)',
         },
+        border: 'var(--color-border)',
         'token-border': {
           DEFAULT: 'var(--color-border)',
           strong: 'var(--color-border-strong)',
