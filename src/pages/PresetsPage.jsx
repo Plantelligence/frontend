@@ -183,7 +183,7 @@ function PresetCard({ preset, selected, onSelect, onEdit, onDuplicate, onDelete,
     <article
       onClick={() => onSelect(preset)}
       className={`h-full cursor-pointer overflow-hidden rounded-lg border bg-white dark:bg-stone-900 transition hover:-translate-y-0.5 hover:shadow-md ${
-        selected ? 'border-red-500 shadow-[0_0_0_3px_rgba(212,58,42,0.1)]' : 'border-stone-200 hover:border-stone-300'
+        selected ? 'border-red-500 shadow-[0_0_0_3px_rgba(212,58,42,0.1)]' : 'border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600'
       }`}
     >
       <div className="h-1 w-full bg-gradient-to-r from-red-700 to-red-500" />
@@ -290,7 +290,7 @@ function DetailPanel({ preset, open, saving, onSave, onClose, readOnly = false }
         style={{ maxHeight: '90vh', overflowY: 'auto' }}
         onClick={(event) => event.stopPropagation()}
       >
-      <div className="border-b border-stone-200 px-5 py-4">
+      <div className="border-b border-stone-200 dark:border-stone-700 px-5 py-4">
         <p className="text-[10px] font-semibold uppercase tracking-widest text-red-600">Perfil em edição</p>
         <label className="mt-2 block text-[11px] font-semibold uppercase tracking-wide text-stone-500">
           Nome do perfil de cultivo
@@ -404,7 +404,7 @@ function DetailPanel({ preset, open, saving, onSave, onClose, readOnly = false }
         </section>
       </div>
 
-      <div className="flex gap-2 border-t border-stone-200 px-5 py-3">
+      <div className="flex gap-2 border-t border-stone-200 dark:border-stone-700 px-5 py-3">
         <button
           onClick={onClose}
           className="flex-1 rounded border border-stone-200 dark:border-stone-700 px-3 py-2 text-sm text-stone-700 dark:text-stone-300 transition hover:bg-stone-50 dark:hover:bg-stone-800"
@@ -468,7 +468,7 @@ function AIModal({ open, onClose, onUse }) {
         style={{ maxHeight: '90vh', overflowY: 'auto' }}
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="border-b border-stone-200 px-5 py-4">
+        <div className="border-b border-stone-200 dark:border-stone-700 px-5 py-4">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-red-600">Inteligência Artificial</p>
           <h2 className="mt-1 text-lg font-semibold text-stone-900 dark:text-stone-100">Criar perfil com IA</h2>
           <p className="mt-1 text-sm text-stone-500">Descreva a cultura ou condições de cultivo e a IA irá sugerir os parâmetros ideais.</p>
@@ -496,7 +496,7 @@ function AIModal({ open, onClose, onUse }) {
         </form>
 
         {suggestion ? (
-          <div className="space-y-3 border-t border-stone-200 px-5 pb-5 pt-4">
+          <div className="space-y-3 border-t border-stone-200 dark:border-stone-700 px-5 pb-5 pt-4">
             <p className="text-[10px] font-semibold uppercase tracking-widest text-emerald-700">Sugestão gerada</p>
             <div className="space-y-2 rounded-xl border border-stone-200 bg-stone-50 dark:border-stone-700 dark:bg-stone-800 p-4">
               <p className="font-semibold text-stone-900 dark:text-stone-100">{suggestion.name}</p>
