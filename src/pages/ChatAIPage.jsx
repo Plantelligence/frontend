@@ -9,20 +9,21 @@ import remarkGfm from 'remark-gfm';
 import { useAuthStore } from '../store/authStore.js';
 import { refreshSession } from '../api/client.js';
 
-// Lê o token sempre fresco (evita usar token expirado em closures)
-const getFreshToken = () => {
+// Retorna um token válido — refresca antes se estiver expirado (evita 401)
+const getValidToken = async () => {
   const { tokens } = useAuthStore.getState();
-  return tokens?.accessToken ?? tokens?.access_token ?? null;
-};
-
-// Usa o mesmo refreshSession do axios (com refreshPromise guard)
-// Evita race condition onde dois refreshes simultâneos revogam o token
-const tryRefreshToken = async () => {
-  try {
-    return await refreshSession();
-  } catch {
-    return null;
+  const token = tokens?.accessToken ?? tokens?.access_token ?? null;
+  if (!token) {
+    try { return await refreshSession(); } catch { return null; }
   }
+  // Decodifica o JWT e verifica expiração com 60s de margem
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    if (payload.exp && Date.now() > payload.exp * 1000 - 60000) {
+      return await refreshSession();
+    }
+  } catch { /* token malformado — usa assim mesmo */ }
+  return token;
 };
 
 // ── Constantes ─────────────────────────────────────────────────────────────────
@@ -224,25 +225,18 @@ export const ChatAIPage = () => {
     const assistantMsg = { id: assistantId, role: 'assistant', text: '', timestamp: new Date().toISOString(), streaming: true };
 
     try {
-      const doFetch = async (token) => fetch(`${API_BASE}/chat/stream`, {
+      const token = await getValidToken();
+      if (!token) throw new Error('Sessão expirada. Faça login novamente.');
+
+      const response = await fetch(`${API_BASE}/chat/stream`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ messages: history }),
         signal: abortRef.current.signal,
       });
-
-      let token    = getFreshToken();
-      let response = await doFetch(token);
-
-      if (response.status === 401) {
-        const newToken = await tryRefreshToken();
-        if (!newToken) throw new Error('Sessão expirada. Faça login novamente.');
-        abortRef.current = new AbortController();
-        response = await doFetch(newToken);
-      }
 
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
