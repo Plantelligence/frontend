@@ -451,6 +451,9 @@ const GreenhousePanel = ({
 
   // estado local do formulário de cadastro de dispositivo
   const [showDeviceWizard,  setShowDeviceWizard]  = useState(false);
+  // estado do diálogo de confirmação de remoção de dispositivo
+  const [deleteDeviceTarget, setDeleteDeviceTarget] = useState(null);
+  const [deleteDeviceBusy,   setDeleteDeviceBusy]   = useState(false);
   // credenciais IoT Hub retornadas após cadastro bem-sucedido
 
 
@@ -1290,14 +1293,14 @@ const GreenhousePanel = ({
                   <div className="flex gap-2 mt-1">
                     <button
                       type="button"
-                      onClick={() => onToggleDevice?.(greenhouse.id, device.id, !device.active)}
+                      onClick={() => onToggleDevice?.(device.id, !device.active)}
                       className="flex-1 rounded border border-stone-300 dark:border-stone-700/40 dark:text-stone-300 dark:bg-stone-800/40 py-1.5 text-[11px] font-medium text-slate-600 transition hover:border-red-300 hover:text-red-700"
                     >
                       {device.active ? 'Desativar' : 'Ativar'}
                     </button>
                     <button
                       type="button"
-                      onClick={() => onDeleteDevice?.(greenhouse.id, device.id)}
+                      onClick={() => setDeleteDeviceTarget(device)}
                       className="rounded border border-stone-200 dark:border-stone-700/40 px-3 py-1.5 text-[11px] text-slate-400 transition hover:border-rose-300 hover:text-rose-600"
                     >
                       Remover
@@ -1332,12 +1335,38 @@ const GreenhousePanel = ({
         <WizardOnboardingDispositivo
           estufaId={greenhouse.id}
           onClose={() => setShowDeviceWizard(false)}
-          onSuccess={() => {
+          onSuccess={(device) => {
             setShowDeviceWizard(false);
-            if (onCreateDevice) onCreateDevice();
+            // Dispositivo já foi criado pelo wizard — apenas atualiza o estado local
+            if (onCreateDevice && device) onCreateDevice(device);
           }}
         />
       )}
+
+      {/* Confirmação de remoção de dispositivo */}
+      <ConfirmDialog
+        open={!!deleteDeviceTarget}
+        title="Remover dispositivo"
+        description={
+          deleteDeviceTarget
+            ? `Remover "${deleteDeviceTarget.name}" desta estufa? O dispositivo será excluído do Azure IoT Hub e não poderá enviar telemetria.`
+            : ''
+        }
+        confirmLabel={deleteDeviceBusy ? 'Removendo...' : 'Remover'}
+        confirmDisabled={deleteDeviceBusy}
+        cancelDisabled={deleteDeviceBusy}
+        onCancel={() => setDeleteDeviceTarget(null)}
+        onConfirm={async () => {
+          if (!deleteDeviceTarget) return;
+          setDeleteDeviceBusy(true);
+          try {
+            await onDeleteDevice?.(deleteDeviceTarget.id);
+          } finally {
+            setDeleteDeviceBusy(false);
+            setDeleteDeviceTarget(null);
+          }
+        }}
+      />
     </section>
   );
 };
@@ -2455,7 +2484,15 @@ export const DashboardPage = () => {
             onUpdateAlertThresholds={(t) => handleUpdateAlertThresholds(selectedGreenhouse.id, t)}
             devices={devicesById[selectedGreenhouse.id] ?? []}
             devicesLoading={devicesLoadingById[selectedGreenhouse.id] ?? false}
-            onCreateDevice={(payload) => handleCreateDevice(selectedGreenhouse.id, payload)}
+            onCreateDevice={(device) => {
+              // O wizard já criou o dispositivo no backend — apenas adiciona ao estado local
+              if (device?.id) {
+                setDevicesById((prev) => ({
+                  ...prev,
+                  [selectedGreenhouse.id]: [...(prev[selectedGreenhouse.id] ?? []), device],
+                }));
+              }
+            }}
             onDeleteDevice={(deviceId) => handleDeleteDevice(selectedGreenhouse.id, deviceId)}
             onToggleDevice={(deviceId, active) => handleToggleDevice(selectedGreenhouse.id, deviceId, active)}
             readOnly={isReader}

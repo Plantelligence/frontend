@@ -791,17 +791,17 @@ export const PresetsPage = () => {
             </section>
 
             <section className="mb-4 grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
-              <article className="rounded-2xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
+              <article className="rounded-2xl border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900 p-4">
                 <p className="text-xs uppercase tracking-wide text-red-600">Total de perfis</p>
                 <p className="mt-1 text-3xl font-semibold text-slate-800 dark:text-stone-100">{counts.all}</p>
                 <p className="text-xs text-slate-500 dark:text-stone-400">Perfis padrão e personalizados</p>
               </article>
-              <article className="rounded-2xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
+              <article className="rounded-2xl border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900 p-4">
                 <p className="text-xs uppercase tracking-wide text-red-600">Perfis em uso</p>
                 <p className="mt-1 text-3xl font-semibold text-slate-800 dark:text-stone-100">{counts.inUse}</p>
                 <p className="text-xs text-slate-500 dark:text-stone-400">Já aplicados em estufas</p>
               </article>
-              <article className="rounded-2xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
+              <article className="rounded-2xl border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900 p-4">
                 <p className="text-xs uppercase tracking-wide text-red-600">Perfis personalizados</p>
                 <p className="mt-1 text-3xl font-semibold text-slate-800 dark:text-stone-100">{counts.custom}</p>
                 <p className="text-xs text-slate-500 dark:text-stone-400">Criados para sua operação</p>
@@ -856,8 +856,8 @@ export const PresetsPage = () => {
                 ) : (
                   <>
                     {activeFilter !== 'custom' ? (
-                      <section className="rounded-2xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
-                        <div className="mb-3 flex items-center justify-between gap-2 border-b border-stone-100 pb-2">
+                      <section className="rounded-2xl border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900 p-4">
+                        <div className="mb-3 flex items-center justify-between gap-2 border-b border-stone-100 dark:border-stone-800 pb-2">
                           <h3 className="text-sm font-semibold text-slate-800 dark:text-stone-100">Perfis padrão (modelos prontos)</h3>
                           <span className="rounded-full bg-stone-100 dark:bg-stone-800 px-2 py-0.5 text-xs text-slate-600 dark:text-stone-400">{segmented.defaults.length}</span>
                         </div>
@@ -883,8 +883,8 @@ export const PresetsPage = () => {
                     ) : null}
 
                     {activeFilter !== 'default' ? (
-                      <section className="rounded-2xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
-                        <div className="mb-3 flex items-center justify-between gap-2 border-b border-stone-100 pb-2">
+                      <section className="rounded-2xl border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900 p-4">
+                        <div className="mb-3 flex items-center justify-between gap-2 border-b border-stone-100 dark:border-stone-800 pb-2">
                           <h3 className="text-sm font-semibold text-slate-800 dark:text-stone-100">Perfis personalizados (criados por você)</h3>
                           <span className="rounded-full bg-stone-100 dark:bg-stone-800 px-2 py-0.5 text-xs text-slate-600 dark:text-stone-400">{segmented.customs.length}</span>
                         </div>
