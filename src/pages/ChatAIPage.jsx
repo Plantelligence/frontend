@@ -30,7 +30,11 @@ const tryRefreshToken = async () => {
 const API_BASE = (() => {
   const raw = (import.meta.env?.VITE_APP_API_URL ?? '').trim();
   if (!raw) return '/api';
-  const cleaned = raw.replace(/\/+$/, '');
+  // Garante HTTPS quando a página é servida por HTTPS (evita Mixed Content)
+  const secured = typeof window !== 'undefined' && window.location.protocol === 'https:'
+    ? raw.replace(/^http:\/\//i, 'https://')
+    : raw;
+  const cleaned = secured.replace(/\/+$/, '');
   return cleaned.endsWith('/api') ? cleaned : `${cleaned}/api`;
 })();
 
