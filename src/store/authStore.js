@@ -133,6 +133,8 @@ export const useAuthStore = create((set, get) => ({
   // ── Sessao ────────────────────────────────────────────────────────────────
 
   setSession: ({ user, tokens, requiresPasswordReset }) => {
+    // Detecta se já havia sessão ativa (= refresh de token, não login fresco)
+    const isTokenRefresh = Boolean(get().user);
     const normalizedTokens = normalizeTokens(tokens);
     const nextState = {
       user,
@@ -145,9 +147,11 @@ export const useAuthStore = create((set, get) => ({
     };
     set(nextState);
     persistLockState(false, null);
-    // Aplica o tema salvo no perfil do servidor
-    if (user?.uiTheme) {
-      try { applyServerTheme(user.uiTheme); } catch {} 
+    // Aplica o tema do servidor apenas em login fresco.
+    // Em refresh de token, respeita a preferência local para não sobrescrever
+    // o dark mode quando o servidor ainda tem 'light' desatualizado.
+    if (user?.uiTheme && !isTokenRefresh) {
+      try { applyServerTheme(user.uiTheme); } catch {}
     }
     persistToStorage({ user: nextState.user, tokens: nextState.tokens, requiresPasswordReset: nextState.requiresPasswordReset });
   },
