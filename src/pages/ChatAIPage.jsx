@@ -296,7 +296,7 @@ export const ChatAIPage = () => {
       setMessages(prev => prev.filter(m => m.id !== assistantId));
       setMessages(prev => [...prev, {
         id: uid(), role: 'assistant', streaming: false,
-        text: `Não foi possível obter resposta. ${err?.message || 'Tente novamente.'}\n\nReformule a pergunta ou tente em instantes.`,
+        text: 'Não foi possível obter resposta do assistente. Verifique sua conexão e tente novamente.',
         timestamp: new Date().toISOString(),
       }]);
     } finally {
