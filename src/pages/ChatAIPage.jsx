@@ -31,10 +31,9 @@ const getValidToken = async () => {
 const API_BASE = (() => {
   const raw = (import.meta.env?.VITE_APP_API_URL ?? '').trim();
   if (!raw) return '/api';
-  // Garante HTTPS quando a página é servida por HTTPS (evita Mixed Content)
-  const secured = typeof window !== 'undefined' && window.location.protocol === 'https:'
-    ? raw.replace(/^http:\/\//i, 'https://')
-    : raw;
+  // Força https para URLs não-locais (produção é sempre HTTPS, evita Mixed Content)
+  const isLocal = /localhost|127\.0\.0\.1/.test(raw);
+  const secured = isLocal ? raw : raw.replace(/^http:\/\//i, 'https://');
   const cleaned = secured.replace(/\/+$/, '');
   return cleaned.endsWith('/api') ? cleaned : `${cleaned}/api`;
 })();
