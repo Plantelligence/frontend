@@ -443,6 +443,92 @@ export const HelpPage = () => {
           </div>
         </Section>
 
+
+        {/* SECAO 12: Roadmap */}
+
+        <Section id="comando" icon="fa-gauge-high" title="Centro de Comando">
+          <p>
+            O Centro de Comando é a tela principal de cada estufa. Acesse-a pela aba <strong>Centro de Comando</strong> ao abrir qualquer estufa no dashboard.
+          </p>
+          <InfoBox color="blue" icon="fa-circle-info">
+            Esta é a aba padrão ao abrir uma estufa. Foi projetada para responder em segundos: a estufa está saudável? O que precisa de atenção agora?
+          </InfoBox>
+          <div className="grid gap-3 sm:grid-cols-2 mt-3">
+            <FeatureCard icon="fa-gauge-high" title="Health Score" description="Pontuação de 0 a 100 que indica o estado geral da estufa com base na aderência ao preset ativo." badge="Novo" badgeColor="green" />
+            <FeatureCard icon="fa-triangle-exclamation" title="Alertas prioritários" description="Até 3 itens críticos com causa identificada e ação sugerida. Sem ruído, direto ao ponto." badge="Novo" badgeColor="green" />
+            <FeatureCard icon="fa-leaf" title="Aderência ao preset" description="Para cada sensor: valor atual, faixa ideal, desvio percentual e barra de posição visual." badge="Novo" badgeColor="green" />
+            <FeatureCard icon="fa-clock-rotate-left" title="Timeline de eventos" description="Histórico unificado de comandos de atuadores, alertas e decisões de automação." badge="Novo" badgeColor="green" />
+          </div>
+          <Step num={1} title="Quick Actions">
+            Na parte inferior do Centro de Comando há ações rápidas: trocar fase biológica, suspender a automação por 60 minutos, abrir relatórios e chamar o assistente de IA.
+          </Step>
+          <Step num={2} title="Previsão de curto prazo">
+            O sistema analisa a tendência atual e exibe riscos de desvio nas próximas 4 horas com recomendação preventiva.
+          </Step>
+        </Section>
+
+        <Section id="fases" icon="fa-seedling" title="Fases biológicas">
+          <p>
+            Cada estufa possui uma fase biológica ativa que representa o estágio atual do cultivo.
+            A fase é usada pelo worker de automação e pelo assistente de IA para contextualizar decisões.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-3 mt-3">
+            <FeatureCard icon="fa-seedling" title="Incubação" description="Fase inicial. Micélio coloniza o substrato. Prioridade: temperatura estável e umidade controlada." badge="Fase 1" badgeColor="blue" />
+            <FeatureCard icon="fa-leaf" title="Frutificação" description="Formação dos corpos frutíferos. Alta umidade do ar e luminosidade controlada são críticas." badge="Fase 2" badgeColor="green" />
+            <FeatureCard icon="fa-basket-shopping" title="Colheita" description="Período de coleta. Monitoramento de picos de CO₂ e controle de ventilação são prioritários." badge="Fase 3" badgeColor="amber" />
+          </div>
+          <Step num={1} title="Como trocar de fase">
+            No Centro de Comando, clique em <strong>Trocar fase</strong> nas Quick Actions. Selecione a nova fase, adicione um motivo opcional e confirme. A transição fica registrada no histórico.
+          </Step>
+          <InfoBox color="amber" icon="fa-triangle-exclamation">
+            A troca de fase não altera o preset vinculado automaticamente. Recomenda-se vincular um preset específico para cada fase.
+          </InfoBox>
+        </Section>
+
+        <Section id="automacao" icon="fa-robot" title="Automação inteligente">
+          <p>
+            O Plantelligence possui um worker de automação que roda em background a cada 90 segundos,
+            avaliando a telemetria dos sensores e acionando atuadores automaticamente.
+          </p>
+          <InfoBox color="blue" icon="fa-circle-info">
+            A automação só funciona quando: (1) a estufa tem um preset vinculado, (2) há dispositivos atuadores ativos e registrados no IoT Hub, e (3) o modo manual não está ativo.
+          </InfoBox>
+          <div className="grid gap-3 sm:grid-cols-2 mt-3">
+            <FeatureCard icon="fa-droplet" title="Umidade baixa" description="Aciona o nebulizador automaticamente quando a umidade do ar cai abaixo do mínimo do preset." badge="Automático" badgeColor="blue" />
+            <FeatureCard icon="fa-wind" title="Temperatura alta" description="Aciona a ventilação forçada quando a temperatura ultrapassa o máximo do preset." badge="Automático" badgeColor="blue" />
+            <FeatureCard icon="fa-seedling" title="Substrato seco" description="Aciona a irrigação quando a umidade do substrato fica abaixo do limite mínimo." badge="Automático" badgeColor="blue" />
+            <FeatureCard icon="fa-sun" title="Luminosidade" description="Ajusta a iluminação AgroLED com base nos limites do preset de luminosidade." badge="Automático" badgeColor="blue" />
+          </div>
+          <Step num={1} title="Histerese e cooldown">
+            O sistema aplica uma margem de 5% dentro da faixa ideal antes de desligar um atuador (histerese),
+            e espera 5 minutos entre acionamentos do mesmo atuador (cooldown). Isso evita liga/desliga em loop.
+          </Step>
+          <Step num={2} title="Modo manual temporário">
+            No Centro de Comando, clique em <strong>Suspender automação</strong> para pausar o worker por 60 minutos.
+            Todas as decisões automáticas ficam registradas na timeline de eventos.
+          </Step>
+          <Step num={3} title="Fail-safe">
+            Se um sensor não enviar dados há mais de 5 minutos, o worker não toma nenhuma ação automática
+            para aquela métrica e entra em estado seguro para evitar acionamentos errados.
+          </Step>
+        </Section>
+
+        <Section id="ia-contextual" icon="fa-brain" title="IA com contexto dinâmico">
+          <p>
+            O assistente de IA do Plantelligence agora recebe o contexto real da sua estufa antes de responder.
+            Isso significa que ele já sabe a fase atual, o preset ativo e as últimas leituras dos sensores.
+          </p>
+          <InfoBox color="green" icon="fa-circle-check">
+            Para ativar o contexto dinâmico, abra o Chat com IA a partir da aba da estufa. O sistema injeta automaticamente os dados operacionais no prompt.
+          </InfoBox>
+          <div className="grid gap-3 sm:grid-cols-2 mt-3">
+            <FeatureCard icon="fa-temperature-half" title="Leituras em tempo real" description="Temperatura, umidade, substrato e luminosidade são injetadas no contexto antes de cada resposta." badge="Novo" badgeColor="green" />
+            <FeatureCard icon="fa-leaf" title="Fase e preset" description="A IA sabe em qual fase o cultivo está e quais são as faixas ideais do preset ativo." badge="Novo" badgeColor="green" />
+            <FeatureCard icon="fa-shield-halved" title="Proteção contra injeção" description="Todos os dados injetados são sanitizados para prevenir manipulação do comportamento da IA." badge="Segurança" badgeColor="red" />
+            <FeatureCard icon="fa-ban" title="Zero Data Retention" description="As conversas não são armazenadas pelo provedor de IA (OpenRouter ZDR ativo)." badge="LGPD" badgeColor="blue" />
+          </div>
+        </Section>
+
         {/* SECAO 7: Relatorios */}
         <Section id="relatorios" icon="fa-chart-bar" title="Relatórios">
           <p>
@@ -560,91 +646,6 @@ export const HelpPage = () => {
             <FeatureCard icon="fa-mobile-screen-button" title="Configurar autenticador" description="Configure ou reconfigure o app autenticador TOTP. O QR Code é exibido para escanear com qualquer app compatível." />
             <FeatureCard icon="fa-bell-slash" title="Preferências de notificação" description="Escolha quais tipos de notificação receber por e-mail e quais apenas no sistema." />
             <FeatureCard icon="fa-moon" title="Tema claro / escuro" description="Troque o tema pelo botão no rodapé do menu lateral. A preferência é salva automaticamente no navegador." badge="Novo" badgeColor="green" />
-          </div>
-        </Section>
-
-        {/* SECAO 12: Roadmap */}
-
-        <Section id="comando" icon="fa-gauge-high" title="Centro de Comando">
-          <p>
-            O Centro de Comando é a tela principal de cada estufa. Acesse-a pela aba <strong>Centro de Comando</strong> ao abrir qualquer estufa no dashboard.
-          </p>
-          <InfoBox color="blue" icon="fa-circle-info">
-            Esta é a aba padrão ao abrir uma estufa. Foi projetada para responder em segundos: a estufa está saudável? O que precisa de atenção agora?
-          </InfoBox>
-          <div className="grid gap-3 sm:grid-cols-2 mt-3">
-            <FeatureCard icon="fa-gauge-high" title="Health Score" description="Pontuação de 0 a 100 que indica o estado geral da estufa com base na aderência ao preset ativo." badge="Novo" badgeColor="green" />
-            <FeatureCard icon="fa-triangle-exclamation" title="Alertas prioritários" description="Até 3 itens críticos com causa identificada e ação sugerida. Sem ruído, direto ao ponto." badge="Novo" badgeColor="green" />
-            <FeatureCard icon="fa-leaf" title="Aderência ao preset" description="Para cada sensor: valor atual, faixa ideal, desvio percentual e barra de posição visual." badge="Novo" badgeColor="green" />
-            <FeatureCard icon="fa-clock-rotate-left" title="Timeline de eventos" description="Histórico unificado de comandos de atuadores, alertas e decisões de automação." badge="Novo" badgeColor="green" />
-          </div>
-          <Step num={1} title="Quick Actions">
-            Na parte inferior do Centro de Comando há ações rápidas: trocar fase biológica, suspender a automação por 60 minutos, abrir relatórios e chamar o assistente de IA.
-          </Step>
-          <Step num={2} title="Previsão de curto prazo">
-            O sistema analisa a tendência atual e exibe riscos de desvio nas próximas 4 horas com recomendação preventiva.
-          </Step>
-        </Section>
-
-        <Section id="fases" icon="fa-seedling" title="Fases biológicas">
-          <p>
-            Cada estufa possui uma fase biológica ativa que representa o estágio atual do cultivo.
-            A fase é usada pelo worker de automação e pelo assistente de IA para contextualizar decisões.
-          </p>
-          <div className="grid gap-3 sm:grid-cols-3 mt-3">
-            <FeatureCard icon="fa-seedling" title="Incubação" description="Fase inicial. Micélio coloniza o substrato. Prioridade: temperatura estável e umidade controlada." badge="Fase 1" badgeColor="blue" />
-            <FeatureCard icon="fa-leaf" title="Frutificação" description="Formação dos corpos frutíferos. Alta umidade do ar e luminosidade controlada são críticas." badge="Fase 2" badgeColor="green" />
-            <FeatureCard icon="fa-basket-shopping" title="Colheita" description="Período de coleta. Monitoramento de picos de CO₂ e controle de ventilação são prioritários." badge="Fase 3" badgeColor="amber" />
-          </div>
-          <Step num={1} title="Como trocar de fase">
-            No Centro de Comando, clique em <strong>Trocar fase</strong> nas Quick Actions. Selecione a nova fase, adicione um motivo opcional e confirme. A transição fica registrada no histórico.
-          </Step>
-          <InfoBox color="amber" icon="fa-triangle-exclamation">
-            A troca de fase não altera o preset vinculado automaticamente. Recomenda-se vincular um preset específico para cada fase.
-          </InfoBox>
-        </Section>
-
-        <Section id="automacao" icon="fa-robot" title="Automação inteligente">
-          <p>
-            O Plantelligence possui um worker de automação que roda em background a cada 90 segundos,
-            avaliando a telemetria dos sensores e acionando atuadores automaticamente.
-          </p>
-          <InfoBox color="blue" icon="fa-circle-info">
-            A automação só funciona quando: (1) a estufa tem um preset vinculado, (2) há dispositivos atuadores ativos e registrados no IoT Hub, e (3) o modo manual não está ativo.
-          </InfoBox>
-          <div className="grid gap-3 sm:grid-cols-2 mt-3">
-            <FeatureCard icon="fa-droplet" title="Umidade baixa" description="Aciona o nebulizador automaticamente quando a umidade do ar cai abaixo do mínimo do preset." badge="Automático" badgeColor="blue" />
-            <FeatureCard icon="fa-wind" title="Temperatura alta" description="Aciona a ventilação forçada quando a temperatura ultrapassa o máximo do preset." badge="Automático" badgeColor="blue" />
-            <FeatureCard icon="fa-seedling" title="Substrato seco" description="Aciona a irrigação quando a umidade do substrato fica abaixo do limite mínimo." badge="Automático" badgeColor="blue" />
-            <FeatureCard icon="fa-sun" title="Luminosidade" description="Ajusta a iluminação AgroLED com base nos limites do preset de luminosidade." badge="Automático" badgeColor="blue" />
-          </div>
-          <Step num={1} title="Histerese e cooldown">
-            O sistema aplica uma margem de 5% dentro da faixa ideal antes de desligar um atuador (histerese),
-            e espera 5 minutos entre acionamentos do mesmo atuador (cooldown). Isso evita liga/desliga em loop.
-          </Step>
-          <Step num={2} title="Modo manual temporário">
-            No Centro de Comando, clique em <strong>Suspender automação</strong> para pausar o worker por 60 minutos.
-            Todas as decisões automáticas ficam registradas na timeline de eventos.
-          </Step>
-          <Step num={3} title="Fail-safe">
-            Se um sensor não enviar dados há mais de 5 minutos, o worker não toma nenhuma ação automática
-            para aquela métrica e entra em estado seguro para evitar acionamentos errados.
-          </Step>
-        </Section>
-
-        <Section id="ia-contextual" icon="fa-brain" title="IA com contexto dinâmico">
-          <p>
-            O assistente de IA do Plantelligence agora recebe o contexto real da sua estufa antes de responder.
-            Isso significa que ele já sabe a fase atual, o preset ativo e as últimas leituras dos sensores.
-          </p>
-          <InfoBox color="green" icon="fa-circle-check">
-            Para ativar o contexto dinâmico, abra o Chat com IA a partir da aba da estufa. O sistema injeta automaticamente os dados operacionais no prompt.
-          </InfoBox>
-          <div className="grid gap-3 sm:grid-cols-2 mt-3">
-            <FeatureCard icon="fa-temperature-half" title="Leituras em tempo real" description="Temperatura, umidade, substrato e luminosidade são injetadas no contexto antes de cada resposta." badge="Novo" badgeColor="green" />
-            <FeatureCard icon="fa-leaf" title="Fase e preset" description="A IA sabe em qual fase o cultivo está e quais são as faixas ideais do preset ativo." badge="Novo" badgeColor="green" />
-            <FeatureCard icon="fa-shield-halved" title="Proteção contra injeção" description="Todos os dados injetados são sanitizados para prevenir manipulação do comportamento da IA." badge="Segurança" badgeColor="red" />
-            <FeatureCard icon="fa-ban" title="Zero Data Retention" description="As conversas não são armazenadas pelo provedor de IA (OpenRouter ZDR ativo)." badge="LGPD" badgeColor="blue" />
           </div>
         </Section>
 
