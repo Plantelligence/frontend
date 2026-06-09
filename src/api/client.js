@@ -6,7 +6,6 @@ const resolveBaseUrl = () => {
   if (!raw) return '/api';
   if (raw === '/api') return '/api';
   if (raw.startsWith('http')) {
-    // Garante HTTPS quando a página é servida por HTTPS (evita Mixed Content)
     const secured = typeof window !== 'undefined' && window.location.protocol === 'https:'
       ? raw.replace(/^http:\/\//i, 'https://')
       : raw;
