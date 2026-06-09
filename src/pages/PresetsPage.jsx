@@ -182,7 +182,7 @@ function PresetCard({ preset, selected, onSelect, onEdit, onDuplicate, onDelete,
   return (
     <article
       onClick={() => onSelect(preset)}
-      className={`h-full cursor-pointer overflow-hidden rounded-lg border bg-white dark:bg-stone-900/35 transition hover:-translate-y-0.5 hover:shadow-md ${
+      className={`h-full cursor-pointer overflow-hidden rounded-lg border bg-white dark:bg-stone-900 transition hover:-translate-y-0.5 hover:shadow-md ${
         selected ? 'border-red-500 shadow-[0_0_0_3px_rgba(212,58,42,0.1)]' : 'border-stone-200 hover:border-stone-300'
       }`}
     >
@@ -221,7 +221,7 @@ function PresetCard({ preset, selected, onSelect, onEdit, onDuplicate, onDelete,
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-2 border-t border-stone-100 pt-2.5">
+        <div className="flex items-center justify-between gap-2 border-t border-stone-100 dark:border-stone-800 pt-2.5">
           <span className="text-[11px] text-stone-400">
             {inUse > 0 ? `${inUse} estufa${inUse > 1 ? 's' : ''}` : 'Sem estufa vinculada'}
           </span>
@@ -286,7 +286,7 @@ function DetailPanel({ preset, open, saving, onSave, onClose, readOnly = false }
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto bg-black/50 px-4 py-6 backdrop-blur-sm" onClick={onClose}>
       <aside
-        className="w-full max-w-3xl rounded-2xl my-auto border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 shadow-2xl"
+        className="w-full max-w-3xl rounded-2xl my-auto border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900 shadow-2xl"
         style={{ maxHeight: '90vh', overflowY: 'auto' }}
         onClick={(event) => event.stopPropagation()}
       >
@@ -320,7 +320,7 @@ function DetailPanel({ preset, open, saving, onSave, onClose, readOnly = false }
 
       <div className="space-y-5 px-5 py-4 max-h-[65vh] overflow-y-auto">
         <section>
-          <p className="mb-1 border-b border-stone-100 pb-2 text-[10px] font-semibold uppercase tracking-widest text-stone-400">Faixa ideal para o cultivo</p>
+          <p className="mb-1 border-b border-stone-100 dark:border-stone-800 pb-2 text-[10px] font-semibold uppercase tracking-widest text-stone-400">Faixa ideal para o cultivo</p>
           <p className="mb-3 text-xs text-stone-500">Ajuste os valores mínimo e máximo recomendados para cada parâmetro.</p>
           <p className="mb-3 rounded-md border border-stone-200 dark:border-stone-700/40 bg-stone-50 dark:bg-stone-800/40 px-3 py-2 text-[11px] text-stone-600 dark:text-stone-400">
             Limites: temperatura -5 a 45 °C, umidade 0 a 100%, umidade do solo 0 a 100% e luminosidade 0 a 3000 lux.
@@ -464,7 +464,7 @@ function AIModal({ open, onClose, onUse }) {
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto bg-black/60 px-4 py-6 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="w-full max-w-lg rounded-2xl my-auto border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 shadow-2xl"
+        className="w-full max-w-lg rounded-2xl my-auto border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900 shadow-2xl"
         style={{ maxHeight: '90vh', overflowY: 'auto' }}
         onClick={(event) => event.stopPropagation()}
       >
@@ -502,15 +502,15 @@ function AIModal({ open, onClose, onUse }) {
               <p className="font-semibold text-stone-900 dark:text-stone-100">{suggestion.name}</p>
               {suggestion.summary ? <p className="text-sm text-stone-600 dark:text-stone-400">{suggestion.summary}</p> : null}
               <div className="mt-2 grid grid-cols-3 gap-2">
-                <div className="rounded-lg border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-2 text-center">
+                <div className="rounded-lg border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900 p-2 text-center">
                   <p className="text-[10px] font-semibold text-red-600">Temperatura</p>
                   <p className="mt-1 text-sm font-semibold text-stone-800 dark:text-stone-200">{suggestion.temperature?.min}–{suggestion.temperature?.max}°C</p>
                 </div>
-                <div className="rounded-lg border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-2 text-center">
+                <div className="rounded-lg border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900 p-2 text-center">
                   <p className="text-[10px] font-semibold text-red-600">Umidade</p>
                   <p className="mt-1 text-sm font-semibold text-stone-800 dark:text-stone-200">{suggestion.humidity?.min}–{suggestion.humidity?.max}%</p>
                 </div>
-                <div className="rounded-lg border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-2 text-center">
+                <div className="rounded-lg border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900 p-2 text-center">
                   <p className="text-[10px] font-semibold text-red-600">Luminosidade</p>
                   <p className="mt-1 text-sm font-semibold text-stone-800 dark:text-stone-200">{suggestion.soilMoisture?.min}–{suggestion.soilMoisture?.max} lx</p>
                 </div>
@@ -528,7 +528,7 @@ function AIModal({ open, onClose, onUse }) {
           </div>
         ) : null}
 
-        <div className="border-t border-stone-100 px-5 py-3">
+        <div className="border-t border-stone-100 dark:border-stone-800 px-5 py-3">
           <button onClick={onClose} className="text-sm text-stone-500 transition hover:text-stone-700 dark:text-stone-300">
             Cancelar
           </button>
@@ -750,7 +750,7 @@ export const PresetsPage = () => {
             ref={contentSectionRef}
             className={`relative rounded-[26px] dark:bg-[#0f0c0c] p-4 md:p-6 ${isDetailOpen ? 'overflow-hidden' : 'overflow-y-auto'}`}
           >
-            <header className="mb-4 rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
+            <header className="mb-4 rounded-2xl border border-stone-300 bg-white dark:border-stone-800 dark:bg-stone-900 p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-red-700">Perfis de cultivo</p>
@@ -776,7 +776,7 @@ export const PresetsPage = () => {
               </div>
             </header>
 
-            <section className="mb-4 rounded-2xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-4">
+            <section className="mb-4 rounded-2xl border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900 p-4">
               <h2 className="text-sm font-semibold text-slate-800 dark:text-stone-100">Como usar este painel</h2>
               <p className="mt-2 text-sm text-slate-600 dark:text-stone-400">
                 1. Comece escolhendo um perfil padrão para usar como referência inicial.
@@ -808,7 +808,7 @@ export const PresetsPage = () => {
               </article>
             </section>
 
-            <div className="mb-4 flex flex-col gap-3 rounded-lg border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="mb-4 flex flex-col gap-3 rounded-lg border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex flex-wrap gap-1">
                 {FILTERS.map((filter) => (
                   <button
@@ -816,12 +816,12 @@ export const PresetsPage = () => {
                     onClick={() => setActiveFilter(filter.id)}
                     className={`rounded border px-3 py-1.5 text-xs transition ${
                       activeFilter === filter.id
-                        ? 'border-stone-300 bg-stone-100 font-semibold text-stone-900'
-                        : 'border-transparent text-stone-500 hover:border-stone-200 hover:bg-stone-50'
+                        ? 'border-stone-300 bg-stone-100 dark:border-stone-700 dark:bg-stone-800 font-semibold text-stone-900 dark:text-stone-100'
+                        : 'border-transparent text-stone-500 dark:text-stone-400 hover:border-stone-200 dark:hover:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-800'
                     }`}
                   >
                     {filter.label}
-                    <span className="ml-1 rounded-full bg-stone-200 px-1.5 py-0.5 text-[10px]">{counts[filter.id]}</span>
+                    <span className="ml-1 rounded-full bg-stone-200 dark:bg-stone-700 dark:text-stone-300 px-1.5 py-0.5 text-[10px]">{counts[filter.id]}</span>
                   </button>
                 ))}
               </div>
@@ -834,7 +834,7 @@ export const PresetsPage = () => {
               />
             </div>
 
-            <section className="mb-4 rounded-lg border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 px-4 py-3">
+            <section className="mb-4 rounded-lg border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900 px-4 py-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-stone-400">Legenda dos indicadores</p>
               <div className="mt-2 flex flex-wrap gap-2 text-xs text-stone-400">
                 <span className="rounded-full border border-stone-300 bg-stone-100 text-stone-600 dark:border-stone-700/50 dark:bg-stone-800/50 dark:text-stone-400 px-2.5 py-1 text-[11px]">Temperatura: valor em °C</span>
@@ -850,7 +850,7 @@ export const PresetsPage = () => {
                 {loading ? (
                   <div className="grid gap-4 md:grid-cols-2">
                     {[0, 1, 2].map((item) => (
-                      <div key={item} className="h-60 animate-pulse rounded-lg border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35" />
+                      <div key={item} className="h-60 animate-pulse rounded-lg border border-stone-300 bg-white dark:border-stone-800 dark:bg-stone-900" />
                     ))}
                   </div>
                 ) : (
@@ -939,6 +939,4 @@ export const PresetsPage = () => {
           />
 
           </section>
-    </>
-  );
-};
+  
