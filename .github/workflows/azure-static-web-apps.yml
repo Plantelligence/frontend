@@ -15,8 +15,6 @@ jobs:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
     name: Build and Deploy Job
-    env:
-      VITE_APP_API_URL: ${{ secrets.VITE_APP_API_URL }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -34,6 +32,8 @@ jobs:
 
       - name: Build frontend
         run: npm run build
+        env:
+          VITE_APP_API_URL: ${{ secrets.VITE_APP_API_URL }}
 
       - name: Copy Static Web App config to output
         run: |
