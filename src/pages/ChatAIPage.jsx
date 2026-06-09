@@ -7,6 +7,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useAuthStore } from '../store/authStore.js';
+import { refreshSession } from '../api/client.js';
 
 // Lê o token sempre fresco (evita usar token expirado em closures)
 const getFreshToken = () => {
@@ -14,23 +15,12 @@ const getFreshToken = () => {
   return tokens?.accessToken ?? tokens?.access_token ?? null;
 };
 
-// Tenta renovar o access token via refresh endpoint
+// Usa o mesmo refreshSession do axios (com refreshPromise guard)
+// Evita race condition onde dois refreshes simultâneos revogam o token
 const tryRefreshToken = async () => {
-  const { tokens, setSession, clearSession } = useAuthStore.getState();
-  const refreshToken = tokens?.refreshToken ?? tokens?.refresh_token ?? null;
-  if (!refreshToken) return null;
   try {
-    const res = await fetch(`${API_BASE}/auth/refresh`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken }),
-    });
-    if (!res.ok) { clearSession(); return null; }
-    const data = await res.json();
-    setSession({ user: data.user, tokens: data.tokens });
-    return data.tokens?.accessToken ?? data.tokens?.access_token ?? null;
+    return await refreshSession();
   } catch {
-    clearSession();
     return null;
   }
 };

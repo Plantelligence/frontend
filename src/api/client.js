@@ -30,7 +30,7 @@ const isAuthEndpoint = (url = '') => {
          n.includes('/auth/first-access') || n.includes('/auth/refresh');
 };
 
-const refreshSession = async () => {
+export const refreshSession = async () => {
   if (!refreshPromise) {
     const { tokens, setSession, clearSession } = useAuthStore.getState();
     const refreshToken = getRefreshToken(tokens);
