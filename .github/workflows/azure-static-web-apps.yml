@@ -33,7 +33,7 @@ jobs:
       - name: Build frontend
         run: npm run build
         env:
-          VITE_APP_API_URL: ${{ secrets.VITE_APP_API_URL }}
+          VITE_APP_API_URL: https://planti-api-aghhf0a7b3hdfpbr.brazilsouth-01.azurewebsites.net
 
       - name: Copy Static Web App config to output
         run: |
