@@ -1237,7 +1237,7 @@ const GreenhousePanel = ({
           <ol className="text-[11px] text-blue-700 list-decimal list-inside space-y-1">
             <li>Clique em <strong>+ Adicionar dispositivo</strong>, preencha nome e tipo e salve.</li>
             <li>O sistema cria o dispositivo no Azure IoT Hub automaticamente e exibe as credenciais.</li>
-            <li>Copie os 4 valores exibidos para o <strong>boot.py</strong> do ESP32 — incluindo o ID da estufa abaixo.</li>
+            <li>Copie os 4 valores exibidos para o <strong>boot.py</strong> do ESP32, incluindo o ID da estufa abaixo.</li>
           </ol>
           <div className="mt-1 flex items-center gap-2 rounded-lg border border-blue-200 bg-white dark:border-stone-700/40 dark:bg-stone-800/40 px-3 py-2">
             <div className="flex-1 min-w-0">

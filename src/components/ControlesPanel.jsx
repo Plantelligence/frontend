@@ -332,7 +332,7 @@ const LedFotoperiodoCard = ({ device, estadoAtual, faseAtual, onComando, readOnl
       {periodoHoras === 0 && (
         <div className="rounded-xl border border-stone-200 dark:border-stone-700/50 bg-stone-50 dark:bg-stone-800/30 px-3 py-2 text-center">
           <p className="text-[11px] text-stone-500 dark:text-stone-400">
-            Fotoperíodo desativado nesta fase — o LED permanece desligado.
+            Fotoperíodo desativado nesta fase: o LED permanece desligado.
           </p>
         </div>
       )}

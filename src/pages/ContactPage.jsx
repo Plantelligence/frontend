@@ -75,7 +75,7 @@ export const ContactPage = () => {
                 <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-red-500 mb-3">Atendimento</p>
                 <h2 className="text-2xl font-bold text-white mb-3">Nossa equipe está pronta para responder</h2>
                 <p className="text-stone-400 text-sm leading-relaxed">
-                  Seja para uma dúvida técnica, uma demonstração ou uma proposta comercial — respondemos com atenção e sem rodeios.
+                  Seja para uma dúvida técnica, uma demonstração ou uma proposta comercial, respondemos com atenção e sem rodeios.
                 </p>
               </div>
 
