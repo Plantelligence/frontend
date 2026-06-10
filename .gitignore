@@ -62,3 +62,7 @@ dist/
 
 # Cache
 .eslintcache
+
+# Backups de edição — não commitar
+*.bak[0-9]*
+*.bak[0-9][0-9]*
