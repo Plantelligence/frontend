@@ -360,11 +360,12 @@ export const WizardOnboardingDispositivo = ({ estufaId, onClose, onSuccess }) =>
               <div>
                 <p className="mb-1.5 text-xs font-semibold text-stone-300">
                   <i className="fa-solid fa-microchip mr-1.5 text-red-400" />
-                  Firmware gerado. Grave os dois arquivos no ESP32:
+                  Firmware gerado. Grave os três arquivos no ESP32:
                 </p>
                 <div className="space-y-2">
                   <CodeViewer label="Credenciais + Wi-Fi" filename="boot.py" code={firmware.boot_py} />
-                  <CodeViewer label="Lógica principal" filename="main.py" code={firmware.main_py} />
+                  <CodeViewer label="Monitor de Estufa" filename="estufa.py" code={firmware.estufa_py} />
+                  <CodeViewer label="Entry point" filename="main.py" code={firmware.main_py} />
                 </div>
               </div>
 
