@@ -208,6 +208,13 @@ export const AdminUsersPage = () => {
     expired: 'border-rose-300 bg-rose-50 text-rose-700'
   };
 
+  const canBlockUser = (listedUser) => {
+    if (!listedUser || !authUser) return false;
+    if (listedUser.id === authUser.id) return false;
+    if (listedUser.permissionLevel === 'AdminMaster') return false;
+    return true;
+  };
+
   const resolveCanDelete = (listedUser) => {
     if (!listedUser || !authUser) {
       return false;
@@ -796,6 +803,18 @@ export const AdminUsersPage = () => {
               <p className="rounded border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 px-3 py-2 text-sm text-slate-500 dark:text-stone-400">
                 Selecione um usuário para editar o acesso.
               </p>
+            ) : !canBlockUser(selectedUser) ? (
+              <div className="space-y-3">
+                <div className="rounded-xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-3 text-xs text-slate-600 dark:text-stone-400">
+                  <p className="font-semibold text-slate-800 dark:text-stone-100">{selectedUser.fullName ?? selectedUser.email}</p>
+                  <p className="mt-1 text-slate-500 dark:text-stone-400">Status atual: {selectedUser.blocked ? 'Bloqueado' : 'Ativo'}</p>
+                </div>
+                <p className="rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10 px-4 py-2.5 text-sm text-amber-700 dark:text-amber-300">
+                  {selectedUser.id === authUser?.id
+                    ? 'Você não pode alterar o próprio status de acesso.'
+                    : 'O Administrador master não pode ser bloqueado.'}
+                </p>
+              </div>
             ) : (
               <div className="space-y-3">
                 <div className="rounded-xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-3 text-xs text-slate-600 dark:text-stone-400">
