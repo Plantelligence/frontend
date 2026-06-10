@@ -29,7 +29,7 @@ const NAV = [
     groupLabel: 'Operação',
     items: [
       { key: 'presets',    icon: 'fa-leaf',        label: 'Perfis de cultivo', to: '/dashboard/presets' },
-      { key: 'relatorios', icon: 'fa-chart-bar',   label: 'Relatorios',        to: '/dashboard/relatorios' },
+      { key: 'relatorios', icon: 'fa-chart-bar',   label: 'Relatórios',        to: '/dashboard/relatorios' },
       { key: 'onboarding', icon: 'fa-circle-plus', label: 'Criar nova estufa', to: '/dashboard/onboarding', hideForReader: true },
     ],
   },

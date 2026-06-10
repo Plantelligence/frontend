@@ -90,7 +90,7 @@ function HealthScoreGauge({ score, status }) {
           transform="rotate(135 60 60)"
           style={{ transition: 'stroke-dasharray 0.8s ease' }}
         />
-        <text x="60" y="56" textAnchor="middle" fontSize="22" fontWeight="700" fill="white">
+        <text x="60" y="56" textAnchor="middle" fontSize="22" fontWeight="700" className="fill-stone-800 dark:fill-white">
           {clamp}
         </text>
         <text x="60" y="70" textAnchor="middle" fontSize="9" fill="#78716c">
@@ -304,10 +304,10 @@ export const CentroComando = ({ estufaId, isReader = false }) => {
     try {
       if (isManual) {
         await retomarAutomacao(estufaId);
-        showFeedback('Automacao retomada com sucesso.');
+        showFeedback('Automação retomada com sucesso.');
       } else {
         await suspenderAutomacao(estufaId, 60);
-        showFeedback('Automacao suspensa por 60 minutos.');
+        showFeedback('Automação suspensa por 60 minutos.');
       }
       await load();
     } catch {
@@ -479,7 +479,7 @@ export const CentroComando = ({ estufaId, isReader = false }) => {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10">
               <i className="fa-solid fa-robot text-blue-400 text-sm" />
             </div>
-            <h3 className="text-sm font-semibold text-stone-800 dark:text-stone-100">Automacao</h3>
+            <h3 className="text-sm font-semibold text-stone-800 dark:text-stone-100">Automação</h3>
             <span className={`ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
               isManual
                 ? 'bg-amber-50 border-amber-400 text-amber-700 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-400'

@@ -295,7 +295,7 @@ function RelatorioCard({ relatorio, onDelete }) {
             type="button"
             onClick={() => onDelete(relatorio)}
             className="shrink-0 rounded-lg border border-stone-700/50 p-1.5 text-stone-600 transition hover:border-rose-500/40 hover:text-rose-400"
-            title="Remover relatorio"
+            title="Remover relatório"
           >
             <i className="fa-solid fa-trash-can text-xs" />
           </button>
@@ -421,10 +421,10 @@ export const RelatoriosPage = () => {
         <header className="mb-5 rounded-2xl border border-stone-200 bg-stone-50 dark:border-stone-800/60 dark:bg-stone-900/35 p-5">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-red-500 mb-1">Relatorios</p>
-              <h1 className="text-2xl font-bold text-stone-800 dark:text-stone-100">Historico da estufa</h1>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-red-500 mb-1">Relatórios</p>
+              <h1 className="text-2xl font-bold text-stone-800 dark:text-stone-100">Histórico da estufa</h1>
               <p className="mt-1 text-sm text-stone-500 dark:text-stone-400 max-w-lg">
-                Medias mensais de temperatura, umidade, substrato e luminosidade com observacoes operacionais do periodo.
+                Médias mensais de temperatura, umidade, substrato e luminosidade com observações operacionais do período.
               </p>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
@@ -446,7 +446,7 @@ export const RelatoriosPage = () => {
                   className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-red-500 active:scale-[0.98]"
                 >
                   <i className="fa-solid fa-plus text-xs" />
-                  Novo relatorio
+                  Novo relatório
                 </button>
               )}
             </div>
@@ -461,7 +461,7 @@ export const RelatoriosPage = () => {
                 <i className="fa-solid fa-chart-bar text-red-400 text-base" />
               </div>
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-stone-500">Total de relatorios</p>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-stone-500">Total de relatórios</p>
                 <p className="text-2xl font-bold text-stone-100">{summaryStats.total}</p>
               </div>
             </div>
@@ -506,10 +506,10 @@ export const RelatoriosPage = () => {
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-stone-300 bg-stone-100 dark:border-stone-700/40 dark:bg-stone-800/60">
               <i className="fa-solid fa-chart-bar text-xl text-stone-400 dark:text-stone-600" />
             </div>
-            <p className="text-sm font-semibold text-stone-500 dark:text-stone-400">Nenhum relatorio registrado.</p>
+            <p className="text-sm font-semibold text-stone-500 dark:text-stone-400">Nenhum relatório registrado.</p>
             {!isReader && (
               <p className="text-xs text-stone-600 max-w-xs">
-                Os relatorios semanais sao gerados automaticamente toda segunda-feira. Voce tambem pode criar um manualmente.
+                Os relatórios semanais são gerados automaticamente toda segunda-feira. Você também pode criar um manualmente.
               </p>
             )}
           </div>
@@ -528,8 +528,8 @@ export const RelatoriosPage = () => {
 
       <ConfirmDialog
         open={!!deleteTarget}
-        title="Remover relatorio"
-        description={`Deseja remover o relatorio do periodo ${deleteTarget?.periodo_inicio ?? ''}? Esta acao nao pode ser desfeita.`}
+        title="Remover relatório"
+        description={`Deseja remover o relatório do período ${deleteTarget?.periodo_inicio ?? ''}? Esta ação não pode ser desfeita.`}
         onConfirm={handleConfirmDelete}
         onCancel={() => setDeleteTarget(null)}
         confirmLabel="Remover"
