@@ -28,9 +28,9 @@ export const CardEstufa = ({
   // Conta quantos usuários estão vinculados como responsáveis pela estufa
   const responsibleCount = greenhouse.watchersDetails?.length ?? 0;
 
+  // article semanticamente correto para representar um item de lista de entidades
+  // typeVisual.ring: borda colorida que identifica o tipo de cultivo da estufa
   return (
-    {/* article semanticamente correto para representar um item de lista de entidades */}
-    {/* typeVisual.ring: borda colorida que identifica o tipo de cultivo da estufa */}
     <article className={`flex h-full min-h-[230px] flex-col rounded-3xl border bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-3.5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${typeVisual.ring}`}>
       {/* Cabeçalho: logo + nome + tipo de cultivo */}
       <header className="flex flex-col items-center gap-2 text-center">

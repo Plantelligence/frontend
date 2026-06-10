@@ -23,8 +23,8 @@ export const FiltroEstufas = ({
   // Total de estufas cadastradas sem filtro
   total
 }) => {
+  // Container da barra de filtros com borda e background
   return (
-    {/* Container da barra de filtros com borda e background */}
     <section className="rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 p-3 shadow-sm">
       {/* Layout: coluna no mobile, linha horizontal no desktop */}
       <div className="flex flex-col gap-2 lg:flex-row lg:items-end">

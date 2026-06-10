@@ -230,8 +230,8 @@ const Footer = () => {
       )
     : null;
 
+  // Footer da landing page: informações da plataforma e links de políticas
   return (
-    {/* Footer da landing page: informações da plataforma e links de políticas */}
     <footer id="rodape" className="border-t border-stone-800/70 bg-[#181415]/95 text-stone-200">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-12 md:grid md:grid-cols-[minmax(0,1fr)_0.7fr] md:items-start">
         {/* Bloco da esquerda: identidade e descrição da plataforma */}

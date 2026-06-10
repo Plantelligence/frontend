@@ -262,8 +262,8 @@ export const TopNav = () => {
     if (event.key === 'Escape') { event.preventDefault(); setMenuOpen(false); }
   };
 
+  // Header sticky com backdrop blur - visível em todas as páginas públicas
   return (
-    {/* Header sticky com backdrop blur — visível em todas as páginas públicas */}
     <header className="sticky top-0 z-50 flex h-14 items-center justify-between border-b border-stone-700/50 bg-[#181415]/95 px-5 backdrop-blur">
       {/* Logo clicável que volta para a página inicial */}
       <Link to="/" className="flex items-center gap-2 text-lg font-semibold text-red-400">

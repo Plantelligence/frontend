@@ -27,8 +27,8 @@ export const GridEstufas = ({
     );
   }
 
+  // Grade com colunas automáticas - auto-rows-fr faz todos os cards da mesma linha terem a mesma altura
   return (
-    {/* Grade com colunas automáticas — auto-rows-fr faz todos os cards da mesma linha terem a mesma altura */}
     <section className="grid auto-rows-fr gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
       {estufas.map((greenhouse) => {
         // Resolve as configurações visuais (cores, ícone) para o tipo de cultivo desta estufa
