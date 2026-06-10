@@ -29,6 +29,8 @@ jobs:
           app_location: /
           api_location: ""
           output_location: dist
+        env:
+          VITE_APP_API_URL: https://api.plantelligence.cloud
 
   close_pull_request:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
