@@ -1,3 +1,5 @@
+///* Cada notificação é um botão clicável que a marca como lida */
+///* Usuário não logado fora das páginas de auth: exibe botão de acesso */
 /**
  * TopNav - Barra de navegação das páginas públicas (pré-login).
  *
@@ -162,15 +164,14 @@ const NotificationBell = ({ userId }) => {
 
           {/* Lista de notificações com scroll interno */}
           <div className="max-h-80 overflow-y-auto">
+            {/* Estado vazio: nenhuma notificação */}
             {notifications.length === 0 ? (
-              {/* Estado vazio: nenhuma notificação */}
               <div className="flex flex-col items-center justify-center gap-2 py-10 text-stone-500">
                 <i className="fa-solid fa-bell-slash text-2xl" />
                 <p className="text-xs">Nenhuma notificação</p>
               </div>
             ) : (
               notifications.map((n) => (
-                {/* Cada notificação é um botão clicável que a marca como lida */}
                 <button
                   key={n.id}
                   type="button"
@@ -338,7 +339,6 @@ export const TopNav = () => {
             </div>
           </>
         ) : !isAuthPage ? (
-          {/* Usuário não logado fora das páginas de auth: exibe botão de acesso */}
           <Link to="/login" className="rounded-md bg-red-600 px-4 py-2 font-semibold text-white shadow-sm transition hover:bg-red-500">
             Acessar painel
           </Link>

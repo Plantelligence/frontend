@@ -1,3 +1,6 @@
+///* Tela de sucesso exibida após envio bem-sucedido */
+///* Formulário principal de envio de feedback */
+///* Cada tipo é um botão toggle — o selecionado tem destaque vermelho */
 /**
  * FeedbackModal — Modal para envio de feedback/sugestões pelo usuário autenticado.
  * Envia e-mail para contato@plantelligence.cloud via API.
@@ -61,8 +64,8 @@ export const FeedbackModal = ({ open, onClose }) => {
   // Não renderiza se o modal estiver fechado
   if (!open) return null;
 
+  // Overlay: fecha o modal ao clicar fora
   return createPortal(
-    {/* Overlay: fecha o modal ao clicar fora */}
     <div className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto bg-black/50 px-4 py-6 backdrop-blur-sm" onClick={handleClose}>
       {/* Card do modal: stopPropagation evita que cliques internos fechem o modal */}
       <div
@@ -84,7 +87,6 @@ export const FeedbackModal = ({ open, onClose }) => {
         </div>
 
         {sent ? (
-          {/* Tela de sucesso exibida após envio bem-sucedido */}
           <div className="flex flex-col items-center gap-4 px-6 py-10 text-center">
             {/* Ícone de check verde para confirmar o envio */}
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-500/10">
@@ -103,7 +105,6 @@ export const FeedbackModal = ({ open, onClose }) => {
             </button>
           </div>
         ) : (
-          {/* Formulário principal de envio de feedback */}
           <form onSubmit={handleSubmit} className="px-5 py-5 space-y-4">
             <p className="text-xs text-stone-500 dark:text-stone-400">
               Sua mensagem será enviada diretamente para nossa equipe. Adoramos ouvir sugestões e relatos de melhoria!
@@ -114,7 +115,6 @@ export const FeedbackModal = ({ open, onClose }) => {
               <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400">Tipo</p>
               <div className="grid grid-cols-4 gap-2">
                 {TYPES.map((t) => (
-                  {/* Cada tipo é um botão toggle — o selecionado tem destaque vermelho */}
                   <button
                     key={t.id}
                     type="button"
