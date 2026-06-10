@@ -132,6 +132,8 @@ src/__testes__/utils/            2 suites  - 18 passed
 TOTAL                            8 suites  - 65 passed
 ```
 
+Relatório HTML completo: [`docs/resultados-testes.html`](docs/resultados-testes.html)
+
 ---
 
 ## Scripts disponíveis
