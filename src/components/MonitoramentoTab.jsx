@@ -379,7 +379,7 @@ export const MonitoramentoTab = ({ estufaId, telemetry, profile, externalWeather
         <div className="flex items-center justify-between mb-4">
           <div>
             <p className="text-xs font-semibold text-stone-800 dark:text-stone-100">Temperatura e Umidade do ar</p>
-            <p className="text-[10px] text-stone-500 mt-0.5">Evolucao - ultimas {win.label}</p>
+            <p className="text-[10px] text-stone-500 mt-0.5">Evolução - últimas {win.label}</p>
           </div>
           <div className="flex items-center gap-3 text-[10px] text-stone-500 dark:text-stone-500">
             <span className="flex items-center gap-1"><span className="h-2 w-4 rounded-full inline-block bg-red-400" />Temp (C)</span>
@@ -404,7 +404,7 @@ export const MonitoramentoTab = ({ estufaId, telemetry, profile, externalWeather
         <div className="rounded-2xl border border-stone-200 dark:border-stone-800/60 bg-white dark:bg-stone-900/35 p-5">
           <div className="mb-4">
             <p className="text-xs font-semibold text-stone-800 dark:text-stone-100">Umidade do substrato</p>
-            <p className="text-[10px] text-stone-500 mt-0.5">Tendencia - ultimas {win.label}</p>
+            <p className="text-[10px] text-stone-500 mt-0.5">Tendência - últimas {win.label}</p>
           </div>
           <SvgAreaChart
             data={chartData}
@@ -418,7 +418,7 @@ export const MonitoramentoTab = ({ estufaId, telemetry, profile, externalWeather
         <div className="rounded-2xl border border-stone-200 dark:border-stone-800/60 bg-white dark:bg-stone-900/35 p-5">
           <div className="mb-4">
             <p className="text-xs font-semibold text-stone-800 dark:text-stone-100">Comparativo de periodos</p>
-            <p className="text-[10px] text-stone-500 mt-0.5">Ultimos 6 pontos</p>
+            <p className="text-[10px] text-stone-500 mt-0.5">Últimos 6 pontos</p>
           </div>
           <SvgBarChart
             data={barData}
@@ -441,7 +441,7 @@ export const MonitoramentoTab = ({ estufaId, telemetry, profile, externalWeather
             {[
               { label: 'Temperatura', value: externalWeather.temperatura, unit: 'C', color: 'text-red-400' },
               { label: 'Umidade', value: externalWeather.umidade, unit: '%', color: 'text-blue-400' },
-              { label: 'Condicao', value: externalWeather.descricao, unit: '', color: 'text-stone-400' },
+              { label: 'Condição', value: externalWeather.descricao, unit: '', color: 'text-stone-400' },
               { label: 'Nuvens', value: externalWeather.nuvens, unit: '%', color: 'text-stone-400' },
             ].filter((i) => i.value != null).map((item) => (
               <div key={item.label} className="rounded-xl border border-stone-200 dark:border-stone-800/40 bg-stone-50 dark:bg-stone-800/30 p-3">

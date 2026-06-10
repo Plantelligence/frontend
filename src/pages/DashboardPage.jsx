@@ -2433,12 +2433,6 @@ export const DashboardPage = () => {
           >
             Voltar para estufas
           </Link>
-          <Link
-            to="/settings"
-            className="inline-flex items-center justify-center rounded-md border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-stone-300 transition hover:border-red-400 hover:text-red-700"
-          >
-            Configurações da conta
-          </Link>
         </div>
       </header>
 
