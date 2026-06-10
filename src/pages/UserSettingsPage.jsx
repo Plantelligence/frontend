@@ -44,13 +44,20 @@ const roleLabel = (profile) => {
 
 const formatDateOnly = (value) => {
   if (!value) {
-    return '—';
+    return '-';
   }
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) {
-    return '—';
+    return '-';
   }
   return parsed.toLocaleDateString('pt-BR');
+};
+
+const daysUntilExpiry = (value) => {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return Math.ceil((parsed.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
 };
 
 export const UserSettingsPage = () => {
@@ -394,8 +401,17 @@ export const UserSettingsPage = () => {
       </header>
 
       {requiresPasswordReset && (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/8 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
-          Sua senha expirada precisa ser atualizada para manter o acesso ao monitoramento e automação das estufas.
+        <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
+          <p className="font-semibold">Sua senha expirou e precisa ser trocada.</p>
+          <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
+            O acesso ao painel está bloqueado até a troca ser concluída. Vá para a aba <strong>Configurações</strong> para trocar agora, ou use o link abaixo.
+          </p>
+          <a
+            href="/password-reset"
+            className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-amber-400 px-3 py-1.5 text-xs font-semibold text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-500/20 transition"
+          >
+            <i className="fa-solid fa-key text-[11px]" /> Trocar senha agora
+          </a>
         </div>
       )}
 
@@ -481,8 +497,30 @@ export const UserSettingsPage = () => {
             <dd>{profile?.lastLoginAt ? new Date(profile.lastLoginAt).toLocaleString() : 'Nunca registrado'}</dd>
           </div>
           <div>
-            <dt className="font-semibold text-slate-700 dark:text-stone-300">Senha expira em</dt>
-            <dd>{formatDateOnly(profile?.passwordExpiresAt)}</dd>
+            <dt className="font-semibold text-slate-700 dark:text-stone-300">Validade da senha</dt>
+            <dd>
+              {(() => {
+                const days = daysUntilExpiry(profile?.passwordExpiresAt);
+                const dateStr = formatDateOnly(profile?.passwordExpiresAt);
+                if (days === null) return <span>-</span>;
+                if (days < 0) return (
+                  <span className="font-semibold text-rose-600 dark:text-rose-400">
+                    Expirada. Troque a senha para liberar o acesso ao painel.
+                  </span>
+                );
+                if (days <= 14) return (
+                  <span className="font-semibold text-amber-600 dark:text-amber-400">
+                    Expira em {days} {days === 1 ? 'dia' : 'dias'} ({dateStr}). Troque antes de expirar para não precisar redefinir no próximo acesso.
+                  </span>
+                );
+                return (
+                  <span>
+                    {dateStr}
+                    <span className="ml-1 text-stone-400 dark:text-stone-500">({days} dias restantes)</span>
+                  </span>
+                );
+              })()}
+            </dd>
           </div>
         </dl>
       </section>

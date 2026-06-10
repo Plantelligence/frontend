@@ -2391,16 +2391,27 @@ export const DashboardPage = () => {
     return (
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-16 text-slate-800 dark:text-stone-100">
         <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-6">
-          <h1 className="text-2xl font-semibold text-amber-200">Redefina sua senha</h1>
-          <p className="mt-4 text-sm text-amber-100/90">
-            Para acessar o dashboard multiestufas é necessário redefinir a senha temporária. Essa etapa reforça a política de segurança e conformidade LGPD da Plantelligence.
+          <div className="flex items-center gap-3 mb-3">
+            <i className="fa-solid fa-lock text-amber-400 text-xl" />
+            <h1 className="text-xl font-semibold text-amber-200">Senha expirada</h1>
+          </div>
+          <p className="text-sm text-amber-100/90">
+            Sua senha atingiu o limite de validade de 90 dias. O painel está bloqueado até a troca ser concluída. Após trocar, você volta normalmente sem perder nenhum dado.
           </p>
-          <Link
-            to="/password-reset"
-            className="mt-4 inline-flex items-center gap-2 rounded-md border border-amber-300 px-4 py-2 text-sm font-semibold text-amber-100 transition hover:border-amber-200 hover:text-amber-50"
-          >
-            Ir para redefinição de senha
-          </Link>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Link
+              to="/password-reset"
+              className="inline-flex items-center gap-2 rounded-md bg-amber-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-400"
+            >
+              <i className="fa-solid fa-key" /> Trocar senha agora
+            </Link>
+            <Link
+              to="/settings"
+              className="inline-flex items-center gap-2 rounded-md border border-amber-400 px-4 py-2 text-sm font-semibold text-amber-200 transition hover:border-amber-300"
+            >
+              Ir para configurações
+            </Link>
+          </div>
         </div>
       </div>
     );

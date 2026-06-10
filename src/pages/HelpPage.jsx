@@ -293,6 +293,39 @@ export const HelpPage = () => {
             <FeatureCard icon="fa-fingerprint" title="MFA adaptativo" description="Dispositivos conhecidos têm fluxo simplificado. Dispositivos novos sempre exigem MFA." badge="Novo" badgeColor="purple" />
             <FeatureCard icon="fa-shield-halved" title="Logs de autenticação" description="Cada login, bloqueio, desbloqueio e falha fica registrado na trilha de auditoria." badge="LGPD" badgeColor="amber" />
           </div>
+
+          <h3 className="font-semibold text-stone-800 dark:text-stone-200 mt-6 mb-3">Validade da senha (90 dias)</h3>
+          <p>
+            Por conformidade com boas práticas de segurança, toda senha tem validade de <strong className="text-stone-800 dark:text-stone-200">90 dias</strong>.
+            O sistema acompanha essa validade automaticamente e avisa com antecedência.
+          </p>
+
+          <div className="space-y-3 mt-3">
+            <Step num={1} title="Aviso preventivo (14 dias antes)">
+              Quando faltam 14 dias ou menos para a senha expirar, o campo "Validade da senha" em
+              <strong className="text-stone-800 dark:text-stone-200"> Configurações &gt; Perfil</strong> muda de cor para laranja
+              e exibe quantos dias restam. Aproveite para trocar antes de expirar.
+            </Step>
+            <Step num={2} title="Senha expirada: painel bloqueado">
+              No dia seguinte ao vencimento, o painel é bloqueado automaticamente ao tentar acessar as estufas.
+              Você não perde dados. A tela exibe um botão direto para trocar a senha e retomar o acesso.
+            </Step>
+            <Step num={3} title="Troca de senha">
+              Acesse <strong className="text-stone-800 dark:text-stone-200">Configurações &gt; Credenciais</strong> ou use o link
+              "Trocar senha agora" que aparece no aviso. A troca exige confirmação MFA e a nova senha deve ter
+              mínimo 8 caracteres, incluindo maiúscula, número e caractere especial.
+              Após a troca, o prazo de 90 dias reinicia automaticamente.
+            </Step>
+          </div>
+
+          <InfoBox color="blue" icon="fa-circle-info">
+            <strong>Por que 90 dias?</strong> Esse prazo é o padrão recomendado por frameworks de segurança como ISO 27001 e LGPD para sistemas com acesso a dados operacionais. O objetivo não é dificultar o uso, mas reduzir o risco de credenciais comprometidas por muito tempo sem rotação.
+          </InfoBox>
+
+          <div className="grid gap-3 sm:grid-cols-2 mt-4">
+            <FeatureCard icon="fa-calendar-xmark" title="Validade de 90 dias" description="Cada senha tem um prazo de 90 dias. Após esse período, o painel solicita a troca antes de liberar o acesso." badge="Compliance" badgeColor="amber" />
+            <FeatureCard icon="fa-bell" title="Aviso com 14 dias de antecedência" description="O campo de validade muda para laranja quando faltam 14 dias, permitindo troca preventiva sem interrupção." badge="Novo" badgeColor="green" />
+          </div>
         </Section>
 
         {/* SECAO 3: Estufas */}
