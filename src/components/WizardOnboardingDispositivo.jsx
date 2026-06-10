@@ -72,7 +72,7 @@ const CodeViewer = ({ label, code, filename }) => {
         </button>
       </div>
       {/* código */}
-      <pre className="max-h-64 overflow-auto p-4 text-[11px] leading-relaxed text-stone-800 dark:text-stone-100 whitespace-pre-wrap break-all">
+      <pre className="max-h-36 overflow-auto p-3 text-[11px] leading-relaxed text-stone-800 dark:text-stone-100 whitespace-pre-wrap break-all">
         {code}
       </pre>
     </div>
@@ -84,7 +84,7 @@ const CodeViewer = ({ label, code, filename }) => {
 const ProgressBar = ({ etapaAtual }) => {
   const idx = ETAPAS.findIndex((e) => e.id === etapaAtual);
   return (
-    <div className="mb-6 flex items-center gap-0">
+    <div className="mb-4 flex items-center gap-0">
       {ETAPAS.map((etapa, i) => {
         const done    = i < idx;
         const current = i === idx;
@@ -251,10 +251,10 @@ export const WizardOnboardingDispositivo = ({ estufaId, onClose, onSuccess }) =>
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 backdrop-blur-sm px-4 py-6">
-      <div className="w-full max-w-2xl rounded-2xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-[#1c1917] shadow-2xl my-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 py-4">
+      <div className="w-full max-w-2xl rounded-2xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-[#1c1917] shadow-2xl">
         {/* cabeçalho */}
-        <div className="flex items-center justify-between border-b border-stone-200 dark:border-stone-700 px-6 py-4">
+        <div className="flex items-center justify-between border-b border-stone-200 dark:border-stone-700 px-5 py-3">
           <div>
             <h2 className="text-base font-semibold text-stone-900 dark:text-stone-900 dark:text-stone-50">Adicionar dispositivo IoT</h2>
             <p className="text-xs text-stone-500 dark:text-stone-400">Wizard de onboarding do ESP32</p>
@@ -265,30 +265,30 @@ export const WizardOnboardingDispositivo = ({ estufaId, onClose, onSuccess }) =>
         </div>
 
         {/* conteúdo */}
-        <div className="px-6 py-5">
+        <div className="px-5 py-4">
           <ProgressBar etapaAtual={etapa} />
 
           {/* ── Etapa 1: Formulário ── */}
           {etapa === 'form' && (
-            <form onSubmit={handleCriar} className="space-y-4">
+            <form onSubmit={handleCriar} className="space-y-3">
               <div>
-                <label className="mb-1.5 block text-xs font-semibold text-stone-300">Nome do dispositivo *</label>
+                <label className="mb-1 block text-xs font-semibold text-stone-300">Nome do dispositivo *</label>
                 <input
                   type="text"
                   value={nome}
                   onChange={(e) => setNome(e.target.value)}
                   placeholder="ex: Sensor Principal Estufa A"
                   required
-                  className="w-full rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 px-4 py-2.5 text-sm text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                  className="w-full rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 px-4 py-2 text-sm text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
                 />
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-semibold text-stone-300">Tipo do dispositivo *</label>
+                <label className="mb-1 block text-xs font-semibold text-stone-300">Tipo do dispositivo *</label>
                 <select
                   value={tipo}
                   onChange={(e) => setTipo(e.target.value)}
-                  className="w-full rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 px-4 py-2.5 text-sm text-stone-900 dark:text-stone-100 outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                  className="w-full rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 px-4 py-2 text-sm text-stone-900 dark:text-stone-100 outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
                 >
                   {TIPO_OPCOES.map((opt) => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -296,8 +296,8 @@ export const WizardOnboardingDispositivo = ({ estufaId, onClose, onSuccess }) =>
                 </select>
               </div>
 
-              <div className="rounded-xl border border-amber-800/40 bg-amber-900/20 p-4">
-                <p className="mb-3 flex items-center gap-2 text-xs font-semibold text-amber-300">
+              <div className="rounded-xl border border-amber-800/40 bg-amber-900/20 p-3">
+                <p className="mb-2 flex items-center gap-2 text-xs font-semibold text-amber-300">
                   <i className="fa-solid fa-wifi" />
                   Rede Wi-Fi do ESP32
                 </p>
@@ -341,7 +341,7 @@ export const WizardOnboardingDispositivo = ({ estufaId, onClose, onSuccess }) =>
                 </div>
               )}
 
-              <div className="flex justify-end gap-3 pt-2">
+              <div className="flex justify-end gap-3 pt-1">
                 <button type="button" onClick={handleClose} disabled={deletando}
                   className="rounded-xl border border-stone-600 px-4 py-2 text-sm text-stone-300 transition hover:bg-stone-700 disabled:opacity-50">
                   Cancelar
@@ -358,42 +358,42 @@ export const WizardOnboardingDispositivo = ({ estufaId, onClose, onSuccess }) =>
 
           {/* ── Etapa 2: Firmware ── */}
           {etapa === 'firmware' && firmware && (
-            <div className="space-y-4">
-              <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50 dark:bg-emerald-900/20 px-4 py-3">
+            <div className="space-y-3">
+              <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-2">
                 <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">
                   <i className="fa-solid fa-circle-check mr-1.5" />
                   Dispositivo registrado no Azure IoT Hub com sucesso!
                 </p>
-                <p className="mt-1 text-[11px] text-emerald-600 dark:text-emerald-400">
+                <p className="mt-0.5 text-[11px] text-emerald-600 dark:text-emerald-400">
                   Device ID: <code className="rounded bg-emerald-100 dark:bg-emerald-900/40 px-1.5 py-0.5 font-mono text-[10px] text-emerald-800 dark:text-emerald-300">{firmware.device_id}</code>
                 </p>
               </div>
 
               <div>
-                <p className="mb-2 text-xs font-semibold text-stone-300">
+                <p className="mb-1.5 text-xs font-semibold text-stone-300">
                   <i className="fa-solid fa-microchip mr-1.5 text-red-400" />
                   Firmware gerado. Grave os dois arquivos no ESP32:
                 </p>
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <CodeViewer label="Credenciais + Wi-Fi" filename="boot.py" code={firmware.boot_py} />
                   <CodeViewer label="Lógica principal" filename="main.py" code={firmware.main_py} />
                 </div>
               </div>
 
               {/* instruções */}
-              <div className="rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50 px-4 py-3">
-                <p className="mb-2 text-xs font-semibold text-stone-300">
+              <div className="rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50 px-3 py-2.5">
+                <p className="mb-1.5 text-xs font-semibold text-stone-600 dark:text-stone-300">
                   <i className="fa-solid fa-list-ol mr-1.5 text-amber-400" />
                   Como gravar no ESP32:
                 </p>
-                <ol className="space-y-1">
+                <ol className="space-y-0.5">
                   {(firmware.instrucoes || []).map((inst, i) => (
-                    <li key={i} className="text-[11px] text-stone-400">{inst}</li>
+                    <li key={i} className="text-[11px] text-stone-600 dark:text-stone-400">{inst}</li>
                   ))}
                 </ol>
               </div>
 
-              <div className="flex justify-between gap-3 pt-2">
+              <div className="flex justify-between gap-3 pt-1">
                 <button type="button" onClick={() => setEtapa('form')}
                   className="rounded-xl border border-stone-600 px-4 py-2 text-sm text-stone-300 transition hover:bg-stone-700">
                   <i className="fa-solid fa-arrow-left mr-1" /> Voltar
@@ -408,12 +408,12 @@ export const WizardOnboardingDispositivo = ({ estufaId, onClose, onSuccess }) =>
 
           {/* ── Etapa 3: Aguardando handshake ── */}
           {etapa === 'aguardando' && (
-            <div className="space-y-5 text-center">
+            <div className="space-y-4 text-center">
               {!pollTimeout ? (
                 <>
                   <div className="flex justify-center">
-                    <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-red-600/10">
-                      <i className="fa-solid fa-satellite-dish text-3xl text-red-500 animate-pulse" />
+                    <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-red-600/10">
+                      <i className="fa-solid fa-satellite-dish text-2xl text-red-500 animate-pulse" />
                       <span className="absolute inset-0 rounded-full border-2 border-red-500/40 animate-ping" />
                     </div>
                   </div>
@@ -473,9 +473,9 @@ export const WizardOnboardingDispositivo = ({ estufaId, onClose, onSuccess }) =>
 
           {/* ── Etapa 4: Sucesso ── */}
           {etapa === 'sucesso' && (
-            <div className="space-y-5 text-center">
+            <div className="space-y-4 text-center">
               <div className="flex justify-center">
-                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/10">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10">
                   <i className="fa-solid fa-circle-check text-4xl text-emerald-400" />
                 </div>
               </div>
@@ -486,7 +486,7 @@ export const WizardOnboardingDispositivo = ({ estufaId, onClose, onSuccess }) =>
                 </p>
               </div>
               {dispositivo && (
-                <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/30 bg-emerald-50 dark:bg-emerald-900/10 px-5 py-4 text-left">
+                <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/30 bg-emerald-50 dark:bg-emerald-900/10 px-4 py-3 text-left">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400 mb-2">Dispositivo cadastrado</p>
                   <div className="space-y-1 text-xs text-stone-700 dark:text-stone-300">
                     <p><span className="text-stone-500">Nome:</span> {dispositivo.nome}</p>
