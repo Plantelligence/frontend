@@ -103,5 +103,10 @@ export const getFriendlyErrorMessage = (error, fallback, context = 'default') =>
     return apiMessage;
   }
 
+  // Erro JS puro (new Error('...')) sem response HTTP — usa a mensagem diretamente
+  if (!error?.response && error?.message && !TECHNICAL_MESSAGE_PATTERN.test(error.message)) {
+    return error.message;
+  }
+
   return getStatusFallback(status, context) || fallback;
 };

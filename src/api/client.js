@@ -69,6 +69,17 @@ api.interceptors.request.use((config) => {
   const { tokens } = useAuthStore.getState();
   const token = getAccessToken(tokens);
   if (token) config.headers.Authorization = `Bearer ${token}`;
+
+  // Garante HTTPS em produção: evita Mixed Content se a URL absoluta vier com http://
+  if (config.url && config.url.startsWith('http://')) {
+    const isLocal = /localhost|127\.0\.0\.1/.test(config.url);
+    if (!isLocal) config.url = config.url.replace(/^http:\/\//i, 'https://');
+  }
+  if (config.baseURL && config.baseURL.startsWith('http://')) {
+    const isLocal = /localhost|127\.0\.0\.1/.test(config.baseURL);
+    if (!isLocal) config.baseURL = config.baseURL.replace(/^http:\/\//i, 'https://');
+  }
+
   return config;
 });
 
