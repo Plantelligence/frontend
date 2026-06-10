@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plantelligence - Resultados dos Testes Automatizados</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f4f6f9; color: #1a1a2e; }
+  header { background: #1a1a2e; color: #fff; padding: 32px 40px; }
+  header h1 { font-size: 1.6rem; font-weight: 700; }
+  header p { color: #a0aec0; margin-top: 6px; font-size: 0.9rem; }
+  .badge { display: inline-block; background: #22c55e; color: #fff; border-radius: 999px; padding: 3px 12px; font-size: 0.78rem; font-weight: 600; margin-top: 12px; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+  .resumo { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 36px; }
+  .card { background: #fff; border-radius: 10px; padding: 20px 24px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  .card .num { font-size: 2rem; font-weight: 700; }
+  .card .label { font-size: 0.8rem; color: #6b7280; margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
+  .card.verde .num { color: #16a34a; } .card.azul .num { color: #2563eb; }
+  .card.roxo .num { color: #7c3aed; } .card.laranja .num { color: #d97706; }
+  .secao { background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,.08); margin-bottom: 28px; overflow: hidden; }
+  .secao-header { padding: 16px 24px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 12px; }
+  .secao-header h2 { font-size: 1rem; font-weight: 600; }
+  .tag { font-size: 0.72rem; font-weight: 600; border-radius: 4px; padding: 2px 8px; }
+  .tag-backend { background: #dbeafe; color: #1d4ed8; } .tag-frontend { background: #fce7f3; color: #9d174d; }
+  .tag-unitario { background: #ecfdf5; color: #065f46; } .tag-integracao { background: #fff7ed; color: #92400e; }
+  .tag-guardrails { background: #f5f3ff; color: #5b21b6; }
+  .contagem { margin-left: auto; font-size: 0.8rem; color: #6b7280; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { text-align: left; padding: 10px 16px; font-size: 0.75rem; color: #6b7280; text-transform: uppercase; letter-spacing: .5px; background: #fafafa; border-bottom: 1px solid #f0f0f0; }
+  tbody tr { border-bottom: 1px solid #f9f9f9; } tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #fafafa; }
+  td { padding: 9px 16px; font-size: 0.84rem; }
+  .suite { color: #6b7280; font-size: 0.78rem; }
+  .status { font-weight: 600; color: #16a34a; font-size: 0.75rem; }
+  footer { text-align: center; padding: 24px; color: #9ca3af; font-size: 0.78rem; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Plantelligence - Resultados dos Testes Automatizados</h1>
+  <p>Cobertura completa: backend (Python/pytest) e frontend (JavaScript/Vitest)</p>
+  <span class="badge">201 testes aprovados</span>
+</header>
+<div class="container">
+  <div class="resumo">
+    <div class="card verde"><div class="num">201</div><div class="label">Total aprovados</div></div>
+    <div class="card azul"><div class="num">136</div><div class="label">Testes backend</div></div>
+    <div class="card roxo"><div class="num">65</div><div class="label">Testes frontend</div></div>
+    <div class="card laranja"><div class="num">0</div><div class="label">Falhas</div></div>
+  </div>
+
+  <div class="secao">
+    <div class="secao-header">
+      <h2>Testes de Integração</h2>
+      <span class="tag tag-backend">Backend</span>
+      <span class="tag tag-integracao">Integração</span>
+      <span class="contagem">60 testes</span>
+    </div>
+    <table><thead><tr><th>Teste</th><th>Suite</th><th>Status</th></tr></thead>
+    <tbody>        <tr><td>test_enviar_comando_sem_autenticacao_retorna_401</td><td class="suite">test_rotas_atuadores</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_leitor_nao_pode_enviar_comandos</td><td class="suite">test_rotas_atuadores</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_ligar_atuador_existente_retorna_200</td><td class="suite">test_rotas_atuadores</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_desligar_atuador_retorna_sucesso</td><td class="suite">test_rotas_atuadores</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_buscar_historico_sem_autenticacao_retorna_401</td><td class="suite">test_rotas_atuadores</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_buscar_historico_autenticado_retorna_200_ou_404</td><td class="suite">test_rotas_atuadores</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_registro_com_dados_validos_retorna_201</td><td class="suite">test_rotas_autenticacao</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_registro_com_erro_de_servico_retorna_400</td><td class="suite">test_rotas_autenticacao</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_registro_sem_payload_retorna_erro_de_validacao</td><td class="suite">test_rotas_autenticacao</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_login_com_credenciais_corretas_retorna_mfa_required</td><td class="suite">test_rotas_autenticacao</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_login_com_credenciais_erradas_retorna_401</td><td class="suite">test_rotas_autenticacao</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_login_sem_email_retorna_erro</td><td class="suite">test_rotas_autenticacao</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_logout_retorna_204_sem_conteudo</td><td class="suite">test_rotas_autenticacao</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_logout_com_erro_retorna_400</td><td class="suite">test_rotas_autenticacao</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_solicitar_reset_sempre_retorna_200</td><td class="suite">test_rotas_autenticacao</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_listar_sem_autenticacao_retorna_401</td><td class="suite">test_rotas_dispositivos</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_listar_de_estufa_inexistente_retorna_404</td><td class="suite">test_rotas_dispositivos</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_listar_sem_permissao_retorna_403</td><td class="suite">test_rotas_dispositivos</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_criar_dispositivo_sem_autenticacao_retorna_401</td><td class="suite">test_rotas_dispositivos</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_leitor_nao_pode_criar_dispositivo</td><td class="suite">test_rotas_dispositivos</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_criar_dispositivo_com_estufa_inexistente_retorna_404</td><td class="suite">test_rotas_dispositivos</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_remover_dispositivo_inexistente_retorna_404</td><td class="suite">test_rotas_dispositivos</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_remover_sem_autenticacao_retorna_401</td><td class="suite">test_rotas_dispositivos</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_listar_estufas_autenticado_retorna_200</td><td class="suite">test_rotas_estufas</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_listar_estufas_sem_autenticacao_retorna_401</td><td class="suite">test_rotas_estufas</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_criar_estufa_com_dados_validos_retorna_201</td><td class="suite">test_rotas_estufas</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_criar_estufa_sem_autenticacao_retorna_401</td><td class="suite">test_rotas_estufas</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_criar_estufa_sem_permissao_retorna_403</td><td class="suite">test_rotas_estufas</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_buscar_estufa_existente_retorna_200</td><td class="suite">test_rotas_estufas</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_buscar_estufa_inexistente_retorna_404</td><td class="suite">test_rotas_estufas</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_deletar_estufa_propria_retorna_200</td><td class="suite">test_rotas_estufas</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_deletar_estufa_sem_permissao_retorna_403</td><td class="suite">test_rotas_estufas</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_listar_recomendacoes_nao_requer_autenticacao</td><td class="suite">test_rotas_estufas</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_listar_sem_autenticacao_retorna_401</td><td class="suite">test_rotas_notificacoes</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_listar_autenticado_retorna_200_com_lista</td><td class="suite">test_rotas_notificacoes</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_contagem_de_nao_lidas_retorna_200</td><td class="suite">test_rotas_notificacoes</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_marcar_notificacao_inexistente_retorna_404</td><td class="suite">test_rotas_notificacoes</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_marcar_todas_como_lidas_retorna_200</td><td class="suite">test_rotas_notificacoes</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_buscar_preferencias_retorna_200</td><td class="suite">test_rotas_notificacoes</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_atualizar_preferencias_retorna_200</td><td class="suite">test_rotas_notificacoes</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_listar_sem_autenticacao_retorna_401</td><td class="suite">test_rotas_presets</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_listar_autenticado_retorna_lista</td><td class="suite">test_rotas_presets</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_criar_preset_sem_autenticacao_retorna_401</td><td class="suite">test_rotas_presets</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_criar_preset_com_dados_validos_retorna_201</td><td class="suite">test_rotas_presets</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_criar_preset_sem_campos_obrigatorios_retorna_422</td><td class="suite">test_rotas_presets</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_buscar_preset_inexistente_retorna_404</td><td class="suite">test_rotas_presets</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_buscar_preset_criado_retorna_200</td><td class="suite">test_rotas_presets</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_atualizar_preset_de_outro_usuario_retorna_403</td><td class="suite">test_rotas_presets</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_remover_preset_proprio_retorna_200</td><td class="suite">test_rotas_presets</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_remover_preset_sem_autenticacao_retorna_401</td><td class="suite">test_rotas_presets</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_buscar_me_sem_autenticacao_retorna_401</td><td class="suite">test_rotas_users</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_buscar_me_autenticado_retorna_200</td><td class="suite">test_rotas_users</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_buscar_me_retorna_email_do_usuario</td><td class="suite">test_rotas_users</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_atualizar_me_sem_autenticacao_retorna_401</td><td class="suite">test_rotas_users</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_atualizar_me_autenticado_retorna_sucesso</td><td class="suite">test_rotas_users</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_trocar_senha_sem_autenticacao_retorna_401</td><td class="suite">test_rotas_users</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_trocar_senha_autenticado_sem_payload_retorna_422</td><td class="suite">test_rotas_users</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_trocar_senha_senha_atual_errada_retorna_400</td><td class="suite">test_rotas_users</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_atualizar_preferencias_sem_autenticacao_retorna_401</td><td class="suite">test_rotas_users</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_atualizar_preferencias_autenticado_retorna_sucesso</td><td class="suite">test_rotas_users</td><td class="status">APROVADO</td></tr></tbody></table>
+  </div>
+
+  <div class="secao">
+    <div class="secao-header">
+      <h2>Testes Unitários</h2>
+      <span class="tag tag-backend">Backend</span>
+      <span class="tag tag-unitario">Unitário</span>
+      <span class="contagem">71 testes</span>
+    </div>
+    <table><thead><tr><th>Teste</th><th>Suite</th><th>Status</th></tr></thead>
+    <tbody>        <tr><td>test_retorna_none_para_entrada_nula</td><td class="suite">test_avaliacao_metricas_estufa</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_retorna_none_para_entrada_nao_dict</td><td class="suite">test_avaliacao_metricas_estufa</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_retorna_none_sem_chaves_min_max</td><td class="suite">test_avaliacao_metricas_estufa</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_retorna_range_direto_com_min_max</td><td class="suite">test_avaliacao_metricas_estufa</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_retorna_range_aninhado_dentro_de_ideal</td><td class="suite">test_avaliacao_metricas_estufa</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_sem_intervalo_configurado_retorna_nao_avaliado</td><td class="suite">test_avaliacao_metricas_estufa</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_sem_valor_disponivel_retorna_indisponivel</td><td class="suite">test_avaliacao_metricas_estufa</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_valor_dentro_do_intervalo_retorna_ok</td><td class="suite">test_avaliacao_metricas_estufa</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_valor_abaixo_do_minimo_retorna_baixo</td><td class="suite">test_avaliacao_metricas_estufa</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_valor_acima_do_maximo_retorna_alto</td><td class="suite">test_avaliacao_metricas_estufa</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_valor_exatamente_no_minimo_e_valido</td><td class="suite">test_avaliacao_metricas_estufa</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_valor_exatamente_no_maximo_e_valido</td><td class="suite">test_avaliacao_metricas_estufa</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_retorna_none_para_entrada_vazia</td><td class="suite">test_avaliacao_metricas_estufa</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_converte_string_iso_valida</td><td class="suite">test_avaliacao_metricas_estufa</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_converte_string_iso_com_Z</td><td class="suite">test_avaliacao_metricas_estufa</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_retorna_none_para_string_invalida</td><td class="suite">test_avaliacao_metricas_estufa</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_substitui_placeholder_simples</td><td class="suite">test_firmware_service</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_substitui_multiplos_placeholders</td><td class="suite">test_firmware_service</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_placeholder_nao_presente_fica_inalterado</td><td class="suite">test_firmware_service</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_template_vazio_retorna_vazio</td><td class="suite">test_firmware_service</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_mapa_vazio_retorna_template_inalterado</td><td class="suite">test_firmware_service</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_retorna_boot_e_main</td><td class="suite">test_firmware_service</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_device_id_presente_no_firmware</td><td class="suite">test_firmware_service</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_estufa_id_presente_no_firmware</td><td class="suite">test_firmware_service</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_hub_hostname_presente_no_boot</td><td class="suite">test_firmware_service</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_sas_key_presente_no_boot</td><td class="suite">test_firmware_service</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_wifi_ssid_presente_no_boot</td><td class="suite">test_firmware_service</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_firmware_sem_placeholders_residuais</td><td class="suite">test_firmware_service</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_sem_preferencias_retorna_falso</td><td class="suite">test_motor_notificacoes</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_sem_horario_configurado_retorna_falso</td><td class="suite">test_motor_notificacoes</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_dentro_do_horario_silencioso_suprime_info</td><td class="suite">test_motor_notificacoes</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_critico_nunca_suprimido</td><td class="suite">test_motor_notificacoes</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_aviso_nao_suprimido_quando_flag_desativada</td><td class="suite">test_motor_notificacoes</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_aviso_suprimido_quando_flag_ativada</td><td class="suite">test_motor_notificacoes</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_fora_do_horario_silencioso_retorna_falso</td><td class="suite">test_motor_notificacoes</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_horario_que_cruza_meia_noite</td><td class="suite">test_motor_notificacoes</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_em_cooldown_retorna_verdadeiro</td><td class="suite">test_motor_notificacoes</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_fora_de_cooldown_retorna_falso</td><td class="suite">test_motor_notificacoes</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_cooldown_critico_menor_que_warning</td><td class="suite">test_motor_notificacoes</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_tipo_bloqueado_retorna_none</td><td class="suite">test_motor_notificacoes</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_em_cooldown_retorna_none</td><td class="suite">test_motor_notificacoes</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_dispatch_equipe_sem_responsaveis_retorna_lista_vazia</td><td class="suite">test_motor_notificacoes</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_cooldown_desconhecido_usa_valor_padrao</td><td class="suite">test_motor_notificacoes</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_seed_insere_presets_de_cogumelos</td><td class="suite">test_preset_service</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_seed_nao_duplica_em_segunda_chamada</td><td class="suite">test_preset_service</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_lista_presets_do_sistema_e_do_usuario</td><td class="suite">test_preset_service</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_nao_lista_presets_de_outro_usuario</td><td class="suite">test_preset_service</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_buscar_por_id_existente_retorna_preset</td><td class="suite">test_preset_service</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_buscar_por_id_inexistente_retorna_none</td><td class="suite">test_preset_service</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_buscar_por_nome_existente_retorna_preset</td><td class="suite">test_preset_service</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_buscar_por_nome_inexistente_retorna_none</td><td class="suite">test_preset_service</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_criar_preset_persiste_no_banco</td><td class="suite">test_preset_service</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_preset_criado_nao_e_do_sistema</td><td class="suite">test_preset_service</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_reader_nao_pode_vincular_preset</td><td class="suite">test_preset_service</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_estufa_inexistente_lanca_value_error</td><td class="suite">test_preset_service</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_preset_inexistente_lanca_value_error</td><td class="suite">test_preset_service</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_vinculacao_valida_atualiza_preset_id</td><td class="suite">test_preset_service</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_preset_do_sistema_nao_pode_ser_alterado</td><td class="suite">test_preset_service</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_preset_de_outro_usuario_nao_pode_ser_alterado</td><td class="suite">test_preset_service</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_remover_preset_proprio_funciona</td><td class="suite">test_preset_service</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_atualizar_nome_cultura</td><td class="suite">test_preset_service</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_access_token_e_gerado_com_sucesso</td><td class="suite">test_servico_token_jwt</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_access_token_contem_dados_do_usuario</td><td class="suite">test_servico_token_jwt</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_decodificar_token_invalido_lanca_excecao</td><td class="suite">test_servico_token_jwt</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_decodificar_token_com_assinatura_errada_lanca_excecao</td><td class="suite">test_servico_token_jwt</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_tokens_diferentes_para_usuarios_diferentes</td><td class="suite">test_servico_token_jwt</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_refresh_token_e_gerado_com_sucesso</td><td class="suite">test_servico_token_jwt</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_refresh_tokens_diferentes_a_cada_chamada</td><td class="suite">test_servico_token_jwt</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_hash_e_deterministico</td><td class="suite">test_servico_token_jwt</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_tokens_diferentes_produzem_hashes_diferentes</td><td class="suite">test_servico_token_jwt</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_hash_nao_e_o_token_em_claro</td><td class="suite">test_servico_token_jwt</td><td class="status">APROVADO</td></tr></tbody></table>
+  </div>
+
+  <div class="secao">
+    <div class="secao-header">
+      <h2>Regras do Chat com IA</h2>
+      <span class="tag tag-backend">Backend</span>
+      <span class="tag tag-guardrails">Guardrails</span>
+      <span class="contagem">5 testes</span>
+    </div>
+    <table><thead><tr><th>Teste</th><th>Suite</th><th>Status</th></tr></thead>
+    <tbody>        <tr><td>test_extract_text_from_completion_uses_reasoning_when_content_is_empty</td><td class="suite">test_chat_guardrails</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_policy_gate_allows_agro_question</td><td class="suite">test_chat_guardrails</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_policy_gate_blocks_pii</td><td class="suite">test_chat_guardrails</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_policy_gate_permite_fora_do_escopo</td><td class="suite">test_chat_guardrails</td><td class="status">APROVADO</td></tr>
+        <tr><td>test_validate_cpf_checksum</td><td class="suite">test_chat_guardrails</td><td class="status">APROVADO</td></tr></tbody></table>
+  </div>
+
+  <div class="secao">
+    <div class="secao-header">
+      <h2>Serviços de API</h2>
+      <span class="tag tag-frontend">Frontend</span>
+      <span class="tag tag-unitario">Unitário</span>
+      <span class="contagem">14 testes</span>
+    </div>
+    <table><thead><tr><th>Teste</th><th>Suite</th><th>Status</th></tr></thead>
+    <tbody>        <tr><td>POST /auth/login com e-mail e senha</td><td class="suite">authService</td><td class="status">APROVADO</td></tr>
+        <tr><td>repassa o erro da API quando as credenciais são inválidas</td><td class="suite">authService</td><td class="status">APROVADO</td></tr>
+        <tr><td>POST /auth/logout com refreshToken</td><td class="suite">authService</td><td class="status">APROVADO</td></tr>
+        <tr><td>POST /auth/register com os dados do formulário</td><td class="suite">authService</td><td class="status">APROVADO</td></tr>
+        <tr><td>initiateMfa: POST /auth/mfa/initiate com sessionId</td><td class="suite">authService</td><td class="status">APROVADO</td></tr>
+        <tr><td>verifyMfa: POST /auth/mfa/verify com código OTP</td><td class="suite">authService</td><td class="status">APROVADO</td></tr>
+        <tr><td>requestPasswordReset: POST /auth/password-reset/request</td><td class="suite">authService</td><td class="status">APROVADO</td></tr>
+        <tr><td>confirmPasswordReset: POST /auth/password-reset/confirm com token e nova senha</td><td class="suite">authService</td><td class="status">APROVADO</td></tr>
+        <tr><td>POST /auth/refresh com refreshToken</td><td class="suite">authService</td><td class="status">APROVADO</td></tr>
+        <tr><td>GET /estufas/ retorna objeto com lista greenhouses</td><td class="suite">greenhouseService</td><td class="status">APROVADO</td></tr>
+        <tr><td>repassa o erro da API ao chamador quando a listagem falha</td><td class="suite">greenhouseService</td><td class="status">APROVADO</td></tr>
+        <tr><td>GET /estufas/:id retorna objeto com greenhouse</td><td class="suite">greenhouseService</td><td class="status">APROVADO</td></tr>
+        <tr><td>POST /estufas/ converte campos em português antes de enviar</td><td class="suite">greenhouseService</td><td class="status">APROVADO</td></tr>
+        <tr><td>DELETE /estufas/:id é chamado com o ID correto</td><td class="suite">greenhouseService</td><td class="status">APROVADO</td></tr></tbody></table>
+  </div>
+
+  <div class="secao">
+    <div class="secao-header">
+      <h2>Componentes de Interface</h2>
+      <span class="tag tag-frontend">Frontend</span>
+      <span class="tag tag-unitario">Unitário</span>
+      <span class="contagem">25 testes</span>
+    </div>
+    <table><thead><tr><th>Teste</th><th>Suite</th><th>Status</th></tr></thead>
+    <tbody>        <tr><td>exibe o nome da estufa</td><td class="suite">CardEstufa</td><td class="status">APROVADO</td></tr>
+        <tr><td>exibe o tipo de cultivo do typeVisual</td><td class="suite">CardEstufa</td><td class="status">APROVADO</td></tr>
+        <tr><td>exibe &quot;Estufa sem nome&quot; quando name está ausente</td><td class="suite">CardEstufa</td><td class="status">APROVADO</td></tr>
+        <tr><td>renderiza o botão &quot;Abrir estufa&quot;</td><td class="suite">CardEstufa</td><td class="status">APROVADO</td></tr>
+        <tr><td>chama onOpen ao clicar no botão</td><td class="suite">CardEstufa</td><td class="status">APROVADO</td></tr>
+        <tr><td>exibe o número de responsáveis quando há watchersDetails</td><td class="suite">CardEstufa</td><td class="status">APROVADO</td></tr>
+        <tr><td>funciona corretamente com lista de responsáveis vazia</td><td class="suite">CardEstufa</td><td class="status">APROVADO</td></tr>
+        <tr><td>indica ausência de perfil quando profile é nulo</td><td class="suite">CardEstufa</td><td class="status">APROVADO</td></tr>
+        <tr><td>não renderiza nada quando open=false</td><td class="suite">ConfirmDialog</td><td class="status">APROVADO</td></tr>
+        <tr><td>renderiza o título quando open=true</td><td class="suite">ConfirmDialog</td><td class="status">APROVADO</td></tr>
+        <tr><td>renderiza a descrição quando open=true</td><td class="suite">ConfirmDialog</td><td class="status">APROVADO</td></tr>
+        <tr><td>chama onConfirm ao clicar no botão de confirmação</td><td class="suite">ConfirmDialog</td><td class="status">APROVADO</td></tr>
+        <tr><td>chama onCancel ao clicar no botão de cancelamento</td><td class="suite">ConfirmDialog</td><td class="status">APROVADO</td></tr>
+        <tr><td>usa labels customizados para os botões</td><td class="suite">ConfirmDialog</td><td class="status">APROVADO</td></tr>
+        <tr><td>renderiza o label corretamente</td><td class="suite">InputField</td><td class="status">APROVADO</td></tr>
+        <tr><td>renderiza o input com type correto</td><td class="suite">InputField</td><td class="status">APROVADO</td></tr>
+        <tr><td>usa type=&quot;text&quot; como padrão quando type não é informado</td><td class="suite">InputField</td><td class="status">APROVADO</td></tr>
+        <tr><td>chama onChange quando o usuário digita</td><td class="suite">InputField</td><td class="status">APROVADO</td></tr>
+        <tr><td>passa props extras para o input (autoComplete, required, etc.)</td><td class="suite">InputField</td><td class="status">APROVADO</td></tr>
+        <tr><td>exibe o valor controlado passado como prop</td><td class="suite">InputField</td><td class="status">APROVADO</td></tr>
+        <tr><td>redireciona para /login quando não há usuário</td><td class="suite">ProtectedRoute</td><td class="status">APROVADO</td></tr>
+        <tr><td>redireciona para /login quando há usuário mas não há tokens</td><td class="suite">ProtectedRoute</td><td class="status">APROVADO</td></tr>
+        <tr><td>redireciona para /login quando o accessToken está vazio</td><td class="suite">ProtectedRoute</td><td class="status">APROVADO</td></tr>
+        <tr><td>renderiza a página protegida quando o usuário tem sessão válida</td><td class="suite">ProtectedRoute</td><td class="status">APROVADO</td></tr>
+        <tr><td>aceita sessão com refreshToken mas sem accessToken</td><td class="suite">ProtectedRoute</td><td class="status">APROVADO</td></tr></tbody></table>
+  </div>
+
+  <div class="secao">
+    <div class="secao-header">
+      <h2>Utilitários</h2>
+      <span class="tag tag-frontend">Frontend</span>
+      <span class="tag tag-unitario">Unitário</span>
+      <span class="contagem">26 testes</span>
+    </div>
+    <table><thead><tr><th>Teste</th><th>Suite</th><th>Status</th></tr></thead>
+    <tbody>        <tr><td>retorna mensagem de sem conexão quando não há status HTTP</td><td class="suite">mensagens-de-erro</td><td class="status">APROVADO</td></tr>
+        <tr><td>retorna mensagem de sessão expirada para 401 genérico</td><td class="suite">mensagens-de-erro</td><td class="status">APROVADO</td></tr>
+        <tr><td>retorna mensagem específica de login para contexto &quot;login&quot;</td><td class="suite">mensagens-de-erro</td><td class="status">APROVADO</td></tr>
+        <tr><td>retorna mensagem de código MFA para contexto &quot;mfa&quot;</td><td class="suite">mensagens-de-erro</td><td class="status">APROVADO</td></tr>
+        <tr><td>retorna mensagem de permissão para 403</td><td class="suite">mensagens-de-erro</td><td class="status">APROVADO</td></tr>
+        <tr><td>retorna mensagem de recurso não encontrado para 404</td><td class="suite">mensagens-de-erro</td><td class="status">APROVADO</td></tr>
+        <tr><td>retorna mensagem de timeout para 408</td><td class="suite">mensagens-de-erro</td><td class="status">APROVADO</td></tr>
+        <tr><td>retorna mensagem de conflito para 409</td><td class="suite">mensagens-de-erro</td><td class="status">APROVADO</td></tr>
+        <tr><td>retorna mensagem de dados inválidos para 422</td><td class="suite">mensagens-de-erro</td><td class="status">APROVADO</td></tr>
+        <tr><td>retorna mensagem de muitas tentativas para 429</td><td class="suite">mensagens-de-erro</td><td class="status">APROVADO</td></tr>
+        <tr><td>retorna mensagem de serviço indisponível para 500</td><td class="suite">mensagens-de-erro</td><td class="status">APROVADO</td></tr>
+        <tr><td>exibe mensagem da API quando ela é segura (sem stack trace)</td><td class="suite">mensagens-de-erro</td><td class="status">APROVADO</td></tr>
+        <tr><td>não exibe mensagem da API que contenha stack trace ou nome de exceção</td><td class="suite">mensagens-de-erro</td><td class="status">APROVADO</td></tr>
+        <tr><td>status &gt;= 500 retorna mensagem de servidor indisponível (não o fallback)</td><td class="suite">mensagens-de-erro</td><td class="status">APROVADO</td></tr>
+        <tr><td>aceita senha com todos os requisitos atendidos</td><td class="suite">politica-de-senhas</td><td class="status">APROVADO</td></tr>
+        <tr><td>aceita senha com caractere especial diferente do @</td><td class="suite">politica-de-senhas</td><td class="status">APROVADO</td></tr>
+        <tr><td>aceita senha com mais de 8 caracteres</td><td class="suite">politica-de-senhas</td><td class="status">APROVADO</td></tr>
+        <tr><td>rejeita senha sem letra maiúscula</td><td class="suite">politica-de-senhas</td><td class="status">APROVADO</td></tr>
+        <tr><td>rejeita senha sem letra minúscula</td><td class="suite">politica-de-senhas</td><td class="status">APROVADO</td></tr>
+        <tr><td>rejeita senha sem número</td><td class="suite">politica-de-senhas</td><td class="status">APROVADO</td></tr>
+        <tr><td>rejeita senha sem caractere especial</td><td class="suite">politica-de-senhas</td><td class="status">APROVADO</td></tr>
+        <tr><td>rejeita senha com menos de 8 caracteres</td><td class="suite">politica-de-senhas</td><td class="status">APROVADO</td></tr>
+        <tr><td>rejeita string vazia</td><td class="suite">politica-de-senhas</td><td class="status">APROVADO</td></tr>
+        <tr><td>retorna false para undefined (sem travar a aplicação)</td><td class="suite">politica-de-senhas</td><td class="status">APROVADO</td></tr>
+        <tr><td>exporta o objeto passwordPolicy com regex e message</td><td class="suite">politica-de-senhas</td><td class="status">APROVADO</td></tr>
+        <tr><td>a mensagem descreve os requisitos mínimos para o usuário</td><td class="suite">politica-de-senhas</td><td class="status">APROVADO</td></tr></tbody></table>
+  </div>
+
+</div>
+<footer>Plantelligence - TCC 2026 &nbsp;|&nbsp; 201 testes aprovados, 0 falhas</footer>
+</body>
+</html>

@@ -159,10 +159,17 @@ export const useAuthStore = create((set, get) => ({
     if (!isTokenRefresh) persistLockState(false, null);
 
     // Aplica o tema do servidor apenas em login fresco.
-    // Em refresh de token, respeita a preferência local para não sobrescrever
-    // o dark mode quando o servidor ainda tem 'light' desatualizado.
+    // Regra: servidor 'dark' sempre prevalece (usuário habilitou em outro dispositivo).
+    //        Servidor 'light' só prevalece se não houver preferência local salva —
+    //        evita sobrescrever o dark mode local quando o PATCH de preferência
+    //        ainda não chegou ao servidor (race condition ou falha silenciosa).
     if (user?.uiTheme && !isTokenRefresh) {
-      try { applyServerTheme(user.uiTheme); } catch {}
+      try {
+        const localTheme = window.localStorage.getItem('plantelligence-theme');
+        if (user.uiTheme === 'dark' || !localTheme) {
+          applyServerTheme(user.uiTheme);
+        }
+      } catch {}
     }
     persistToStorage({ user: nextState.user, tokens: nextState.tokens, requiresPasswordReset: nextState.requiresPasswordReset });
   },
