@@ -1,27 +1,31 @@
 /**
- * useIdleTimer - Hook de deteccao de inatividade do usuario.
+ * useIdleTimer - Hook de detecção de inatividade do usuário.
  *
- * Monitora eventos de interacao (mouse, teclado, scroll, touch) e dispara
- * um callback apos o tempo configurado sem atividade.
+ * Monitora eventos de interação (mouse, teclado, scroll, touch) e dispara
+ * um callback após o tempo configurado sem atividade.
  *
- * BALANCAMENTO UX / SEGURANCA:
- *   O idle timer NAO faz logout — apenas bloqueia a interface (lock screen).
- *   A sessao JWT permanece valida. Para desbloquear, o usuario informa apenas
- *   a senha (sem MFA), o que confirma presenca sem interromper o fluxo.
+ * Persistência entre recargas:
+ *   O timestamp da última atividade é gravado no localStorage
+ *   ("plantelligence-last-activity"). Na montagem, se o tempo decorrido
+ *   desde a última atividade já supera idleMs, o callback é disparado
+ *   imediatamente — impedindo que um refresh de página contorne o lock.
  *
- *   Isso e deliberado: operadores que monitoram estufas em turnos longos nao
- *   devem ser forcados a re-autenticar com MFA a cada 30 minutos. O bloquio
- *   de tela e suficiente para proteger o painel caso o operador se afaste.
+ * BALANÇO UX / SEGURANÇA:
+ *   O idle timer NÃO faz logout — apenas bloqueia a interface (lock screen).
+ *   A sessão JWT permanece válida. Para desbloquear, o usuário informa apenas
+ *   a senha (sem MFA), o que confirma presença sem interromper o fluxo.
  *
  * @param {number}   idleMs      Tempo de inatividade em ms antes de chamar onIdle.
- * @param {Function} onIdle      Callback chamado quando inatividade e detectada.
- * @param {boolean}  enabled     Se false, o timer e desativado (default: true).
+ * @param {Function} onIdle      Callback chamado quando inatividade é detectada.
+ * @param {boolean}  enabled     Se false, o timer é desativado (default: true).
  *
  * @example
  *   useIdleTimer(30 * 60 * 1000, () => lockSession(), isAuthenticated);
  */
 
 import { useCallback, useEffect, useRef } from 'react';
+
+const LAST_ACTIVITY_KEY = 'plantelligence-last-activity';
 
 // Eventos que reiniciam o contador de inatividade
 const ACTIVITY_EVENTS = [
@@ -34,8 +38,26 @@ const ACTIVITY_EVENTS = [
   'click',
   'wheel',
   'pointerdown',
-  'visibilitychange',
 ];
+
+const readLastActivity = () => {
+  try {
+    const raw = window.localStorage.getItem(LAST_ACTIVITY_KEY);
+    return raw ? Number(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+const writeLastActivity = (ts) => {
+  try {
+    window.localStorage.setItem(LAST_ACTIVITY_KEY, String(ts));
+  } catch {}
+};
+
+export const clearLastActivity = () => {
+  try { window.localStorage.removeItem(LAST_ACTIVITY_KEY); } catch {}
+};
 
 export function useIdleTimer(idleMs, onIdle, enabled = true) {
   const timerRef   = useRef(null);
@@ -48,6 +70,7 @@ export function useIdleTimer(idleMs, onIdle, enabled = true) {
 
   const resetTimer = useCallback(() => {
     if (!enabledRef.current) return;
+    writeLastActivity(Date.now());
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
       if (enabledRef.current) onIdleRef.current?.();
@@ -60,10 +83,29 @@ export function useIdleTimer(idleMs, onIdle, enabled = true) {
       return;
     }
 
-    // Inicia o timer imediatamente
-    resetTimer();
+    // Verifica se o usuário já estava inativo antes desta carga de página
+    const lastActivity = readLastActivity();
+    if (lastActivity !== null) {
+      const elapsed = Date.now() - lastActivity;
+      if (elapsed >= idleMs) {
+        // Inatividade já atingiu o limite — bloqueia imediatamente
+        onIdleRef.current?.();
+        return;
+      }
+      // Agenda o restante do tempo que falta
+      const remaining = idleMs - elapsed;
+      timerRef.current = setTimeout(() => {
+        if (enabledRef.current) onIdleRef.current?.();
+      }, remaining);
+    } else {
+      // Primeira carga — inicia o timer completo e registra a atividade
+      writeLastActivity(Date.now());
+      timerRef.current = setTimeout(() => {
+        if (enabledRef.current) onIdleRef.current?.();
+      }, idleMs);
+    }
 
-    // Adiciona listeners para qualquer interacao do usuario
+    // Adiciona listeners para qualquer interação do usuário
     const handleActivity = () => resetTimer();
     ACTIVITY_EVENTS.forEach((evt) =>
       window.addEventListener(evt, handleActivity, { passive: true })
@@ -75,7 +117,7 @@ export function useIdleTimer(idleMs, onIdle, enabled = true) {
         window.removeEventListener(evt, handleActivity)
       );
     };
-  }, [enabled, resetTimer]);
+  }, [enabled, idleMs, resetTimer]);
 }
 
 export default useIdleTimer;

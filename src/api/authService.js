@@ -63,3 +63,12 @@ export const startFirstAccess = (payload) =>
 
 export const completeFirstAccess = (payload) =>
   api.post('/auth/first-access/complete', payload).then((res) => res.data);
+
+// ── MFA reconfirmação para ações críticas ────────────────────────────────────
+// Envia código por e-mail para o usuário autenticado (não requer payload)
+export const initiateMfaReconfirm = () =>
+  api.post('/auth/mfa-reconfirm/initiate').then((res) => res.data);
+
+// Verifica o código (TOTP ou e-mail) e retorna novos tokens com sca=now
+export const verifyMfaReconfirm = (payload) =>
+  api.post('/auth/mfa-reconfirm/verify', payload).then((res) => res.data);

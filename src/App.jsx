@@ -370,10 +370,10 @@ const App = () => {
             <Route path="dashboard/presets" element={<PresetsPage />} />
             <Route path="dashboard/relatorios" element={<RelatoriosPage />} />
             <Route path="settings" element={<UserSettingsPage />} />
-            <Route path="settings/logs" element={<SecurityLogsPage />} />
             <Route path="help" element={<HelpPage />} />
             <Route element={<AdminRoute />}>
               <Route path="admin/usuários" element={<AdminUsersPage />} />
+              <Route path="settings/logs" element={<SecurityLogsPage />} />
             </Route>
           </Route>
         </Route>

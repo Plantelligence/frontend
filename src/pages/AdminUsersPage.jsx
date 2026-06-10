@@ -17,6 +17,7 @@
 // Painel administrativo simplificado para criar usuários, ajustar nível e bloquear acesso.
 import React, { useEffect, useMemo, useState } from 'react';
 import { Button } from '../components/Button.jsx';
+import { MfaReconfirmModal } from '../components/MfaReconfirmModal.jsx';
 import {
   createUserByAdmin,
   deleteUserByAdmin,
@@ -80,6 +81,10 @@ export const AdminUsersPage = () => {
   const [deleteLoadingId, setDeleteLoadingId] = useState(null);
   const [userActionFeedback, setUserActionFeedback] = useState(null);
   const [userActionError, setUserActionError] = useState(null);
+
+  // MFA reconfirmação para exclusão de usuário
+  const [showMfaModal, setShowMfaModal] = useState(false);
+  const [pendingDeleteUser, setPendingDeleteUser] = useState(null);
 
   const [accessDraft, setAccessDraft] = useState({ blocked: false, reason: '' });
   const [accessLoading, setAccessLoading] = useState(false);
@@ -388,17 +393,19 @@ export const AdminUsersPage = () => {
     }
   };
 
-  const handleDeleteUser = async (listedUser) => {
-    if (!listedUser) {
-      return;
-    }
+  // Abre o modal MFA — a exclusão só acontece após confirmação
+  const handleDeleteUser = (listedUser) => {
+    if (!listedUser) return;
+    setPendingDeleteUser(listedUser);
+    setShowMfaModal(true);
+  };
 
-    const confirmed = window.confirm(
-      `Confirmar remoção do acesso de ${listedUser.email}? Os dados criados permanecerão vinculados à organização.`
-    );
-    if (!confirmed) {
-      return;
-    }
+  // Chamado pelo MfaReconfirmModal após tokens frescos emitidos
+  const executeDeleteAfterMfa = async () => {
+    setShowMfaModal(false);
+    const listedUser = pendingDeleteUser;
+    setPendingDeleteUser(null);
+    if (!listedUser) return;
 
     setUserActionFeedback(null);
     setUserActionError(null);
@@ -893,6 +900,18 @@ export const AdminUsersPage = () => {
               </button>
             </div>
           </section>
+      )}
+
+      {showMfaModal && pendingDeleteUser && (
+        <MfaReconfirmModal
+          title="Excluir usuário"
+          description={`Você está prestes a remover o acesso de ${pendingDeleteUser.email}. Os dados criados permanecerão na organização. Esta ação é irreversível.`}
+          onConfirm={executeDeleteAfterMfa}
+          onCancel={() => {
+            setShowMfaModal(false);
+            setPendingDeleteUser(null);
+          }}
+        />
       )}
     </>
   );

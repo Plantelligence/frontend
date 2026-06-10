@@ -17,6 +17,7 @@
 
 import { create } from 'zustand';
 import { applyServerTheme } from './themeStore.js';
+import { clearLastActivity } from '../hooks/useIdleTimer.js';
 
 const STORAGE_KEY = 'plantelligence-session';
 
@@ -134,19 +135,29 @@ export const useAuthStore = create((set, get) => ({
 
   setSession: ({ user, tokens, requiresPasswordReset }) => {
     // Detecta se já havia sessão ativa (= refresh de token, não login fresco)
-    const isTokenRefresh = Boolean(get().user);
+    const current = get();
+    const isTokenRefresh = Boolean(current.user);
     const normalizedTokens = normalizeTokens(tokens);
+
+    // Em refresh de token (recarga de página, renovação silenciosa), preserva
+    // o estado de lock existente para que o LockScreen não desapareça.
+    // Apenas login fresco (isTokenRefresh = false) limpa o lock.
+    const nextLocked    = isTokenRefresh ? current.isLocked    : false;
+    const nextLockReason = isTokenRefresh ? current.lockReason : null;
+
     const nextState = {
       user,
       tokens: normalizedTokens,
       requiresPasswordReset:
-        requiresPasswordReset ?? get().requiresPasswordReset ?? false,
-      // ao receber nova sessao, remove o lock
-      isLocked: false,
-      lockReason: null,
+        requiresPasswordReset ?? current.requiresPasswordReset ?? false,
+      isLocked:    nextLocked,
+      lockReason:  nextLockReason,
     };
     set(nextState);
-    persistLockState(false, null);
+
+    // Só apaga o lock no localStorage em login fresco
+    if (!isTokenRefresh) persistLockState(false, null);
+
     // Aplica o tema do servidor apenas em login fresco.
     // Em refresh de token, respeita a preferência local para não sobrescrever
     // o dark mode quando o servidor ainda tem 'light' desatualizado.
@@ -176,6 +187,7 @@ export const useAuthStore = create((set, get) => ({
       window.localStorage.removeItem(STORAGE_KEY);
       window.localStorage.removeItem(LOCK_KEY);
     }
+    clearLastActivity();
   },
 
   lockSession: (reason = 'idle') => {
@@ -188,5 +200,7 @@ export const useAuthStore = create((set, get) => ({
   unlockSession: () => {
     set({ isLocked: false, lockReason: null });
     persistLockState(false, null);
+    // Reinicia o contador de inatividade a partir do desbloqueio
+    clearLastActivity();
   },
 }));
