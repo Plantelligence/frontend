@@ -23,11 +23,16 @@
  *   useIdleTimer(30 * 60 * 1000, () => lockSession(), isAuthenticated);
  */
 
+// useCallback evita recriar funções desnecessariamente
+// useEffect para registrar/remover listeners ao montar/desmontar
+// useRef para manter referências mutáveis sem causar re-renders
 import { useCallback, useEffect, useRef } from 'react';
 
+// Chave do localStorage para o timestamp da última atividade do usuário
 const LAST_ACTIVITY_KEY = 'plantelligence-last-activity';
 
 // Eventos que reiniciam o contador de inatividade
+// Cobrem todos os tipos de interação: mouse, teclado, scroll e touch
 const ACTIVITY_EVENTS = [
   'mousedown',
   'mousemove',
@@ -40,44 +45,55 @@ const ACTIVITY_EVENTS = [
   'pointerdown',
 ];
 
+// Lê o timestamp da última atividade registrada no localStorage
 const readLastActivity = () => {
   try {
     const raw = window.localStorage.getItem(LAST_ACTIVITY_KEY);
+    // Converte para número ou retorna null se não existir
     return raw ? Number(raw) : null;
   } catch {
     return null;
   }
 };
 
+// Grava o timestamp atual como última atividade do usuário
 const writeLastActivity = (ts) => {
   try {
     window.localStorage.setItem(LAST_ACTIVITY_KEY, String(ts));
   } catch {}
 };
 
+// Exportado para ser chamado pelo authStore no logout e no desbloqueio
 export const clearLastActivity = () => {
   try { window.localStorage.removeItem(LAST_ACTIVITY_KEY); } catch {}
 };
 
 export function useIdleTimer(idleMs, onIdle, enabled = true) {
+  // Guarda o ID do setTimeout para poder cancelar quando o usuário interage
   const timerRef   = useRef(null);
+  // Ref para o callback onIdle — evita recriar listeners quando o callback muda
   const onIdleRef  = useRef(onIdle);
+  // Ref para o flag enabled — permite desativar sem remover/readicionar listeners
   const enabledRef = useRef(enabled);
 
   // Mantém referências atualizadas sem re-adicionar listeners
   useEffect(() => { onIdleRef.current  = onIdle;   }, [onIdle]);
   useEffect(() => { enabledRef.current = enabled;  }, [enabled]);
 
+  // Reinicia o timer e registra a atividade atual no localStorage
   const resetTimer = useCallback(() => {
     if (!enabledRef.current) return;
+    // Atualiza o timestamp para sobreviver a refreshes de página
     writeLastActivity(Date.now());
     if (timerRef.current) clearTimeout(timerRef.current);
+    // Agenda o callback de inatividade para daqui a idleMs milissegundos
     timerRef.current = setTimeout(() => {
       if (enabledRef.current) onIdleRef.current?.();
     }, idleMs);
   }, [idleMs]);
 
   useEffect(() => {
+    // Se o timer foi desativado, cancela qualquer timeout pendente e sai
     if (!enabled) {
       if (timerRef.current) clearTimeout(timerRef.current);
       return;
@@ -92,7 +108,7 @@ export function useIdleTimer(idleMs, onIdle, enabled = true) {
         onIdleRef.current?.();
         return;
       }
-      // Agenda o restante do tempo que falta
+      // Agenda o restante do tempo que falta até completar o período de inatividade
       const remaining = idleMs - elapsed;
       timerRef.current = setTimeout(() => {
         if (enabledRef.current) onIdleRef.current?.();
@@ -107,10 +123,12 @@ export function useIdleTimer(idleMs, onIdle, enabled = true) {
 
     // Adiciona listeners para qualquer interação do usuário
     const handleActivity = () => resetTimer();
+    // passive: true melhora performance em eventos de scroll e touch
     ACTIVITY_EVENTS.forEach((evt) =>
       window.addEventListener(evt, handleActivity, { passive: true })
     );
 
+    // Cleanup: cancela o timer e remove todos os listeners ao desmontar ou trocar dependências
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
       ACTIVITY_EVENTS.forEach((evt) =>

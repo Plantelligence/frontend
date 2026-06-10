@@ -14,11 +14,14 @@
  * A renovação automática do token acontece no interceptor em client.js.
  */
 
+// Importa a instância Axios configurada com interceptores de autenticação
 import api from './client.js';
 
+// Envia os dados de cadastro do novo usuário para criar a conta
 export const register = (payload) =>
   api.post('/auth/register', payload).then((res) => res.data);
 
+// Confirma o e-mail após o registro inicial, validando o código enviado por correio
 export const confirmRegistration = (payload) =>
   api.post('/auth/register/confirm', payload).then((res) => res.data);
 
@@ -26,6 +29,7 @@ export const confirmRegistration = (payload) =>
 export const finalizeRegistration = (payload) =>
   api.post('/auth/register/otp', payload).then((res) => res.data);
 
+// Envia e-mail e senha para autenticação; retorna dados de sessão ou desafio MFA
 export const login = (payload) =>
   api.post('/auth/login', payload).then((res) => res.data);
 
@@ -37,9 +41,11 @@ export const initiateMfa = (payload) =>
 export const verifyMfa = (payload) =>
   api.post('/auth/mfa/verify', payload).then((res) => res.data);
 
+// Solicita renovação explícita do access token usando o refresh token do cookie
 export const refresh = (payload) =>
   api.post('/auth/refresh', payload).then((res) => res.data);
 
+// Encerra a sessão do usuário no servidor e invalida o refresh token no banco
 export const logout = (payload) =>
   api.post('/auth/logout', payload).then((res) => res.status);
 
@@ -47,6 +53,7 @@ export const logout = (payload) =>
 export const checkEmailExists = (email) =>
   api.post('/auth/check-email', { email }).then((res) => res.data);
 
+// Solicita envio de e-mail com link ou código para redefinição de senha
 export const requestPasswordReset = (payload) =>
   api.post('/auth/password-reset/request', payload).then((res) => res.data);
 
@@ -54,6 +61,7 @@ export const requestPasswordReset = (payload) =>
 export const verifyTotpForReset = (payload) =>
   api.post('/auth/password-reset/verify-totp', payload).then((res) => res.data);
 
+// Confirma a nova senha usando o token de reset recebido por e-mail ou TOTP
 export const confirmPasswordReset = (payload) =>
   api.post('/auth/password-reset/confirm', payload).then((res) => res.data);
 
@@ -61,6 +69,7 @@ export const confirmPasswordReset = (payload) =>
 export const startFirstAccess = (payload) =>
   api.post('/auth/first-access/start', payload).then((res) => res.data);
 
+// Completa o primeiro acesso definindo a senha e confirmando o e-mail do convidado
 export const completeFirstAccess = (payload) =>
   api.post('/auth/first-access/complete', payload).then((res) => res.data);
 

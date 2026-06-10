@@ -13,6 +13,7 @@
  *   regenerarTokenDevice — gera um novo SAS Token (usado quando o token expira após 1 ano)
  */
 
+// Importa a instância Axios configurada com os interceptores JWT
 import api from './client.js';
 
 /**
@@ -22,12 +23,15 @@ import api from './client.js';
  */
 const mapDevice = (item) => ({
   id: item?.id,
+  // Suporta tanto 'nome' (campo legado em português) quanto 'name' (novo padrão)
   name: item?.nome ?? item?.name ?? 'Dispositivo',
   type: item?.tipo ?? item?.type ?? '',
   identifier: item?.identificador ?? item?.identifier ?? '',
   active: item?.ativo ?? item?.active ?? true,
+  // ID da estufa a qual o dispositivo pertence — importante para requisições aninhadas
   estufaId: item?.estufa_id ?? item?.estufaId ?? null,
   // credenciais do Azure IoT Hub — retornadas apenas na criação e na renovação do token
+  // o ESP32 usa esses dados para se conectar ao broker MQTT
   iothubDeviceId: item?.iothub_device_id ?? null,
   iothubSasToken: item?.iothub_sas_token ?? null,
   mqttServer:    item?.mqtt_server ?? null,
@@ -40,6 +44,7 @@ const mapDevice = (item) => ({
 /** Retorna todos os dispositivos cadastrados em uma estufa específica. */
 export const listDevices = (estufaId) =>
   api.get(`/estufas/${estufaId}/dispositivos`).then((res) => ({
+    // Normaliza a lista: o backend retorna os itens dentro da chave 'dispositivos'
     devices: (res.data?.dispositivos ?? []).map(mapDevice),
   }));
 
@@ -50,8 +55,10 @@ export const listDevices = (estufaId) =>
  */
 export const createDevice = (estufaId, payload) =>
   api.post(`/estufas/${estufaId}/dispositivos`, {
+    // Converte os nomes do frontend para o formato esperado pelo backend
     nome: payload?.name,
     tipo: payload?.type,
+    // Identificador é opcional — o backend pode gerar automaticamente se omitido
     identificador: payload?.identifier || undefined,
   }).then((res) => ({ device: mapDevice(res.data) }));
 
@@ -59,6 +66,7 @@ export const createDevice = (estufaId, payload) =>
 export const updateDevice = (estufaId, deviceId, payload) =>
   api.patch(`/estufas/${estufaId}/dispositivos/${deviceId}`, {
     nome: payload?.name,
+    // 'ativo' controla se o dispositivo está enviando dados ou foi desativado temporariamente
     ativo: payload?.active,
   }).then((res) => ({ device: mapDevice(res.data) }));
 

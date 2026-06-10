@@ -10,21 +10,34 @@
  * O timer padrão é de 60 segundos, configurável via parâmetro.
  */
 
+// useCallback: memoiza as funções para evitar recriações desnecessárias
+// useEffect: limpa os timers ao desmontar os componentes
+// useRef: armazena IDs de setInterval sem causar re-renders
+// useState: mantém os contadores reativos na interface
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+// Tempos de espera em segundos após cada envio consecutivo (backoff progressivo)
+// Primeiro envio: sem espera; segundo: 30s; terceiro: 60s; quarto: 120s; quinto+: 300s
 const COOLDOWN_STEPS = [0, 30, 60, 120, 300]; // seconds after each consecutive send
 
+// Retorna o tempo de espera para o próximo envio com base em quantas vezes já enviou
 function getNextCooldown(sendCount) {
+  // Garante que não ultrapasse o índice máximo da tabela de cooldowns
   const index = Math.min(sendCount, COOLDOWN_STEPS.length - 1);
   return COOLDOWN_STEPS[index];
 }
 
 // Single-instance cooldown (e.g. password reset button)
+// Versão para uso em contextos com um único botão de reenvio (ex.: redefinição de senha)
 export function useEmailCooldown() {
+  // Segundos restantes até poder enviar novamente (0 = liberado)
   const [secondsLeft, setSecondsLeft] = useState(0);
+  // Contador de envios para calcular o cooldown progressivo
   const [sendCount, setSendCount] = useState(0);
+  // Ref para o ID do setInterval — permite cancelar o timer ao desmontar
   const timerRef = useRef(null);
 
+  // Para o timer e limpa a referência para evitar chamadas após desmontagem
   const clearTimer = () => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -32,18 +45,23 @@ export function useEmailCooldown() {
     }
   };
 
+  // Limpa o timer ao desmontar o componente para evitar vazamento de memória
   useEffect(() => () => clearTimer(), []);
 
+  // Chamado após cada envio bem-sucedido: incrementa o contador e inicia o cooldown
   const recordSend = useCallback(() => {
     setSendCount((prev) => {
       const next = prev + 1;
+      // Calcula quanto tempo deve esperar com base no número de envios
       const delay = getNextCooldown(next);
       if (delay > 0) {
         setSecondsLeft(delay);
         clearTimer();
+        // Decresce o contador a cada segundo até zerar
         timerRef.current = setInterval(() => {
           setSecondsLeft((s) => {
             if (s <= 1) {
+              // Quando chegar a zero, para o timer e libera o botão
               clearTimer();
               return 0;
             }
@@ -55,32 +73,42 @@ export function useEmailCooldown() {
     });
   }, []);
 
+  // canSend: verdadeiro quando não há cooldown ativo (botão liberado)
   return { canSend: secondsLeft === 0, secondsLeft, recordSend };
 }
 
 // Per-key cooldown map (e.g. per-user resend invite buttons)
+// Versão para múltiplos botões independentes na mesma tela (ex.: reenviar convite por usuário)
 export function useEmailCooldownMap() {
+  // Mapa de { chave: segundosRestantes } para cada botão individual
   const [seconds, setSeconds] = useState({});       // { [key]: secondsLeft }
+  // Mapa de contadores de envio por chave para o backoff progressivo
   const [counts, setCounts] = useState({});          // { [key]: sendCount }
+  // Mapa de IDs de timer para cada chave — permite cancelar timers individualmente
   const timers = useRef({});
 
+  // Limpa todos os timers ativos ao desmontar o componente
   useEffect(() => {
     return () => {
       Object.values(timers.current).forEach(clearInterval);
     };
   }, []);
 
+  // Registra um envio para a chave especificada e inicia o cooldown dessa chave
   const recordSend = useCallback((key) => {
     setCounts((prev) => {
       const next = (prev[key] ?? 0) + 1;
       const delay = getNextCooldown(next);
       if (delay > 0) {
+        // Inicializa o contador de segundos para esta chave específica
         setSeconds((s) => ({ ...s, [key]: delay }));
         if (timers.current[key]) clearInterval(timers.current[key]);
+        // Decrementa apenas o contador desta chave a cada segundo
         timers.current[key] = setInterval(() => {
           setSeconds((s) => {
             const cur = s[key] ?? 0;
             if (cur <= 1) {
+              // Zera e para o timer quando o cooldown desta chave termina
               clearInterval(timers.current[key]);
               timers.current[key] = null;
               return { ...s, [key]: 0 };
@@ -93,7 +121,9 @@ export function useEmailCooldownMap() {
     });
   }, []);
 
+  // Verifica se o botão de uma chave específica está liberado para envio
   const canSend = useCallback((key) => (seconds[key] ?? 0) === 0, [seconds]);
+  // Retorna os segundos restantes para uma chave específica
   const secondsLeft = useCallback((key) => seconds[key] ?? 0, [seconds]);
 
   return { canSend, secondsLeft, recordSend };

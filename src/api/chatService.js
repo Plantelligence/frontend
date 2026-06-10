@@ -11,10 +11,15 @@
  *                             de uma descrição livre (ex.: "quero cultivar shiitake")
  */
 
+// Importa a instância Axios com interceptores JWT — o token é adicionado automaticamente
 import api from './client.js';
 
+// Envia o histórico completo da conversa e recebe a próxima mensagem do assistente
+// payload deve conter { messages: [{role, content}, ...] } seguindo o padrão OpenAI
 export const sendChatMessage = (payload) =>
   api.post('/chat/', payload).then((res) => res.data);
 
+// Solicita ao assistente que sugira parâmetros de cultivo com base em uma pergunta livre
+// retorna um objeto com os campos do preset já preenchidos pela IA
 export const requestPresetSuggestion = (question) =>
   api.post('/chat/preset-suggestion', { question }).then((res) => res.data);

@@ -10,6 +10,7 @@
  * portanto não é necessário informar credenciais aqui.
  */
 
+// Importa a instância Axios com interceptores de autenticação já configurados
 import api from './client.js';
 
 /**
@@ -22,11 +23,14 @@ import api from './client.js';
 export const enviarTelemetria = (estufaId, leitura) =>
   api
     .post(`/estufas/${estufaId}/telemetria`, {
+      // ?? null garante que campos não informados sejam enviados como null e não como undefined
       temperatura:  leitura.temperatura  ?? null,
       umidade:      leitura.umidade      ?? null,
+      // Converte o nome camelCase do frontend (umidadeSolo) para snake_case do backend
       umidade_solo: leitura.umidadeSolo  ?? null,
       luminosidade: leitura.luminosidade ?? null,
     })
+    // Retorna null porque o frontend não usa o corpo da resposta para esta operação
     .then(() => null);
 
 /**
@@ -36,6 +40,7 @@ export const enviarTelemetria = (estufaId, leitura) =>
  * @param {number} horas     - Janela de historico em horas (1-168, default: 24)
  * @param {number} janela    - Granularidade em minutos (5-360, default: 30)
  */
+// horas controla quantos dados passados serão exibidos; janela define a resolução do gráfico
 export const getHistoricoTelemetria = (estufaId, horas = 24, janela = 30) =>
   api
     .get(`/estufas/${estufaId}/telemetria/historico`, { params: { horas, janela } })
