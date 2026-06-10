@@ -22,26 +22,26 @@ Interface web do sistema de automação e monitoramento de estufas de cogumelos,
 
 ---
 
-## Seguranca
+## Segurança
 
-A camada de seguranca do frontend complementa o backend, focando em como os tokens sao armazenados, transmitidos e como o usuario e protegido no navegador.
+A camada de segurança do frontend complementa o backend, focando em como os tokens são armazenados, transmitidos e como o usuário é protegido no navegador.
 
 ### Armazenamento de Tokens
 
-- **Refresh token fora do `localStorage`:** o refresh token nunca e gravado em armazenamento acessivel ao JavaScript. Ele trafega exclusivamente no cookie `httpOnly` `plnt_rt`, enviado automaticamente pelo browser a cada chamada a `/api/auth/*`. O `localStorage` armazena apenas `accessToken`, `accessExpiresAt` e `accessJti`.
-- **Zustand authStore com sanitizacao:** a funcao `persistToStorage` remove explicitamente o campo `refreshToken` antes de qualquer gravacao no `localStorage`, impedindo que respostas de versoes anteriores contaminem o armazenamento.
+- **Refresh token fora do `localStorage`:** o refresh token nunca é gravado em armazenamento acessível ao JavaScript. Ele trafega exclusivamente no cookie `httpOnly` `plnt_rt`, enviado automaticamente pelo browser a cada chamada a `/api/auth/*`. O `localStorage` armazena apenas `accessToken`, `accessExpiresAt` e `accessJti`.
+- **Zustand authStore com sanitização:** a função `persistToStorage` remove explicitamente o campo `refreshToken` antes de qualquer gravação no `localStorage`, impedindo que respostas de versões anteriores contaminem o armazenamento.
 
-### Transmissao HTTP (Axios)
+### Transmissão HTTP (Axios)
 
-- **`withCredentials: true`:** ambas as instancias Axios (`api` e `refreshClient`) enviam o cookie `httpOnly` em chamadas cross-origin, sem expor o token em headers manipulaveis pelo JavaScript.
-- **HTTPS forcado:** qualquer URL absoluta que nao seja `localhost` tem `http://` substituido por `https://` antes de cada requisicao, independentemente do valor configurado em `VITE_APP_API_URL`.
-- **Renovacao automatica de sessao:** ao receber `HTTP 401` em endpoints protegidos, o interceptor dispara `POST /auth/refresh` (sem body - o cookie e enviado automaticamente) e reexecuta a requisicao original. Se o backend retornar `SESSION_MAX_AGE_EXCEEDED`, a sessao e encerrada e o usuario e redirecionado para login.
-- **Deteccao de MFA obrigatorio:** ao receber `HTTP 403 MFA_RECONFIRMATION_REQUIRED`, o interceptor encerra a sessao e redireciona para `/login?reason=mfa_required_for_action`.
+- **`withCredentials: true`:** ambas as instâncias Axios (`api` e `refreshClient`) enviam o cookie `httpOnly` em chamadas cross-origin, sem expor o token em headers manipuláveis pelo JavaScript.
+- **HTTPS forçado:** qualquer URL absoluta que não seja `localhost` tem `http://` substituído por `https://` antes de cada requisição, independentemente do valor configurado em `VITE_APP_API_URL`.
+- **Renovação automática de sessão:** ao receber `HTTP 401` em endpoints protegidos, o interceptor dispara `POST /auth/refresh` (sem body - o cookie é enviado automaticamente) e reexecuta a requisição original. Se o backend retornar `SESSION_MAX_AGE_EXCEEDED`, a sessão é encerrada e o usuário é redirecionado para login.
+- **Detecção de MFA obrigatório:** ao receber `HTTP 403 MFA_RECONFIRMATION_REQUIRED`, o interceptor encerra a sessão e redireciona para `/login?reason=mfa_required_for_action`.
 
-### Protecao no Navegador
+### Proteção no Navegador
 
-- **Lock screen por inatividade:** o hook `useIdleTimer` monitora interacao do usuario (mouse, teclado, toque); apos 30 minutos sem atividade, a interface e bloqueada. O estado de bloqueio e persistido em chave separada no `localStorage` (`plantelligence-lock`) para resistir a refresh de pagina.
-- **ProtectedRoute:** rotas autenticadas verificam a existencia do `accessToken` na store; ausencia redireciona imediatamente para login sem renderizar conteudo protegido.
+- **Lock screen por inatividade:** o hook `useIdleTimer` monitora interação do usuário (mouse, teclado, toque); após 30 minutos sem atividade, a interface é bloqueada. O estado de bloqueio é persistido em chave separada no `localStorage` (`plantelligence-lock`) para resistir a refresh de página.
+- **ProtectedRoute:** rotas autenticadas verificam a existência do `accessToken` na store; ausência redireciona imediatamente para login sem renderizar conteúdo protegido.
 
 ---
 
