@@ -359,13 +359,13 @@ export const WizardOnboardingDispositivo = ({ estufaId, onClose, onSuccess }) =>
           {/* ── Etapa 2: Firmware ── */}
           {etapa === 'firmware' && firmware && (
             <div className="space-y-4">
-              <div className="rounded-xl border border-emerald-800/40 bg-emerald-900/20 px-4 py-3">
-                <p className="text-xs font-semibold text-emerald-300">
+              <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50 dark:bg-emerald-900/20 px-4 py-3">
+                <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">
                   <i className="fa-solid fa-circle-check mr-1.5" />
                   Dispositivo registrado no Azure IoT Hub com sucesso!
                 </p>
-                <p className="mt-1 text-[11px] text-emerald-400/80">
-                  Device ID: <code className="rounded bg-emerald-900/40 px-1.5 py-0.5 font-mono text-[10px]">{firmware.device_id}</code>
+                <p className="mt-1 text-[11px] text-emerald-600 dark:text-emerald-400">
+                  Device ID: <code className="rounded bg-emerald-100 dark:bg-emerald-900/40 px-1.5 py-0.5 font-mono text-[10px] text-emerald-800 dark:text-emerald-300">{firmware.device_id}</code>
                 </p>
               </div>
 
@@ -480,18 +480,18 @@ export const WizardOnboardingDispositivo = ({ estufaId, onClose, onSuccess }) =>
                 </div>
               </div>
               <div>
-                <p className="text-lg font-semibold text-emerald-300">Dispositivo online!</p>
-                <p className="mt-1 text-sm text-stone-400">
+                <p className="text-lg font-semibold text-emerald-600 dark:text-emerald-300">Dispositivo online!</p>
+                <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
                   O ESP32 conectou com sucesso e está enviando dados para a estufa.
                 </p>
               </div>
               {dispositivo && (
-                <div className="rounded-xl border border-emerald-800/30 bg-emerald-900/10 px-5 py-4 text-left">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-400 mb-2">Dispositivo cadastrado</p>
-                  <div className="space-y-1 text-xs text-stone-300">
+                <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/30 bg-emerald-50 dark:bg-emerald-900/10 px-5 py-4 text-left">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400 mb-2">Dispositivo cadastrado</p>
+                  <div className="space-y-1 text-xs text-stone-700 dark:text-stone-300">
                     <p><span className="text-stone-500">Nome:</span> {dispositivo.nome}</p>
                     <p><span className="text-stone-500">Tipo:</span> {dispositivo.tipo}</p>
-                    {firmware?.device_id && <p><span className="text-stone-500">Device ID:</span> <code className="text-[10px] text-emerald-400">{firmware.device_id}</code></p>}
+                    {firmware?.device_id && <p><span className="text-stone-500">Device ID:</span> <code className="text-[10px] text-emerald-700 dark:text-emerald-400">{firmware.device_id}</code></p>}
                   </div>
                 </div>
               )}
