@@ -410,7 +410,7 @@ const App = () => {
         <LockScreen
           user={authUser}
           onUnlock={unlockSession}
-          {/* Ao fazer logout do lock screen, limpa a sessão e vai para o login */}
+          // Ao fazer logout do lock screen, limpa a sessão e vai para o login
           onLogout={() => { clearSession(); navigate('/login', { replace: true }); }}
         />
       )}
@@ -472,3 +472,4 @@ const App = () => {
 };
 
 export default App;
+       
