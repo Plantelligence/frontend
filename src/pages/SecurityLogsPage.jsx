@@ -142,7 +142,7 @@ const buildContext = (entry) => {
   if (metadata.inviteSent === false) highlights.push('Convite não enviado (SMTP indisponível)');
 
   // Senha expirada
-  if (metadata.passwordExpired === true) highlights.push('Senha expirada — redefinição necessária');
+  if (metadata.passwordExpired === true) highlights.push('Senha expirada: redefinição necessária');
 
   // Bloqueio de usuário
   if (metadata.blocked !== undefined) highlights.push(metadata.blocked ? 'Conta bloqueada' : 'Conta desbloqueada');

@@ -400,7 +400,7 @@ export const WizardOnboardingDispositivo = ({ estufaId, onClose, onSuccess }) =>
                 </button>
                 <button type="button" onClick={handleFirmwareConfirmado}
                   className="flex items-center gap-2 rounded-xl bg-red-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-red-500">
-                  <i className="fa-solid fa-satellite-dish" /> Já gravei — Aguardar conexão
+                  <i className="fa-solid fa-satellite-dish" /> Já gravei. Aguardar conexão
                 </button>
               </div>
             </div>

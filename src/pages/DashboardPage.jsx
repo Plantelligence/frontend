@@ -897,7 +897,7 @@ const GreenhousePanel = ({
           </div>
           <div className="rounded border border-stone-200 dark:border-stone-800/50 bg-white dark:bg-stone-800 p-3">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600 dark:text-stone-300">Luminosidade</p>
-            <p className="mt-1 text-xs text-slate-600 dark:text-stone-400">Nível de luz medido em lux. Cogumelos precisam de pouca luz — excesso prejudica o crescimento.</p>
+            <p className="mt-1 text-xs text-slate-600 dark:text-stone-400">Nível de luz medido em lux. Cogumelos precisam de pouca luz. Excesso prejudica o crescimento.</p>
           </div>
           <div className="rounded border border-stone-200 dark:border-stone-800/50 bg-white dark:bg-stone-800 p-3">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600 dark:text-stone-300">Perfil de cultivo</p>
@@ -930,25 +930,25 @@ const GreenhousePanel = ({
                 <div className="rounded border border-stone-200 dark:border-stone-800/50 bg-white dark:bg-stone-800 p-3">
                   <dt className="text-[11px] uppercase tracking-widest text-slate-500 dark:text-stone-400">Temperatura</dt>
                   <dd>
-                    {currentProfile.temperature?.min ?? '—'}°C — {currentProfile.temperature?.max ?? '—'}°C
+                    {currentProfile.temperature?.min ?? '-'}°C a {currentProfile.temperature?.max ?? '-'}°C
                   </dd>
                 </div>
                 <div className="rounded border border-stone-200 dark:border-stone-800/50 bg-white dark:bg-stone-800 p-3">
                   <dt className="text-[11px] uppercase tracking-widest text-slate-500 dark:text-stone-400">Umidade do ambiente</dt>
                   <dd>
-                    {currentProfile.humidity?.min ?? '—'}% — {currentProfile.humidity?.max ?? '—'}%
+                    {currentProfile.humidity?.min ?? '-'}% a {currentProfile.humidity?.max ?? '-'}%
                   </dd>
                 </div>
                 <div className="rounded border border-stone-200 dark:border-stone-800/50 bg-white dark:bg-stone-800 p-3">
                   <dt className="text-[11px] uppercase tracking-widest text-slate-500 dark:text-stone-400">Umidade do solo</dt>
                   <dd>
-                    {currentProfile.soilMoisture?.min ?? '—'}% — {currentProfile.soilMoisture?.max ?? '—'}%
+                    {currentProfile.soilMoisture?.min ?? '-'}% a {currentProfile.soilMoisture?.max ?? '-'}%
                   </dd>
                 </div>
                 <div className="rounded border border-stone-200 dark:border-stone-800/50 bg-white dark:bg-stone-800 p-3">
                   <dt className="text-[11px] uppercase tracking-widest text-slate-500 dark:text-stone-400">Luminosidade</dt>
                   <dd>
-                    {currentProfile.luminosity?.min ?? '—'} lux — {currentProfile.luminosity?.max ?? '—'} lux
+                    {currentProfile.luminosity?.min ?? '-'} lux a {currentProfile.luminosity?.max ?? '-'} lux
                   </dd>
                 </div>
               </dl>
@@ -1055,7 +1055,7 @@ const GreenhousePanel = ({
                           : '—'}
                       </p>
                       <p className="text-[11px]">
-                        Ideal {metric.expected?.min ?? '—'}{unitMap[metricKey]} — {metric.expected?.max ?? '—'}{unitMap[metricKey]}
+                        Ideal {metric.expected?.min ?? '-'}{unitMap[metricKey]} a {metric.expected?.max ?? '-'}{unitMap[metricKey]}
                       </p>
                       <p className="text-[11px]">
                         {metric.evaluated === false ? 'Sem dado coletado para este parâmetro' : `Fonte usada: ${sourceLabel}`}
@@ -1377,8 +1377,8 @@ const DEVICE_TYPE_LABELS = {
   'sensor-umidade':       'Sensor de umidade do ar',
   'sensor-solo':          'Sensor de umidade do solo',
   'sensor-luminosidade':  'Sensor de luminosidade',
-  'atuador-lampada':      'Atuador — Lâmpada',
-  'atuador-nebulizador':  'Atuador — Nebulizador',
+  'atuador-lampada':      'Atuador: Lâmpada',
+  'atuador-nebulizador':  'Atuador: Nebulizador',
 };
 
 export const DashboardPage = () => {

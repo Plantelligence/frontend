@@ -172,7 +172,7 @@ export const MfaReconfirmModal = ({ title, description, onConfirm, onCancel }) =
           <div className="text-center mb-6">
             <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/8 px-3 py-1 mb-3">
               <i className="fa-solid fa-shield-halved text-amber-400 text-[11px]" />
-              <span className="text-[11px] font-semibold text-amber-400">Ação crítica — verificação necessária</span>
+              <span className="text-[11px] font-semibold text-amber-400">Ação crítica: verificação necessária</span>
             </div>
             <h1 id="mfa-reconfirm-title" className="text-base font-bold text-stone-100">
               {title || 'Confirmar ação crítica'}

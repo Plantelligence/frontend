@@ -189,8 +189,7 @@ export const HelpPage = () => {
 
         {/* Hero */}
         <div className="rounded-2xl bg-gradient-to-br from-red-600 to-red-800 p-8 text-white">
-          <Badge color="red">Versão 2.1.0</Badge>
-          <h1 className="mt-3 text-3xl font-bold">Central de Ajuda</h1>
+          <h1 className="text-3xl font-bold">Central de Ajuda</h1>
           <p className="mt-2 text-red-100 text-base">
             Tudo o que você precisa saber para usar o Plantelligence, explicado de forma simples e direta.
           </p>

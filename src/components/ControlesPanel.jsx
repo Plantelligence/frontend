@@ -183,7 +183,7 @@ const AtuadorCard = ({ config, device, estadoAtual, onComando, readOnly }) => {
 
       {readOnly && (
         <p className="text-[11px] text-center text-slate-400 dark:text-stone-500">
-          <i className="fa-solid fa-lock mr-1" />Perfil somente leitura — sem permissão de controle
+          <i className="fa-solid fa-lock mr-1" />Perfil somente leitura: sem permissão de controle
         </p>
       )}
     </div>
