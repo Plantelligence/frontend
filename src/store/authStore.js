@@ -3,13 +3,16 @@
  *
  * Gerencia todo o estado relacionado ao usuário logado:
  *   - user: perfil completo (incluindo uiTheme para sincronização de tema)
- *   - tokens: access + refresh JWT
+ *   - tokens: apenas access token (o refresh token fica em httpOnly cookie — B3.6)
  *   - isLocked: estado do lock screen (persistido no localStorage)
  *   - requiresPasswordReset: flag de troca obrigatória de senha
  *
  * Persistência:
- *   - Sessão: localStorage["plantelligence-session"] (não inclui isLocked)
+ *   - Sessão: localStorage["plantelligence-session"] (user + accessToken, sem refreshToken)
  *   - Lock: localStorage["plantelligence-lock"] (separado para segurança)
+ *
+ * O refresh token NÃO é salvo no localStorage — fica exclusivamente no cookie
+ * httpOnly "plnt_rt", inacessível ao JavaScript (proteção contra XSS).
  *
  * Ao fazer login (setSession), aplica automaticamente o tema do servidor
  * via applyServerTheme(user.uiTheme) — sincroniza entre dispositivos.
@@ -27,18 +30,17 @@ const normalizeTokens = (tokens) => {
   }
 
   const accessToken = tokens.accessToken ?? tokens.access_token ?? null;
-  const refreshToken = tokens.refreshToken ?? tokens.refresh_token ?? null;
   const accessJti = tokens.accessJti ?? tokens.access_jti ?? null;
 
-  if (!accessToken && !refreshToken) {
+  // Refresh token nao e mais armazenado — fica no httpOnly cookie (B3.6)
+  if (!accessToken) {
     return null;
   }
 
   return {
-    ...tokens,
     accessToken,
-    refreshToken,
-    accessJti
+    accessExpiresAt: tokens.accessExpiresAt ?? tokens.access_expires_at ?? null,
+    accessJti,
   };
 };
 
@@ -48,12 +50,9 @@ const normalizeSession = (session) => {
   }
 
   const tokens = normalizeTokens(session.tokens);
-  if (session.user && !tokens) {
-    return {
-      user: null,
-      tokens: null,
-      requiresPasswordReset: false
-    };
+  // Sem user e sem access token, sessao invalida
+  if (!session.user && !tokens) {
+    return null;
   }
 
   return {
@@ -90,7 +89,12 @@ const persistToStorage = (state) => {
   if (typeof window === 'undefined') {
     return;
   }
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  // Garante que o refreshToken nunca seja persistido no localStorage (B3.6)
+  const { tokens, ...rest } = state;
+  const safeTokens = tokens
+    ? { accessToken: tokens.accessToken, accessExpiresAt: tokens.accessExpiresAt, accessJti: tokens.accessJti }
+    : null;
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...rest, tokens: safeTokens }));
 };
 
 const initialState = loadFromStorage() ?? {

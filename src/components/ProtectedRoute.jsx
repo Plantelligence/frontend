@@ -16,7 +16,8 @@ export const ProtectedRoute = () => {
     user: state.user,
     tokens: state.tokens
   }));
-  const hasSessionToken = Boolean(tokens?.accessToken || tokens?.refreshToken);
+  // Refresh token fica no httpOnly cookie — verifica apenas o access token em memória (B3.6)
+  const hasSessionToken = Boolean(tokens?.accessToken);
 
   if (!user || !hasSessionToken) {
     return <Navigate to="/login" replace />;

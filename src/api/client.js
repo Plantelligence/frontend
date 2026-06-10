@@ -22,12 +22,12 @@ const configuredBaseUrl = resolveBaseUrl();
 const REQUEST_TIMEOUT_MS = Number.parseInt(import.meta.env?.VITE_APP_API_TIMEOUT_MS ?? '15000', 10);
 const resolvedTimeout = Number.isFinite(REQUEST_TIMEOUT_MS) && REQUEST_TIMEOUT_MS > 0 ? REQUEST_TIMEOUT_MS : 15000;
 
-const api = axios.create({ baseURL: configuredBaseUrl, timeout: resolvedTimeout });
-const refreshClient = axios.create({ baseURL: configuredBaseUrl, timeout: resolvedTimeout });
+// withCredentials = true envia o httpOnly cookie plnt_rt em chamadas cross-origin (B3.6)
+const api = axios.create({ baseURL: configuredBaseUrl, timeout: resolvedTimeout, withCredentials: true });
+const refreshClient = axios.create({ baseURL: configuredBaseUrl, timeout: resolvedTimeout, withCredentials: true });
 let refreshPromise = null;
 
-const getAccessToken  = (t) => t?.accessToken  ?? t?.access_token  ?? null;
-const getRefreshToken = (t) => t?.refreshToken ?? t?.refresh_token ?? null;
+const getAccessToken = (t) => t?.accessToken ?? t?.access_token ?? null;
 
 const isAuthEndpoint = (url = '') => {
   const n = String(url || '').toLowerCase();
@@ -38,13 +38,14 @@ const isAuthEndpoint = (url = '') => {
 
 export const refreshSession = async () => {
   if (!refreshPromise) {
-    const { tokens, setSession, clearSession } = useAuthStore.getState();
-    const refreshToken = getRefreshToken(tokens);
-    if (!refreshToken) { clearSession(); throw new Error('Refresh token not available'); }
+    const { user, setSession, clearSession } = useAuthStore.getState();
+    // Sem usuário na store nao há sessão para renovar
+    if (!user) { clearSession(); throw new Error('No active session'); }
     if (api.defaults.adapter) refreshClient.defaults.adapter = api.defaults.adapter;
 
+    // Nao envia body — backend lê o refresh token do httpOnly cookie (B3.6)
     refreshPromise = refreshClient
-      .post('/auth/refresh', { refreshToken })
+      .post('/auth/refresh')
       .then((res) => {
         const p = res.data;
         setSession({ user: p.user, tokens: p.tokens });
@@ -88,8 +89,9 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
     const orig = error.config;
-    const { tokens } = useAuthStore.getState();
-    const shouldRefresh = Boolean(getRefreshToken(tokens)) && orig &&
+    const { user } = useAuthStore.getState();
+    // Tenta renovar se há sessão ativa (cookie plnt_rt enviado automaticamente)
+    const shouldRefresh = Boolean(user) && orig &&
       error.response?.status === 401 && !orig._retry && !isAuthEndpoint(orig.url);
     if (shouldRefresh) {
       orig._retry = true;

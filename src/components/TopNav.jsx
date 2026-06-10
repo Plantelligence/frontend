@@ -192,7 +192,8 @@ export const TopNav = () => {
 
   const handleLogout = async () => {
     try {
-      await logout({ refreshToken: tokens?.refreshToken, accessJti: tokens?.accessJti, userId: user?.id });
+      // Refresh token no httpOnly cookie — backend limpa o cookie automaticamente (B3.6)
+      await logout({ accessJti: tokens?.accessJti, userId: user?.id });
     } catch (error) {
       console.warn('Erro ao encerrar sessão', error);
     } finally {

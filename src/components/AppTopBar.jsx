@@ -191,7 +191,8 @@ export const AppTopBar = ({ onMenuOpen }) => {
 
   const handleLogout = async () => {
     try {
-      await logout({ refreshToken: tokens?.refreshToken, accessJti: tokens?.accessJti, userId: user?.id });
+      // Refresh token no httpOnly cookie — backend limpa o cookie automaticamente (B3.6)
+      await logout({ accessJti: tokens?.accessJti, userId: user?.id });
     } catch {}
     clearSession();
     navigate('/login');
