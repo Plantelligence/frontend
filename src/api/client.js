@@ -1,18 +1,18 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore.js';
 
+// Força https em qualquer URL absoluta que não seja localhost — sem depender de window
+const _toHttps = (url) => {
+  if (!url || typeof url !== 'string') return url;
+  if (/localhost|127\.0\.0\.1/.test(url)) return url;
+  return url.replace(/^http:\/\//i, 'https://');
+};
+
 const resolveBaseUrl = () => {
-  const raw = (import.meta.env?.VITE_APP_API_URL ?? '').trim();
-  if (!raw) return '/api';
-  if (raw === '/api') return '/api';
-  if (raw.startsWith('http')) {
-    const isLocal = /localhost|127\.0\.0\.1/.test(raw);
-    // Força https se: URL explicitamente http E não é localhost
-    // OU se a página corrente está em https (mixed content proibido)
-    const pageIsHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
-    const shouldSecure = !isLocal && (raw.startsWith('http://') || pageIsHttps);
-    const secured = shouldSecure ? raw.replace(/^http:\/\//i, 'https://') : raw;
-    const cleaned = secured.replace(/\/+$/, '');
+  const raw = _toHttps((import.meta.env?.VITE_APP_API_URL ?? '').trim());
+  if (!raw || raw === '/api') return '/api';
+  if (raw.startsWith('https://') || raw.startsWith('http://')) {
+    const cleaned = raw.replace(/\/+$/, '');
     return cleaned.endsWith('/api') ? cleaned : `${cleaned}/api`;
   }
   return raw.replace(/\/+$/, '') || '/api';
@@ -73,18 +73,8 @@ api.interceptors.request.use((config) => {
   const token = getAccessToken(tokens);
   if (token) config.headers.Authorization = `Bearer ${token}`;
 
-  // Garante HTTPS: se a página está em https, toda requisição deve ser https
-  // Cobre tanto URLs absolutas quanto a baseURL configurada
-  const pageIsHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
-  const forceHttps = (url) => {
-    if (!url || typeof url !== 'string') return url;
-    const isLocal = /localhost|127\.0\.0\.1/.test(url);
-    return (!isLocal && (pageIsHttps || url.startsWith('http://')))
-      ? url.replace(/^http:\/\//i, 'https://')
-      : url;
-  };
-  config.url     = forceHttps(config.url);
-  config.baseURL = forceHttps(config.baseURL);
+  if (config.url)     config.url     = _toHttps(config.url);
+  if (config.baseURL) config.baseURL = _toHttps(config.baseURL);
 
   return config;
 });
