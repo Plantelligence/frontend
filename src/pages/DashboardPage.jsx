@@ -476,7 +476,15 @@ const GreenhousePanel = ({
     setDraftResponsibleIds(greenhouse.responsibleUserIds ?? []);
   }, [greenhouse.responsibleUserIds]);
 
+  const _isFirstRender = useRef(true);
   useEffect(() => {
+    if (_isFirstRender.current) {
+      // no primeiro render mantém a aba da URL (preserva após F5)
+      _isFirstRender.current = false;
+      setThresholdDraft(greenhouse.alertThresholds ?? {});
+      return;
+    }
+    // ao trocar de estufa reseta para a aba padrão
     setActiveTopic('comando');
     setThresholdDraft(greenhouse.alertThresholds ?? {});
     setThresholdFeedback(null);

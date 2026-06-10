@@ -274,10 +274,10 @@ const LedFotoperiodoCard = ({ device, estadoAtual, faseAtual, onComando, readOnl
       <div className="rounded-xl bg-white/70 dark:bg-stone-800/40 border border-stone-200 dark:border-stone-700/40 px-3 py-2 flex items-center gap-2">
         <i className="fa-solid fa-seedling text-xs text-emerald-500" />
         <p className="text-[11px] text-slate-500 dark:text-stone-400">
-          Fase atual: <span className="font-semibold capitalize">{faseAtual || 'frutificação'}</span>
+          Fase atual: <span className="font-semibold">{faseAtual === 'incubacao' ? 'Incubação' : faseAtual === 'inducao' ? 'Indução' : faseAtual === 'frutificacao' ? 'Frutificação' : faseAtual === 'colheita' ? 'Colheita' : faseAtual}</span>
           {periodoHoras > 0
-            ? ` — ${periodoHoras}h de luz necessárias por dia`
-            : ' — sem necessidade de luz nesta fase'}
+            ? ` - ${periodoHoras}h de luz necessárias por dia`
+            : ' - sem necessidade de luz nesta fase'}
         </p>
       </div>
 
