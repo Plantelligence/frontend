@@ -25,6 +25,7 @@ import {
 } from '../api/userService.js';
 import { deactivateOrganization } from '../api/adminService.js';
 import { ConfirmDialog } from '../components/ConfirmDialog.jsx';
+import { MfaReconfirmModal } from '../components/MfaReconfirmModal.jsx';
 import { useAuthStore } from '../store/authStore.js';
 import { getFriendlyErrorMessage } from '../utils/errorMessages.js';
 
@@ -94,6 +95,7 @@ export const UserSettingsPage = () => {
   const [orgDeleteLoading, setOrgDeleteLoading] = useState(false);
   const [orgDeleteFeedback, setOrgDeleteFeedback] = useState(null);
   const [orgDeleteError, setOrgDeleteError] = useState(null);
+  const [showOrgDeleteMfa, setShowOrgDeleteMfa] = useState(false);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -306,20 +308,17 @@ export const UserSettingsPage = () => {
     }
   };
 
-  const handleDeactivateOrganization = async () => {
+  const handleDeactivateOrganization = () => {
     const isCreator = profile?.organizationOwnerId && profile?.organizationOwnerId === profile?.id;
     if (!isCreator) {
       setOrgDeleteError('Somente o usuário criador pode desativar a organização.');
       return;
     }
+    setShowOrgDeleteMfa(true);
+  };
 
-    const confirmed = window.confirm(
-      'Esta ação apagará a organização inteira, incluindo usuários, estufas, cultivos e dados vinculados. Essa operação é irreversível. Deseja continuar?'
-    );
-    if (!confirmed) {
-      return;
-    }
-
+  const executeOrgDeleteAfterMfa = async () => {
+    setShowOrgDeleteMfa(false);
     setOrgDeleteError(null);
     setOrgDeleteFeedback(null);
     setOrgDeleteLoading(true);
@@ -793,6 +792,14 @@ export const UserSettingsPage = () => {
         confirmLabel="Confirmar exclusão"
         cancelLabel="Cancelar"
       />
+      {showOrgDeleteMfa && (
+        <MfaReconfirmModal
+          title="Apagar organização"
+          description="Você está prestes a apagar permanentemente a organização, incluindo todos os usuários, estufas, cultivos e dados vinculados. Essa operação é irreversível. Confirme sua identidade para continuar."
+          onConfirm={executeOrgDeleteAfterMfa}
+          onCancel={() => setShowOrgDeleteMfa(false)}
+        />
+      )}
     </>
   );
 };
