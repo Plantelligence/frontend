@@ -67,7 +67,7 @@ export const WizardOnboardingCriarEstufa = ({
 }) => {
   const [step, setStep] = useState(1);
   const [cropType, setCropType] = useState('champignon');
-  const [name, setName] = useState('Minha primeira estufa');
+  const [name, setName] = useState('');
   const [cep, setCep] = useState('');
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
@@ -214,6 +214,24 @@ export const WizardOnboardingCriarEstufa = ({
   };
 
   const handleCreate = async () => {
+    setStepError('');
+
+    if (cropType === 'personalizado') {
+      const requiredFields = [
+        { key: 'temperatureMin', label: 'Temperatura minima' },
+        { key: 'temperatureMax', label: 'Temperatura maxima' },
+        { key: 'humidityMin',    label: 'Umidade minima' },
+        { key: 'humidityMax',    label: 'Umidade maxima' },
+        { key: 'soilMoistureMin', label: 'Umidade do substrato minima' },
+        { key: 'soilMoistureMax', label: 'Umidade do substrato maxima' },
+      ];
+      const missing = requiredFields.filter((f) => customParams[f.key] === '');
+      if (missing.length > 0) {
+        setStepError(`Preencha os campos obrigatorios do perfil de cultivo: ${missing.map((f) => f.label).join(', ')}.`);
+        return;
+      }
+    }
+
     const selectedProfile = profileByType[cropType];
 
     await onCreate({
@@ -302,13 +320,16 @@ export const WizardOnboardingCriarEstufa = ({
             <h2 className="text-lg font-semibold text-slate-800 dark:text-stone-100">Nome e localização da estufa</h2>
             <p className="text-sm text-slate-600 dark:text-stone-400">Informe o CEP para preenchimento automático de cidade e estado.</p>
           </div>
-          <input
-            type="text"
-            value={name}
-            onChange={(event) => setName(event.target.value.slice(0, 80))}
-            placeholder="Ex.: Estufa do galpão 1"
-            className="w-full rounded-xl border border-slate-300 dark:border-stone-600 bg-white dark:bg-stone-800 px-3 py-2 text-sm text-slate-700 dark:text-stone-200 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100"
-          />
+          <label className="block text-xs font-semibold text-slate-700 dark:text-stone-300">
+            Nome da estufa *
+            <input
+              type="text"
+              value={name}
+              onChange={(event) => setName(event.target.value.slice(0, 80))}
+              placeholder="Ex.: Estufa do galpao 1"
+              className="mt-1 w-full rounded-xl border border-slate-300 dark:border-stone-600 bg-white dark:bg-stone-800 px-3 py-2 text-sm text-slate-700 dark:text-stone-200 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100"
+            />
+          </label>
           <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
             <input
               type="text"
