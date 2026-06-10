@@ -6,9 +6,12 @@ const resolveBaseUrl = () => {
   if (!raw) return '/api';
   if (raw === '/api') return '/api';
   if (raw.startsWith('http')) {
-    // Força https para URLs não-locais (produção é sempre HTTPS)
     const isLocal = /localhost|127\.0\.0\.1/.test(raw);
-    const secured = isLocal ? raw : raw.replace(/^http:\/\//i, 'https://');
+    // Força https se: URL explicitamente http E não é localhost
+    // OU se a página corrente está em https (mixed content proibido)
+    const pageIsHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+    const shouldSecure = !isLocal && (raw.startsWith('http://') || pageIsHttps);
+    const secured = shouldSecure ? raw.replace(/^http:\/\//i, 'https://') : raw;
     const cleaned = secured.replace(/\/+$/, '');
     return cleaned.endsWith('/api') ? cleaned : `${cleaned}/api`;
   }
@@ -70,15 +73,18 @@ api.interceptors.request.use((config) => {
   const token = getAccessToken(tokens);
   if (token) config.headers.Authorization = `Bearer ${token}`;
 
-  // Garante HTTPS em produção: evita Mixed Content se a URL absoluta vier com http://
-  if (config.url && config.url.startsWith('http://')) {
-    const isLocal = /localhost|127\.0\.0\.1/.test(config.url);
-    if (!isLocal) config.url = config.url.replace(/^http:\/\//i, 'https://');
-  }
-  if (config.baseURL && config.baseURL.startsWith('http://')) {
-    const isLocal = /localhost|127\.0\.0\.1/.test(config.baseURL);
-    if (!isLocal) config.baseURL = config.baseURL.replace(/^http:\/\//i, 'https://');
-  }
+  // Garante HTTPS: se a página está em https, toda requisição deve ser https
+  // Cobre tanto URLs absolutas quanto a baseURL configurada
+  const pageIsHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+  const forceHttps = (url) => {
+    if (!url || typeof url !== 'string') return url;
+    const isLocal = /localhost|127\.0\.0\.1/.test(url);
+    return (!isLocal && (pageIsHttps || url.startsWith('http://')))
+      ? url.replace(/^http:\/\//i, 'https://')
+      : url;
+  };
+  config.url     = forceHttps(config.url);
+  config.baseURL = forceHttps(config.baseURL);
 
   return config;
 });
