@@ -21,14 +21,9 @@ import api from '../api/client.js';
 
 // ── Constantes ─────────────────────────────────────────────────────────────────
 
-const TIPO_OPCOES = [
-  { value: 'sensor-temperatura',   label: 'Sensor de Temperatura',    icon: 'fa-thermometer-half' },
-  { value: 'sensor-umidade',       label: 'Sensor de Umidade do Ar',  icon: 'fa-wind' },
-  { value: 'sensor-solo',          label: 'Sensor de Umidade do Solo',icon: 'fa-seedling' },
-  { value: 'sensor-luminosidade',  label: 'Sensor de Luminosidade',   icon: 'fa-sun' },
-  { value: 'atuador-lampada',      label: 'Atuador: Lâmpada',        icon: 'fa-lightbulb' },
-  { value: 'atuador-nebulizador',  label: 'Atuador: Nebulizador',    icon: 'fa-droplet' },
-];
+// Cada ESP32 centraliza todos os sensores e atuadores da estufa (tipo fixo).
+// Sensores  : DHT11 (temp + umidade ar), LDR (luminosidade), solo (umidade)
+// Atuadores : Lâmpada de calor, Nebulizador, LED fotoperíodo
 
 const ETAPAS = [
   { id: 'form',      label: 'Dados',     icon: 'fa-pen-to-square' },
@@ -125,7 +120,6 @@ export const WizardOnboardingDispositivo = ({ estufaId, onClose, onSuccess }) =>
 
   // ── Estado do formulário ────────────────────────────────────────────────────
   const [nome,     setNome]     = useState('');
-  const [tipo,     setTipo]     = useState('sensor-temperatura');
   const [wifiSsid, setWifiSsid] = useState('');
   const [wifiSenha,setWifiSenha]= useState('');
   const [mostrarSenha, setMostrarSenha] = useState(false);
@@ -169,8 +163,7 @@ export const WizardOnboardingDispositivo = ({ estufaId, onClose, onSuccess }) =>
     setErro(null);
     try {
       const { data } = await api.post(`/estufas/${estufaId}/dispositivos`, {
-        nome:      nome.trim(),
-        tipo,
+        nome:       nome.trim(),
         wifi_ssid:  wifiSsid.trim(),
         wifi_senha: wifiSenha,
       });
@@ -283,17 +276,12 @@ export const WizardOnboardingDispositivo = ({ estufaId, onClose, onSuccess }) =>
                 />
               </div>
 
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-stone-300">Tipo do dispositivo *</label>
-                <select
-                  value={tipo}
-                  onChange={(e) => setTipo(e.target.value)}
-                  className="w-full rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 px-4 py-2 text-sm text-stone-900 dark:text-stone-100 outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
-                >
-                  {TIPO_OPCOES.map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
+              {/* ESP32 sempre inclui: DHT11 + LDR + solo + lâmpada calor + nebulizador + LED */}
+              <div className="rounded-xl border border-stone-700/40 bg-stone-800/30 px-3 py-2.5">
+                <p className="text-[11px] text-stone-400">
+                  <i className="fa-solid fa-microchip mr-1.5 text-red-400" />
+                  Este ESP32 irá controlar: temperatura, umidade do ar, luminosidade, umidade do solo, lâmpada de calor, nebulizador e LED de crescimento.
+                </p>
               </div>
 
               <div className="rounded-xl border border-amber-800/40 bg-amber-900/20 p-3">
