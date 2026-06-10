@@ -80,6 +80,7 @@ export const WizardOnboardingCriarEstufa = ({
   const [aiError, setAiError] = useState('');
   const [aiSuccess, setAiSuccess] = useState('');
   const [aiNotes, setAiNotes] = useState([]);
+  const [stepError, setStepError] = useState('');
 
   const normalizeNumericValue = (value, fallback = '') => {
     const normalized = Number(value);
@@ -102,6 +103,18 @@ export const WizardOnboardingCriarEstufa = ({
       personalizado: null
     };
   }, [profiles]);
+
+  // Detecta se todos os valores numéricos do perfil personalizado são idênticos (ex: tudo 0)
+  const repeatedValuesWarning = useMemo(() => {
+    if (cropType !== 'personalizado') return false;
+    const nums = [
+      customParams.temperatureMin, customParams.temperatureMax,
+      customParams.humidityMin, customParams.humidityMax,
+      customParams.soilMoistureMin, customParams.soilMoistureMax,
+    ].filter((v) => v !== '');
+    if (nums.length < 2) return false;
+    return nums.every((v) => v === nums[0]);
+  }, [cropType, customParams]);
 
   const handleSuggestWithAi = async () => {
     const plantation = (customParams.plantation ?? '').trim();
@@ -152,8 +165,21 @@ export const WizardOnboardingCriarEstufa = ({
     }
   };
 
-  const goBack = () => setStep((prev) => Math.max(prev - 1, 1));
-  const goNext = () => setStep((prev) => Math.min(prev + 1, 3));
+  const goBack = () => { setStepError(''); setStep((prev) => Math.max(prev - 1, 1)); };
+  const handleNext = () => {
+    setStepError('');
+    if (step === 2) {
+      if (!name.trim()) {
+        setStepError('Informe o nome da estufa antes de continuar.');
+        return;
+      }
+      if (!city.trim() || !state.trim()) {
+        setStepError('Informe a cidade e o estado. Busque pelo CEP ou preencha manualmente.');
+        return;
+      }
+    }
+    setStep((prev) => Math.min(prev + 1, 3));
+  };
   const handleBack = goBack;
   const busy = loading ?? false;
   const totalSteps = 3;
@@ -318,16 +344,16 @@ export const WizardOnboardingCriarEstufa = ({
             <input
               type="text"
               value={city}
-              readOnly
-              placeholder="Cidade preenchida automaticamente"
-              className="w-full rounded-xl border border-slate-300 dark:border-stone-600 bg-slate-50 dark:bg-stone-800 px-3 py-2 text-sm text-slate-700 dark:text-stone-300"
+              onChange={(e) => setCity(e.target.value.slice(0, 80))}
+              placeholder="Cidade (preenchida pelo CEP ou manual)"
+              className="w-full rounded-xl border border-slate-300 dark:border-stone-600 bg-white dark:bg-stone-800 px-3 py-2 text-sm text-slate-700 dark:text-stone-200 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100"
             />
             <input
               type="text"
               value={state}
-              readOnly
-              placeholder="UF preenchida automaticamente"
-              className="w-full rounded-xl border border-slate-300 dark:border-stone-600 bg-slate-50 dark:bg-stone-800 px-3 py-2 text-sm text-slate-700 dark:text-stone-300"
+              onChange={(e) => setState(e.target.value.replace(/[^a-zA-Z]/g, '').slice(0, 2).toUpperCase())}
+              placeholder="UF"
+              className="w-full rounded-xl border border-slate-300 dark:border-stone-600 bg-white dark:bg-stone-800 px-3 py-2 text-sm text-slate-700 dark:text-stone-200 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100"
             />
           </div>
         </div>
@@ -558,11 +584,24 @@ export const WizardOnboardingCriarEstufa = ({
         </div>
       ) : null}
 
+      {repeatedValuesWarning && (
+        <div className="mt-4 flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10 px-3 py-2.5 text-xs text-amber-700 dark:text-amber-400">
+          <i className="fa-solid fa-triangle-exclamation mt-0.5 flex-shrink-0" />
+          <span>Utilize informações reais para chegar a um resultado correto. Os valores do perfil de cultivo estão todos iguais.</span>
+        </div>
+      )}
+
       {error ? (
         <p className="mt-5 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
           {error}
         </p>
       ) : null}
+
+      {stepError && (
+        <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 dark:border-rose-500/30 dark:bg-rose-500/10 px-3 py-2 text-sm text-rose-700 dark:text-rose-400">
+          <i className="fa-solid fa-circle-exclamation mr-1.5" />{stepError}
+        </p>
+      )}
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
@@ -581,7 +620,7 @@ export const WizardOnboardingCriarEstufa = ({
 
         <Button
           type="button"
-          onClick={step === totalSteps ? handleCreate : goNext}
+          onClick={step === totalSteps ? handleCreate : handleNext}
           disabled={busy}
           className="rounded-xl bg-gradient-to-r from-red-700 to-red-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:from-red-600 hover:to-red-500 transition disabled:opacity-40 disabled:cursor-not-allowed"
         >
