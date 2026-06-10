@@ -44,11 +44,13 @@ let refreshPromise = null;
 const getAccessToken = (t) => t?.accessToken ?? t?.access_token ?? null;
 
 // Identifica endpoints de autenticação que não devem acionar a renovação automática de token
+// /auth/unlock incluído: 401 ali significa senha errada, não token expirado
 const isAuthEndpoint = (url = '') => {
   const n = String(url || '').toLowerCase();
   return n.includes('/auth/login') || n.includes('/auth/register') ||
          n.includes('/auth/mfa/') || n.includes('/auth/password-reset') ||
-         n.includes('/auth/first-access') || n.includes('/auth/refresh');
+         n.includes('/auth/first-access') || n.includes('/auth/refresh') ||
+         n.includes('/auth/unlock');
 };
 
 // Renova a sessão usando o refresh token que fica no cookie httpOnly plnt_rt
@@ -81,8 +83,11 @@ export const refreshSession = async () => {
           clearSession();
           if (typeof window !== 'undefined') window.location.href = '/login?reason=session_expired';
         // 401 ou 403 no refresh significa que o cookie expirou ou foi invalidado
+        // Se a tela estiver bloqueada (isLocked), não limpa a sessão: o lock screen
+        // já está visível e o usuário precisa desbloquear normalmente com a senha.
         } else if (status === 401 || status === 403) {
-          clearSession();
+          const { isLocked } = useAuthStore.getState();
+          if (!isLocked) clearSession();
         }
         throw err;
       })

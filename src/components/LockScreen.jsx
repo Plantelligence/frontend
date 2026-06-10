@@ -18,7 +18,7 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import api from '../api/client.js';
+import api, { refreshSession } from '../api/client.js';
 
 const MAX_ATTEMPTS = 5;
 
@@ -57,6 +57,9 @@ export const LockScreen = ({ user, onUnlock, onLogout }) => {
         email: user?.email ?? '',
         password,
       });
+      // Renova o access token caso tenha expirado durante o bloqueio (TTL = 15 min)
+      // Erros de refresh são ignorados: o interceptor cuidará do próximo request
+      try { await refreshSession(); } catch {}
       setPassword('');
       onUnlock?.();
     } catch (err) {
