@@ -163,10 +163,10 @@ const Footer = () => {
   const isAllChoice = consentChoice === 'all';
 
   // Renderiza o banner via portal diretamente no body para garantir z-index correto
+  // Banner fixo na parte inferior da tela com backdrop blur
   const banner = isClient && isBannerVisible
     ? createPortal(
         (
-          {/* Banner fixo na parte inferior da tela com backdrop blur */}
           <div className="pointer-events-auto fixed inset-x-0 bottom-3 z-[1000] flex justify-center px-4">
             <div
               role="dialog"
