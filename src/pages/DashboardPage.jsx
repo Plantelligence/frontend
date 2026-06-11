@@ -27,6 +27,7 @@ import { listDevices, createDevice, updateDevice, deleteDevice } from '../api/de
 import { getLatestTelemetria } from '../api/telemetriaService.js';
 import { WizardOnboardingDispositivo } from '../components/WizardOnboardingDispositivo.jsx';
 import { MfaReconfirmModal } from '../components/MfaReconfirmModal.jsx';
+import { useEmailCooldownMap } from '../hooks/useEmailCooldown.js';
 import { ControlesPanel } from '../components/ControlesPanel.jsx';
 import { CentroComando } from '../components/CentroComando.jsx';
 import { MonitoramentoTab } from '../components/MonitoramentoTab.jsx';
@@ -429,6 +430,8 @@ const GreenhousePanel = ({
   teamSaving,
   alertsSaving,
   notifyBusy,
+  notifyOnCooldown,
+  notifySecondsLeft,
   externalWeather,
   externalWeatherLoading,
   onSave,
@@ -1286,15 +1289,18 @@ const GreenhousePanel = ({
                   readOnly ||
                   notifyBusy ||
                   !onNotify ||
-                  !hasEvaluableMetrics
+                  !hasEvaluableMetrics ||
+                  notifyOnCooldown
                 }
                 onClick={() => onNotify?.(greenhouse.id)}
               >
                 {notifyBusy
                   ? 'Processando...'
-                  : resolvedEvaluation.status === 'alert'
-                    ? 'Notificar equipe'
-                    : 'Gerar avaliação'}
+                  : notifyOnCooldown
+                    ? `Aguarde ${notifySecondsLeft}s`
+                    : resolvedEvaluation.status === 'alert'
+                      ? 'Notificar equipe'
+                      : 'Gerar avaliação'}
               </Button>
               <p className="text-[10px] text-slate-500 dark:text-stone-400">
                 {readOnly ? 'Perfil Leitor não executa ações.' : 'Para evitar repetição, um novo aviso sai só após 15 min.'}
@@ -1530,6 +1536,7 @@ export const DashboardPage = () => {
   const [teamSavingById, setTeamSavingById] = useState({});
   const [alertsSavingById, setAlertsSavingById] = useState({});
   const [notifyBusyById, setNotifyBusyById] = useState({});
+  const notifyCooldown = useEmailCooldownMap(); // cooldown progressivo por estufa: 30s → 60s → 120s → 300s
   const [externalWeatherById, setExternalWeatherById] = useState({});
   const [externalWeatherLoadingById, setExternalWeatherLoadingById] = useState({});
   const [loading, setLoading] = useState(true);
@@ -2219,6 +2226,7 @@ export const DashboardPage = () => {
       }
 
       if (result?.notified) {
+        notifyCooldown.recordSend(greenhouseId); // inicia contagem regressiva no botão
         const metricCount = Array.isArray(result?.missingMetrics) ? 3 - result.missingMetrics.length : 0;
         setNotifyFeedbackById((prev) => ({
           ...prev,
@@ -2231,6 +2239,7 @@ export const DashboardPage = () => {
           }
         }));
       } else if (result?.throttled) {
+        notifyCooldown.recordSend(greenhouseId); // backend bloqueou — também congela o botão
         setNotifyFeedbackById((prev) => ({
           ...prev,
           [greenhouseId]: {
@@ -2647,6 +2656,8 @@ export const DashboardPage = () => {
             teamSaving={teamSavingById[selectedGreenhouse.id]}
             alertsSaving={alertsSavingById[selectedGreenhouse.id]}
             notifyBusy={notifyBusyById[selectedGreenhouse.id]}
+            notifyOnCooldown={!notifyCooldown.canSend(selectedGreenhouse.id)}
+            notifySecondsLeft={notifyCooldown.secondsLeft(selectedGreenhouse.id)}
             externalWeather={externalWeatherById[selectedGreenhouse.id]}
             externalWeatherLoading={externalWeatherLoadingById[selectedGreenhouse.id]}
             onSave={(_greenhouseId, payload) => handleSaveGreenhouse(selectedGreenhouse.id, payload)}
