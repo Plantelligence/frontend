@@ -76,7 +76,12 @@ const aiResponseToPreset = (suggestion) => ({
   umidade_solo: buildRangesFromIdeal(suggestion?.soilMoisture?.min ?? 55, suggestion?.soilMoisture?.max ?? 70),
 });
 
-const getInUseCount = (preset) => Array.isArray(preset?.estufas) ? preset.estufas.length : 0;
+const getInUseCount = (preset) => {
+  // backend retorna estufas_count; fallback para array legado se existir
+  if (typeof preset?.estufas_count === 'number') return preset.estufas_count;
+  if (Array.isArray(preset?.estufas)) return preset.estufas.length;
+  return 0;
+};
 
 const getIdealMetric = (ranges) => {
   const min = Number(ranges?.ideal?.min);
@@ -306,13 +311,15 @@ function DetailPanel({ preset, open, saving, onSave, onClose, readOnly = false, 
   };
 
   const updateRange = (metric, nextIdeal) => {
-    setForm((prev) => ({
-      ...prev,
-      [metric]: {
-        ...prev[metric],
-        ideal: nextIdeal
+    setForm((prev) => {
+      const current = prev[metric];
+      // se o campo ainda é null (ex: umidade_solo não configurada), gera faixas completas
+      // a partir dos valores ideais informados — sem isso, o Pydantic rejeita o payload
+      if (!current) {
+        return { ...prev, [metric]: buildRangesFromIdeal(nextIdeal.min, nextIdeal.max) };
       }
-    }));
+      return { ...prev, [metric]: { ...current, ideal: nextIdeal } };
+    });
   };
 
   return createPortal(
@@ -722,7 +729,11 @@ export const PresetsPage = () => {
       setSelected(normalized);
       setIsDetailOpen(false);
     } catch (saveError) {
-      setError(saveError?.response?.data?.detail ?? saveError?.response?.data?.message ?? 'Falha ao salvar o perfil de cultivo.');
+      const rawDetail = saveError?.response?.data?.detail;
+      const detailMsg = Array.isArray(rawDetail)
+        ? rawDetail.map((e) => e?.msg ?? JSON.stringify(e)).join('; ')
+        : (typeof rawDetail === 'string' ? rawDetail : null);
+      setError(detailMsg ?? saveError?.response?.data?.message ?? 'Falha ao salvar o perfil de cultivo.');
     } finally {
       setSaving(false);
     }
