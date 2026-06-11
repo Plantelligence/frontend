@@ -282,7 +282,7 @@ function DetailPanel({ preset, open, saving, onSave, onClose, readOnly = false, 
     }
   }, [open]);
 
-  if (!preset || !open) {
+  if (!preset || !open || !form) {
     return null;
   }
 
