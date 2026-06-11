@@ -1105,7 +1105,7 @@ const GreenhousePanel = ({
                 <div className="rounded border border-stone-200 dark:border-stone-800/50 bg-white dark:bg-stone-800 p-3">
                   <dt className="text-[11px] uppercase tracking-widest text-slate-500 dark:text-stone-400">Luminosidade</dt>
                   <dd>
-                    {currentProfile.luminosity?.min ?? '-'} a {currentProfile.luminosity?.max ?? '-'}
+                    {currentProfile.luminosity?.min ?? '-'} a {currentProfile.luminosity?.max ?? '-'} <span className="text-[10px] text-slate-400 dark:text-stone-500">ADC</span>
                   </dd>
                 </div>
               </dl>
