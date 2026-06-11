@@ -8,7 +8,12 @@ const _toHttps = (url) => {
   // Localhost pode continuar em http durante o desenvolvimento
   if (/localhost|127\.0\.0\.1/.test(url)) return url;
   // Substitui http:// por https:// para garantir tráfego cifrado em produção
-  return url.replace(/^http:\/\//i, 'https://');
+  // Também aplica se a página já estiver em https (defesa contra redirects do proxy)
+  const pageIsHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+  if (pageIsHttps || url.startsWith('http://')) {
+    return url.replace(/^http:\/\//i, 'https://');
+  }
+  return url;
 };
 
 // Determina a URL base da API a partir da variável de ambiente VITE_APP_API_URL
