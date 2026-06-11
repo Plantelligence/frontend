@@ -33,6 +33,14 @@ const makeDefaultRanges = () => ({
   critico_alto: { min: 28, max: 40 }
 });
 
+const makeDefaultLuminosityRanges = () => ({
+  critico_baixo: { min: 0,    max: 100  },
+  alerta_baixo:  { min: 100,  max: 400  },
+  ideal:         { min: 400,  max: 2500 },
+  alerta_alto:   { min: 2500, max: 3500 },
+  critico_alto:  { min: 3500, max: 4095 }
+});
+
 const makeDefaultPreset = () => ({
   nome_cultura: 'Novo perfil personalizado',
   tipo_cultura: 'Cogumelos',
@@ -45,7 +53,7 @@ const makeDefaultPreset = () => ({
     alerta_alto: { min: 90, max: 96 },
     critico_alto: { min: 96, max: 100 }
   },
-  luminosidade: makeDefaultRanges(),
+  luminosidade: makeDefaultLuminosityRanges(),
   umidade_solo: {
     critico_baixo: { min: 20, max: 40 },
     alerta_baixo: { min: 40, max: 55 },
@@ -72,7 +80,18 @@ const aiResponseToPreset = (suggestion) => ({
   descricao: suggestion?.summary ?? '',
   temperatura: buildRangesFromIdeal(suggestion?.temperature?.min ?? 15, suggestion?.temperature?.max ?? 25),
   umidade: buildRangesFromIdeal(suggestion?.humidity?.min ?? 70, suggestion?.humidity?.max ?? 90),
-  luminosidade: buildRangesFromIdeal(suggestion?.luminosity?.min ?? 0, suggestion?.luminosity?.max ?? 2500),
+  luminosidade: (() => {
+    const min = suggestion?.luminosity?.min ?? 400;
+    const max = suggestion?.luminosity?.max ?? 2500;
+    const half = Math.round((max - min) * 0.5);
+    return {
+      critico_baixo: { min: 0, max: Math.max(0, min - half) },
+      alerta_baixo:  { min: Math.max(0, min - half), max: min },
+      ideal:         { min, max },
+      alerta_alto:   { min: max, max: Math.min(4095, max + half) },
+      critico_alto:  { min: Math.min(4095, max + half), max: 4095 }
+    };
+  })(),
   umidade_solo: buildRangesFromIdeal(suggestion?.soilMoisture?.min ?? 55, suggestion?.soilMoisture?.max ?? 70),
 });
 
