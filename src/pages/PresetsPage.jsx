@@ -710,20 +710,14 @@ export const PresetsPage = () => {
     setSearch('');
   };
 
-  const handleAIUse = async (suggestion) => {
+  const handleAIUse = (suggestion) => {
+    // abre o painel como rascunho — só persiste no backend ao clicar em Salvar
     setAiModalOpen(false);
-    setError(null);
-    try {
-      const response = await createCulturePreset(aiResponseToPreset(suggestion));
-      const normalized = deriveUiPreset(response);
-      setPresets((prev) => [normalized, ...prev]);
-      setActiveFilter('custom');
-      setSearch('');
-      setSelected(normalized);
-      setIsDetailOpen(true);
-    } catch (createError) {
-      setError(createError?.response?.data?.detail ?? 'Não foi possível criar perfil a partir da sugestão.');
-    }
+    setSelected(aiResponseToPreset(suggestion));
+    setIsDraft(true);
+    setIsDetailOpen(true);
+    setActiveFilter('custom');
+    setSearch('');
   };
 
   const handleConfirmDelete = async () => {
