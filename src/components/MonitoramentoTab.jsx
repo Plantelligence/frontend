@@ -429,16 +429,16 @@ export const MonitoramentoTab = ({ estufaId, telemetry, profile, externalWeather
       </div>
 
       {/* Clima externo */}
-      {externalWeather && (
-        <div className="rounded-2xl border border-stone-200 dark:border-stone-800/60 bg-white dark:bg-stone-900/35 p-4">
-          <div className="flex items-center gap-2.5 mb-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10">
-              <i className="fa-solid fa-cloud-sun text-blue-500 dark:text-blue-400 text-sm" />
-            </div>
-            <p className="text-xs font-semibold text-stone-800 dark:text-stone-100">
-              Clima externo{city ? <span className="ml-1 font-normal text-stone-400 dark:text-stone-500">({city})</span> : null}
-            </p>
+      <div className="rounded-2xl border border-stone-200 dark:border-stone-800/60 bg-white dark:bg-stone-900/35 p-4">
+        <div className="flex items-center gap-2.5 mb-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10">
+            <i className="fa-solid fa-cloud-sun text-blue-500 dark:text-blue-400 text-sm" />
           </div>
+          <p className="text-xs font-semibold text-stone-800 dark:text-stone-100">
+            Clima externo{city ? <span className="ml-1 font-normal text-stone-400 dark:text-stone-500">({city})</span> : null}
+          </p>
+        </div>
+        {externalWeather ? (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
               { label: 'Temperatura', value: externalWeather.temperatura, unit: 'C', color: 'text-red-400' },
@@ -453,8 +453,16 @@ export const MonitoramentoTab = ({ estufaId, telemetry, profile, externalWeather
               </div>
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="flex items-center gap-3 rounded-xl border border-dashed border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/20 px-4 py-5">
+            <i className="fa-solid fa-location-dot text-stone-300 dark:text-stone-600 text-xl" />
+            <div>
+              <p className="text-xs font-medium text-stone-500 dark:text-stone-400">Localização não cadastrada</p>
+              <p className="text-[11px] text-stone-400 dark:text-stone-500 mt-0.5">Adicione o CEP da estufa para visualizar temperatura, umidade e condições externas em tempo real.</p>
+            </div>
+          </div>
+        )}
+      </div>
 
     </div>
   );
