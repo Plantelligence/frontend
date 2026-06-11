@@ -228,9 +228,15 @@ const buildAlertMessages = (profile, evaluation) => {
     );
   }
 
-  if (!evaluation.soilMoisture.ok) {
+  if (profile.soilMoisture && !evaluation.soilMoisture.ok) {
     alerts.push(
       `Umidade do substrato fora do ideal (${profile.soilMoisture.min}% - ${profile.soilMoisture.max}%).`
+    );
+  }
+
+  if (profile.luminosity && !evaluation.luminosity?.ok) {
+    alerts.push(
+      `Luminosidade fora do ideal (${profile.luminosity.min} - ${profile.luminosity.max} ADC).`
     );
   }
 
@@ -245,7 +251,8 @@ const analyzeGreenhouseState = (state, profile) => {
       metrics: {
         temperature: { ok: true, expected: profile?.temperature ?? null },
         humidity: { ok: true, expected: profile?.humidity ?? null },
-        soilMoisture: { ok: true, expected: profile?.soilMoisture ?? null }
+        soilMoisture: { ok: true, expected: profile?.soilMoisture ?? null },
+        luminosity: { ok: true, expected: profile?.luminosity ?? null }
       }
     };
   }
@@ -253,7 +260,9 @@ const analyzeGreenhouseState = (state, profile) => {
   const metrics = {
     temperature: evaluateMetricRange(state.temperature, profile.temperature),
     humidity: evaluateMetricRange(state.humidity, profile.humidity),
-    soilMoisture: evaluateMetricRange(state.soilMoisture, profile.soilMoisture)
+    soilMoisture: evaluateMetricRange(state.soilMoisture, profile.soilMoisture),
+    // luminosidade vem do ESP como state.luminosidade (snake_case preservado no telemetryById)
+    luminosity: evaluateMetricRange(state.luminosidade ?? state.luminosity, profile.luminosity)
   };
 
   const alerts = buildAlertMessages(profile, metrics);
@@ -878,7 +887,7 @@ const GreenhousePanel = ({
           className="fixed inset-0 z-50 grid place-items-center bg-slate-950/70 p-4"
           onMouseDown={(e) => { if (e.target === e.currentTarget) setTeamModalOpen(false); }}
         >
-          <div className="w-full max-w-lg rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-5 shadow-2xl">
+          <div className="w-full max-w-lg rounded-2xl border border-stone-300 bg-white dark:border-stone-700 dark:bg-stone-900 p-5 shadow-2xl">
             <div className="mb-4 flex items-start justify-between gap-3 border-b border-stone-200 dark:border-stone-800/50 pb-3">
               <div>
                 <h3 className="text-lg font-semibold text-slate-800 dark:text-stone-100">Gerenciar equipe</h3>
@@ -890,7 +899,7 @@ const GreenhousePanel = ({
             </div>
 
             <div className="space-y-3">
-              <p className="text-[11px] text-slate-500 dark:text-stone-400">
+              <p className="text-[11px] text-slate-500 dark:text-stone-300">
                 Somente os membros marcados recebem notificações automáticas de alerta desta estufa.
               </p>
               <ul className="max-h-64 space-y-1 overflow-y-auto pr-1">
@@ -899,7 +908,7 @@ const GreenhousePanel = ({
                     const checked = draftResponsibleIds.includes(member.id);
                     return (
                       <li key={member.id}>
-                        <label className="flex cursor-pointer items-start gap-2 rounded-xl border border-stone-200 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 px-3 py-2.5 text-xs text-slate-700 dark:text-stone-300 hover:border-red-300 transition">
+                        <label className="flex cursor-pointer items-start gap-2 rounded-xl border border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-800 px-3 py-2.5 text-xs text-slate-700 dark:text-stone-200 hover:border-red-400 transition">
                           <input
                             type="checkbox"
                             checked={checked}
@@ -908,8 +917,8 @@ const GreenhousePanel = ({
                           />
                           <span>
                             <span className="block font-semibold text-slate-800 dark:text-stone-100">{member.fullName}</span>
-                            <span className="block text-[11px] text-slate-500 dark:text-stone-400">{member.email}</span>
-                            <span className="block text-[10px] uppercase tracking-wide text-slate-400 dark:text-stone-500 mt-0.5">{member.role}</span>
+                            <span className="block text-[11px] text-slate-500 dark:text-stone-300">{member.email}</span>
+                            <span className="block text-[10px] uppercase tracking-wide text-slate-400 dark:text-stone-400 mt-0.5">{member.role}</span>
                           </span>
                         </label>
                       </li>
@@ -1181,7 +1190,7 @@ const GreenhousePanel = ({
                         : 'border-amber-200 bg-amber-50 text-amber-700';
                     return (
                       <div key={metricKey} className={`rounded border px-3 py-2 ${cardClass}`}>
-                        <p className="text-[11px] uppercase tracking-[0.2em]">{labelMap[metricKey]}</p>
+                        <p className="text-[11px] uppercase tracking-[0.12em] leading-tight break-words">{labelMap[metricKey]}</p>
                         <p className="text-sm font-semibold">
                           {typeof metric.value === 'number' ? `${metric.value.toFixed(1)}${unitMap[metricKey]}` : '—'}
                         </p>
@@ -1938,7 +1947,7 @@ export const DashboardPage = () => {
 
     greenhouses.forEach((greenhouse) => {
       const telemetry = telemetryById[greenhouse.id];
-      const profile = greenhouse.profile ?? profileMap[greenhouse.flowerProfileId];
+      const profile = normalizeProfile(greenhouse.profile ?? profileMap[greenhouse.flowerProfileId]);
 
       if (!profile) {
         nextEvaluation[greenhouse.id] = {
