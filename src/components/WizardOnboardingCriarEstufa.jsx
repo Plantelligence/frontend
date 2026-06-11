@@ -173,14 +173,7 @@ export const WizardOnboardingCriarEstufa = ({
         setStepError('Informe o nome da estufa antes de continuar.');
         return;
       }
-      if (digitsOnly(cep).length !== 8) {
-        setStepError('Informe um CEP válido com 8 dígitos antes de continuar.');
-        return;
-      }
-      if (!city.trim() || !state.trim()) {
-        setStepError('Busque o CEP para preencher cidade e estado automaticamente.');
-        return;
-      }
+      // CEP é opcional — sem ele, clima externo e avaliação por região ficam pendentes
     }
     setStep((prev) => Math.min(prev + 1, 3));
   };
@@ -322,7 +315,7 @@ export const WizardOnboardingCriarEstufa = ({
         <div className="space-y-4">
           <div>
             <h2 className="text-lg font-semibold text-slate-800 dark:text-stone-100">Nome e localização da estufa</h2>
-            <p className="text-sm text-slate-600 dark:text-stone-400">O CEP é obrigatório — cidade e estado são preenchidos automaticamente.</p>
+            <p className="text-sm text-slate-600 dark:text-stone-400">Informe o CEP para habilitar clima externo e avaliação por região (opcional).</p>
           </div>
           <label className="block text-xs font-semibold text-slate-700 dark:text-stone-300">
             Nome da estufa *
@@ -381,6 +374,11 @@ export const WizardOnboardingCriarEstufa = ({
               className="w-full rounded-xl border border-slate-300 dark:border-stone-600 bg-slate-50 dark:bg-stone-700/50 px-3 py-2 text-sm text-slate-700 dark:text-stone-200 outline-none cursor-not-allowed"
             />
           </div>
+          {!city && !state ? (
+            <p className="text-xs text-amber-600 dark:text-amber-400">
+              Sem CEP, o clima externo e a avaliação por região ficarão pendentes até você adicionar a localização.
+            </p>
+          ) : null}
         </div>
       ) : null}
 

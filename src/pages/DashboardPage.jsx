@@ -19,7 +19,8 @@ import {
   deleteGreenhouse,
   listGreenhouseTeamMembers,
   updateGreenhouseTeam,
-  getGreenhouseExternalWeather
+  getGreenhouseExternalWeather,
+  resolveCepLocation
 } from '../api/greenhouseService.js';
 import { listCulturePresets } from '../api/presetService.js';
 import { listDevices, createDevice, updateDevice, deleteDevice } from '../api/deviceService.js';
@@ -30,6 +31,11 @@ import { CentroComando } from '../components/CentroComando.jsx';
 import { MonitoramentoTab } from '../components/MonitoramentoTab.jsx';
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+const formatCep = (value) => {
+  const digits = String(value ?? '').replace(/\D/g, '').slice(0, 8);
+  return digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits;
+};
 
 const generateEventId = () =>
   (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
@@ -432,6 +438,11 @@ const GreenhousePanel = ({
   const [draftName, setDraftName] = useState(greenhouse.name ?? 'Estufa Matriz');
   const [draftProfileId, setDraftProfileId] = useState(greenhouse.flowerProfileId ?? '');
   const [draftResponsibleIds, setDraftResponsibleIds] = useState(greenhouse.responsibleUserIds ?? []);
+  const [draftCep, setDraftCep] = useState(greenhouse.cep ? formatCep(greenhouse.cep) : '');
+  const [draftCity, setDraftCity] = useState(greenhouse.city ?? '');
+  const [draftState, setDraftState] = useState(greenhouse.state ?? '');
+  const [draftCepLoading, setDraftCepLoading] = useState(false);
+  const [draftCepError, setDraftCepError] = useState('');
   const [menuFeedback, setMenuFeedback] = useState(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const VALID_TABS = ['comando', 'operacao', 'monitoramento', 'dispositivos', 'controles', 'guia'];
@@ -463,6 +474,12 @@ const GreenhousePanel = ({
   useEffect(() => {
     setDraftName(greenhouse.name ?? 'Estufa Matriz');
   }, [greenhouse.name]);
+
+  useEffect(() => {
+    setDraftCep(greenhouse.cep ? formatCep(greenhouse.cep) : '');
+    setDraftCity(greenhouse.city ?? '');
+    setDraftState(greenhouse.state ?? '');
+  }, [greenhouse.cep, greenhouse.city, greenhouse.state]);
 
   useEffect(() => {
     setDraftProfileId(greenhouse.flowerProfileId ?? '');
@@ -514,8 +531,11 @@ const GreenhousePanel = ({
       return;
     }
 
-    // salva apenas dados da estufa (nome e perfil)
-    const resultEstufa = await onSave(greenhouse.id, { name: trimmedName, flowerProfileId: draftProfileId || null });
+    // salva dados da estufa (nome, perfil e localização)
+    const locationPayload = draftCep.replace(/\D/g, '').length === 8 && draftCity && draftState
+      ? { cep: draftCep.replace(/\D/g, ''), city: draftCity, state: draftState }
+      : {};
+    const resultEstufa = await onSave(greenhouse.id, { name: trimmedName, flowerProfileId: draftProfileId || null, ...locationPayload });
 
     if (resultEstufa.ok) {
       setMenuFeedback({ type: 'success', text: 'Estufa atualizada com sucesso.' });
@@ -531,6 +551,28 @@ const GreenhousePanel = ({
 
     if (!result.ok) {
       setMenuFeedback({ type: 'error', text: result.message });
+    }
+  };
+
+  const handleDraftCepLookup = async () => {
+    const normalized = draftCep.replace(/\D/g, '');
+    if (normalized.length !== 8) {
+      setDraftCepError('Informe um CEP válido com 8 dígitos.');
+      return;
+    }
+    setDraftCepLoading(true);
+    setDraftCepError('');
+    try {
+      const resolved = await resolveCepLocation(normalized);
+      setDraftCep(formatCep(resolved?.cep ?? normalized));
+      setDraftCity(resolved?.localidade ?? resolved?.city ?? '');
+      setDraftState(resolved?.uf ?? resolved?.state ?? '');
+    } catch {
+      setDraftCepError('CEP não encontrado. Verifique e tente novamente.');
+      setDraftCity('');
+      setDraftState('');
+    } finally {
+      setDraftCepLoading(false);
     }
   };
 
@@ -723,6 +765,59 @@ const GreenhousePanel = ({
                 </div>
               </div>
 
+              <div className="rounded-md border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/40 px-3 py-2">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-stone-400">
+                  Localização
+                </p>
+                <p className="mt-1 text-[11px] text-slate-400 dark:text-stone-500">
+                  Necessária para clima externo e avaliação por região.
+                </p>
+                <div className="mt-2 flex flex-col gap-2">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={draftCep}
+                      onChange={(e) => {
+                        const digits = e.target.value.replace(/\D/g, '').slice(0, 8);
+                        const formatted = digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits;
+                        setDraftCep(formatted);
+                        setDraftCepError('');
+                        if (digits.length < 8) { setDraftCity(''); setDraftState(''); }
+                      }}
+                      onBlur={() => { if (draftCep.replace(/\D/g, '').length === 8) handleDraftCepLookup(); }}
+                      placeholder="CEP (00000-000)"
+                      disabled={readOnly}
+                      className="flex-1 rounded-md border border-stone-300 bg-white dark:bg-stone-800 px-3 py-2 text-sm text-slate-800 dark:text-stone-100 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleDraftCepLookup}
+                      disabled={readOnly || draftCepLoading || draftCep.replace(/\D/g, '').length !== 8}
+                      className="rounded-md border border-stone-300 bg-white dark:bg-stone-700 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-stone-200 transition hover:border-red-400 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {draftCepLoading ? '...' : 'Buscar'}
+                    </button>
+                  </div>
+                  {draftCepError ? <p className="text-[11px] text-rose-600">{draftCepError}</p> : null}
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="text"
+                      value={draftCity}
+                      readOnly
+                      placeholder="Cidade"
+                      className="rounded-md border border-stone-300 bg-slate-50 dark:bg-stone-700/50 px-3 py-2 text-sm text-slate-700 dark:text-stone-300 cursor-not-allowed"
+                    />
+                    <input
+                      type="text"
+                      value={draftState}
+                      readOnly
+                      placeholder="UF"
+                      className="rounded-md border border-stone-300 bg-slate-50 dark:bg-stone-700/50 px-3 py-2 text-sm text-slate-700 dark:text-stone-300 cursor-not-allowed"
+                    />
+                  </div>
+                </div>
+              </div>
+
               {menuFeedback ? (
                 <div
                   className={`rounded border px-3 py-2 text-xs ${
@@ -859,6 +954,26 @@ const GreenhousePanel = ({
           </button>
         ))}
       </div>
+
+      {/* ── Banner: CEP não informado ─────────────────────────────────────── */}
+      {!greenhouse.cep && !readOnly ? (
+        <div className="mt-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-800/40 dark:bg-amber-900/20 px-4 py-3 text-xs text-amber-800 dark:text-amber-300">
+          <span className="mt-0.5 shrink-0">⚠️</span>
+          <div>
+            <p className="font-semibold">Localização não cadastrada</p>
+            <p className="mt-0.5 font-normal">
+              Sem o CEP, o clima externo e a avaliação automática por região ficam pendentes.{' '}
+              <button
+                type="button"
+                onClick={() => setMenuOpen(true)}
+                className="underline underline-offset-2 hover:text-amber-900 dark:hover:text-amber-200 transition"
+              >
+                Adicionar agora
+              </button>
+            </p>
+          </div>
+        </div>
+      ) : null}
 
       {/* ── Centro de Comando ──────────────────────────────────────────────── */}
       {activeTopic === 'comando' ? (
@@ -1297,6 +1412,7 @@ const GreenhousePanel = ({
     </section>
   );
 };
+
 
 // rótulos legíveis para os tipos de dispositivo cadastrados
 const DEVICE_TYPE_LABELS = {
