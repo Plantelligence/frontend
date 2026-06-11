@@ -482,8 +482,7 @@ function AIModal({ open, onClose, onUse }) {
     return null;
   }
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const handleGenerate = async () => {
     if (!query.trim()) {
       return;
     }
@@ -507,16 +506,17 @@ function AIModal({ open, onClose, onUse }) {
         style={{ maxHeight: '90vh', overflowY: 'auto' }}
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="border-b border-stone-200 dark:border-stone-700 px-5 py-4">
+        <div className="border-b border-stone-200 dark:border-stone-700 px-5 py-4 text-center">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-red-600">Inteligência Artificial</p>
           <h2 className="mt-1 text-lg font-semibold text-stone-900 dark:text-stone-100">Criar perfil com IA</h2>
           <p className="mt-1 text-sm text-stone-500">Descreva a cultura ou condições de cultivo e a IA irá sugerir os parâmetros ideais.</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3 px-5 py-4">
+        <div className="space-y-3 px-5 py-4">
           <textarea
             value={query}
             onChange={(event) => setQuery(event.target.value)}
+            onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey && query.trim() && !loading) { event.preventDefault(); handleGenerate(); } }}
             placeholder="Ex.: Shiitake em clima frio, alta umidade, pouca luz..."
             rows={3}
             disabled={loading}
@@ -526,13 +526,14 @@ function AIModal({ open, onClose, onUse }) {
             <p className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>
           ) : null}
           <button
-            type="submit"
+            type="button"
+            onClick={handleGenerate}
             disabled={loading || !query.trim()}
             className="w-full rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {loading ? 'Gerando sugestão...' : 'Gerar sugestão com IA'}
           </button>
-        </form>
+        </div>
 
         {suggestion ? (
           <div className="space-y-3 border-t border-stone-200 dark:border-stone-700 px-5 pb-5 pt-4">
@@ -567,8 +568,8 @@ function AIModal({ open, onClose, onUse }) {
           </div>
         ) : null}
 
-        <div className="border-t border-stone-100 dark:border-stone-800 px-5 py-3">
-          <button onClick={onClose} className="text-sm text-stone-500 transition hover:text-stone-700 dark:text-stone-300">
+        <div className="border-t border-stone-100 dark:border-stone-800 px-5 py-3 text-center">
+          <button type="button" onClick={onClose} className="text-sm text-stone-500 transition hover:text-stone-700 dark:text-stone-300">
             Cancelar
           </button>
         </div>
