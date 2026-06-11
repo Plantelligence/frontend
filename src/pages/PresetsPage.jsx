@@ -295,7 +295,6 @@ function DetailPanel({ preset, open, saving, onSave, onClose, readOnly = false, 
       setForm((prev) => ({
         ...prev,
         ...aiResponseToPreset(suggestion),
-        nome_cultura: prev.nome_cultura, // keep name the user typed
       }));
       setAiOpen(false);
       setAiDesc('');
