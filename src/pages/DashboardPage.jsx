@@ -2491,7 +2491,7 @@ export const DashboardPage = () => {
             notifyBusy={notifyBusyById[selectedGreenhouse.id]}
             externalWeather={externalWeatherById[selectedGreenhouse.id]}
             externalWeatherLoading={externalWeatherLoadingById[selectedGreenhouse.id]}
-            onSave={(payload) => handleSaveGreenhouse(selectedGreenhouse.id, payload)}
+            onSave={(_greenhouseId, payload) => handleSaveGreenhouse(selectedGreenhouse.id, payload)}
             onUpdateTeam={(ids) => handleUpdateTeam(selectedGreenhouse.id, ids)}
             onToggleAlerts={(enabled) => handleToggleAlerts(selectedGreenhouse.id, enabled)}
             onNotify={() => handleNotifyTeam(selectedGreenhouse.id)}
