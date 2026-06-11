@@ -565,8 +565,8 @@ const GreenhousePanel = ({
     try {
       const resolved = await resolveCepLocation(normalized);
       setDraftCep(formatCep(resolved?.cep ?? normalized));
-      setDraftCity(resolved?.localidade ?? resolved?.city ?? '');
-      setDraftState(resolved?.uf ?? resolved?.state ?? '');
+      setDraftCity(resolved?.cidade ?? resolved?.localidade ?? resolved?.city ?? '');
+      setDraftState(resolved?.estado ?? resolved?.uf ?? resolved?.state ?? '');
     } catch {
       setDraftCepError('CEP não encontrado. Verifique e tente novamente.');
       setDraftCity('');
