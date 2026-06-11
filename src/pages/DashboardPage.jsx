@@ -25,6 +25,7 @@ import {
 import { listCulturePresets } from '../api/presetService.js';
 import { listDevices, createDevice, updateDevice, deleteDevice } from '../api/deviceService.js';
 import { WizardOnboardingDispositivo } from '../components/WizardOnboardingDispositivo.jsx';
+import { MfaReconfirmModal } from '../components/MfaReconfirmModal.jsx';
 import { ControlesPanel } from '../components/ControlesPanel.jsx';
 import { CentroComando } from '../components/CentroComando.jsx';
 import { MonitoramentoTab } from '../components/MonitoramentoTab.jsx';
@@ -1412,6 +1413,7 @@ export const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [showGreenhouseMfa, setShowGreenhouseMfa] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
 
   // dispositivos da estufa selecionada
@@ -2514,27 +2516,36 @@ export const DashboardPage = () => {
       ) : null}
 
       <ConfirmDialog
-        open={!!deleteTarget}
+        open={!!deleteTarget && !showGreenhouseMfa}
         title="Remover estufa"
         description={deleteTarget ? `Remover a estufa "${deleteTarget.name}"? Esta acao nao podera ser desfeita.` : ''}
-        onConfirm={async () => {
-          if (!deleteTarget) return;
-          setDeleteBusy(true);
-          try {
-            await deleteGreenhouse(deleteTarget.id);
-            setGreenhouses((prev) => prev.filter((g) => g.id !== deleteTarget.id));
-            setDeleteTarget(null);
-            navigate('/dashboard');
-          } catch {
-            setError('Nao foi possivel remover a estufa.');
-          } finally {
-            setDeleteBusy(false);
-          }
-        }}
+        onConfirm={() => setShowGreenhouseMfa(true)}
         onCancel={() => setDeleteTarget(null)}
-        confirmLabel={deleteBusy ? 'Removendo...' : 'Remover'}
+        confirmLabel="Continuar"
         cancelLabel="Cancelar"
       />
+      {showGreenhouseMfa && deleteTarget && (
+        <MfaReconfirmModal
+          title="Remover estufa"
+          description={`Você está prestes a remover permanentemente "${deleteTarget.name}" e todos os seus dados. Confirme sua identidade para continuar.`}
+          onConfirm={async () => {
+            setShowGreenhouseMfa(false);
+            if (!deleteTarget) return;
+            setDeleteBusy(true);
+            try {
+              await deleteGreenhouse(deleteTarget.id);
+              setGreenhouses((prev) => prev.filter((g) => g.id !== deleteTarget.id));
+              setDeleteTarget(null);
+              navigate('/dashboard');
+            } catch {
+              setError('Nao foi possivel remover a estufa.');
+            } finally {
+              setDeleteBusy(false);
+            }
+          }}
+          onCancel={() => { setShowGreenhouseMfa(false); setDeleteTarget(null); }}
+        />
+      )}
     </>
   );
 };

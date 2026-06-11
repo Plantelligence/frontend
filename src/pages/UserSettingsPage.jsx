@@ -821,15 +821,14 @@ export const UserSettingsPage = () => {
         onCancel={() => setConfirmSaveProfile(false)}
         onConfirm={submitProfileUpdate}
       />
-      <ConfirmDialog
-        open={confirmDeletion}
-        title="Excluir meu perfil neste ambiente"
-        description="Esta ação registra a exclusão do seu perfil de acesso no Plantelligence. Você será desconectado imediatamente."
-        onConfirm={handleDeletionRequest}
-        onCancel={() => setConfirmDeletion(false)}
-        confirmLabel="Confirmar exclusão"
-        cancelLabel="Cancelar"
-      />
+      {confirmDeletion && (
+        <MfaReconfirmModal
+          title="Solicitar exclusão de dados"
+          description="Esta ação registra a exclusão do seu perfil e dados pessoais no Plantelligence. Confirme sua identidade para continuar."
+          onConfirm={() => { setConfirmDeletion(false); handleDeletionRequest(); }}
+          onCancel={() => setConfirmDeletion(false)}
+        />
+      )}
       {showOrgDeleteMfa && (
         <MfaReconfirmModal
           title="Apagar organização"
