@@ -742,6 +742,7 @@ export const PresetsPage = () => {
       setDeleteTarget(null);
     } catch (deleteError) {
       setError(deleteError?.response?.data?.detail ?? deleteError?.response?.data?.message ?? 'Falha ao remover o perfil de cultivo.');
+      setDeleteTarget(null);
     } finally {
       setSaving(false);
     }

@@ -6,9 +6,13 @@
  *
  * Persistência entre recargas:
  *   O timestamp da última atividade é gravado no localStorage
- *   ("plantelligence-last-activity"). Na montagem, se o tempo decorrido
- *   desde a última atividade já supera idleMs, o callback é disparado
- *   imediatamente — impedindo que um refresh de página contorne o lock.
+ *   ("plantelligence-last-activity"). Na montagem inicial, se o tempo
+ *   decorrido já supera idleMs, o callback é disparado imediatamente —
+ *   impedindo que um refresh de página contorne o lock.
+ *
+ *   Em re-ativações (enabled vai de false→true após a montagem inicial,
+ *   ex.: navegação para rota não protegida e volta), o timer é sempre
+ *   reiniciado do zero — o usuário claramente está presente.
  *
  * BALANÇO UX / SEGURANÇA:
  *   O idle timer NÃO faz logout — apenas bloqueia a interface (lock screen).
@@ -31,11 +35,11 @@ import { useCallback, useEffect, useRef } from 'react';
 // Chave do localStorage para o timestamp da última atividade do usuário
 const LAST_ACTIVITY_KEY = 'plantelligence-last-activity';
 
-// Eventos que reiniciam o contador de inatividade
-// Cobrem todos os tipos de interação: mouse, teclado, scroll e touch
+// Eventos que reiniciam o contador de inatividade.
+// mousemove foi intencionalmente omitido — dispara centenas de vezes por
+// segundo e não acrescenta cobertura relevante frente aos demais eventos.
 const ACTIVITY_EVENTS = [
   'mousedown',
-  'mousemove',
   'keydown',
   'scroll',
   'touchstart',
@@ -70,11 +74,18 @@ export const clearLastActivity = () => {
 
 export function useIdleTimer(idleMs, onIdle, enabled = true) {
   // Guarda o ID do setTimeout para poder cancelar quando o usuário interage
-  const timerRef   = useRef(null);
+  const timerRef    = useRef(null);
   // Ref para o callback onIdle — evita recriar listeners quando o callback muda
-  const onIdleRef  = useRef(onIdle);
+  const onIdleRef   = useRef(onIdle);
   // Ref para o flag enabled — permite desativar sem remover/readicionar listeners
-  const enabledRef = useRef(enabled);
+  const enabledRef  = useRef(enabled);
+  // Controla se o efeito já foi ativado ao menos uma vez.
+  // Na MONTAGEM INICIAL: usa o lastActivity do localStorage (proteção contra
+  // contornar o lock com um refresh de página).
+  // Em RE-ATIVAÇÕES (enabled foi false e voltou a true): inicia timer completo —
+  // o usuário está claramente presente e não deve ser punido por uma troca de
+  // rota momentânea ou re-render do Zustand.
+  const mountedRef  = useRef(false);
 
   // Mantém referências atualizadas sem re-adicionar listeners
   useEffect(() => { onIdleRef.current  = onIdle;   }, [onIdle]);
@@ -99,22 +110,38 @@ export function useIdleTimer(idleMs, onIdle, enabled = true) {
       return;
     }
 
-    // Verifica se o usuário já estava inativo antes desta carga de página
-    const lastActivity = readLastActivity();
-    if (lastActivity !== null) {
-      const elapsed = Date.now() - lastActivity;
-      if (elapsed >= idleMs) {
-        // Inatividade já atingiu o limite — bloqueia imediatamente
-        onIdleRef.current?.();
-        return;
+    const isInitialActivation = !mountedRef.current;
+    mountedRef.current = true;
+
+    if (isInitialActivation) {
+      // ── Montagem inicial ──────────────────────────────────────────────────
+      // Verifica se o usuário já estava inativo antes desta carga de página.
+      // Isso impede que um refresh contorne o lock screen por inatividade.
+      const lastActivity = readLastActivity();
+      if (lastActivity !== null) {
+        const elapsed = Date.now() - lastActivity;
+        if (elapsed >= idleMs) {
+          // Inatividade já atingiu o limite — bloqueia imediatamente
+          onIdleRef.current?.();
+          return;
+        }
+        // Agenda o restante do tempo que falta até completar o período de inatividade
+        const remaining = idleMs - elapsed;
+        timerRef.current = setTimeout(() => {
+          if (enabledRef.current) onIdleRef.current?.();
+        }, remaining);
+      } else {
+        // Primeira carga sem histórico — inicia o timer completo
+        writeLastActivity(Date.now());
+        timerRef.current = setTimeout(() => {
+          if (enabledRef.current) onIdleRef.current?.();
+        }, idleMs);
       }
-      // Agenda o restante do tempo que falta até completar o período de inatividade
-      const remaining = idleMs - elapsed;
-      timerRef.current = setTimeout(() => {
-        if (enabledRef.current) onIdleRef.current?.();
-      }, remaining);
     } else {
-      // Primeira carga — inicia o timer completo e registra a atividade
+      // ── Re-ativação (enabled voltou a true após ter sido false) ───────────
+      // O usuário está claramente presente (navegou de volta à rota protegida,
+      // desbloqueou a sessão, etc.). Inicia sempre um timer completo para
+      // evitar falsos positivos causados por troca de rota ou re-renders.
       writeLastActivity(Date.now());
       timerRef.current = setTimeout(() => {
         if (enabledRef.current) onIdleRef.current?.();

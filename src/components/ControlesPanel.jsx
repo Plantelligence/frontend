@@ -399,7 +399,7 @@ const LedFotoperiodoCard = ({ device, estadoAtual, faseAtual, onComando, readOnl
 
 // ── Componente principal ───────────────────────────────────────────────────────
 
-export const ControlesPanel = ({ _greenhouse, devices, devicesLoading, telemetry, readOnly }) => {
+export const ControlesPanel = ({ greenhouse, devices, devicesLoading, telemetry, readOnly }) => {
   const [estadosLocais, setEstadosLocais] = useState({});
 
   // Lê o estado real da última telemetria do ESP32
@@ -425,10 +425,10 @@ export const ControlesPanel = ({ _greenhouse, devices, devicesLoading, telemetry
 
   // Adiciona estufaId ao objeto de device para os cards enviarem para a rota correta
   const deviceComEstufa = esp32
-    ? { ...esp32, estufaId: _greenhouse?.id || esp32?.estufa_id }
+    ? { ...esp32, estufaId: greenhouse?.id || esp32?.estufaId || esp32?.estufa_id }
     : null;
 
-  const faseAtual = _greenhouse?.fase_atual || 'frutificacao';
+  const faseAtual = greenhouse?.fase_atual || 'frutificacao';
   const temDispositivo = !!esp32;
 
   return (
