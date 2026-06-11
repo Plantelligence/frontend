@@ -173,8 +173,12 @@ export const WizardOnboardingCriarEstufa = ({
         setStepError('Informe o nome da estufa antes de continuar.');
         return;
       }
+      if (digitsOnly(cep).length !== 8) {
+        setStepError('Informe um CEP válido com 8 dígitos antes de continuar.');
+        return;
+      }
       if (!city.trim() || !state.trim()) {
-        setStepError('Informe a cidade e o estado. Busque pelo CEP ou preencha manualmente.');
+        setStepError('Busque o CEP para preencher cidade e estado automaticamente.');
         return;
       }
     }
@@ -318,7 +322,7 @@ export const WizardOnboardingCriarEstufa = ({
         <div className="space-y-4">
           <div>
             <h2 className="text-lg font-semibold text-slate-800 dark:text-stone-100">Nome e localização da estufa</h2>
-            <p className="text-sm text-slate-600 dark:text-stone-400">Informe o CEP para preenchimento automático de cidade e estado.</p>
+            <p className="text-sm text-slate-600 dark:text-stone-400">O CEP é obrigatório — cidade e estado são preenchidos automaticamente.</p>
           </div>
           <label className="block text-xs font-semibold text-slate-700 dark:text-stone-300">
             Nome da estufa *
@@ -365,16 +369,16 @@ export const WizardOnboardingCriarEstufa = ({
             <input
               type="text"
               value={city}
-              onChange={(e) => setCity(e.target.value.slice(0, 80))}
-              placeholder="Cidade (preenchida pelo CEP ou manual)"
-              className="w-full rounded-xl border border-slate-300 dark:border-stone-600 bg-white dark:bg-stone-800 px-3 py-2 text-sm text-slate-700 dark:text-stone-200 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100"
+              readOnly
+              placeholder="Cidade (preenchida pelo CEP)"
+              className="w-full rounded-xl border border-slate-300 dark:border-stone-600 bg-slate-50 dark:bg-stone-700/50 px-3 py-2 text-sm text-slate-700 dark:text-stone-200 outline-none cursor-not-allowed"
             />
             <input
               type="text"
               value={state}
-              onChange={(e) => setState(e.target.value.replace(/[^a-zA-Z]/g, '').slice(0, 2).toUpperCase())}
-              placeholder="UF"
-              className="w-full rounded-xl border border-slate-300 dark:border-stone-600 bg-white dark:bg-stone-800 px-3 py-2 text-sm text-slate-700 dark:text-stone-200 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100"
+              readOnly
+              placeholder="UF (preenchida pelo CEP)"
+              className="w-full rounded-xl border border-slate-300 dark:border-stone-600 bg-slate-50 dark:bg-stone-700/50 px-3 py-2 text-sm text-slate-700 dark:text-stone-200 outline-none cursor-not-allowed"
             />
           </div>
         </div>
