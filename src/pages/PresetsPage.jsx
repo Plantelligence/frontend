@@ -348,45 +348,6 @@ function DetailPanel({ preset, open, saving, onSave, onClose, readOnly = false, 
         <p className="mt-1 text-[11px] text-stone-500">
           Descreva o objetivo desse perfil para facilitar o uso pela equipe.
         </p>
-        {isDraft && !readOnly && (
-          <button
-            type="button"
-            onClick={() => { setAiOpen((v) => !v); setAiError(null); }}
-            className="mt-3 flex items-center gap-1.5 rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-100 dark:border-red-900 dark:bg-red-950 dark:text-red-400 dark:hover:bg-red-900"
-          >
-            ✨ Sugerir parâmetros com IA
-          </button>
-        )}
-        {aiOpen && (
-          <div className="mt-3 rounded-lg border border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950 p-3">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-red-700 dark:text-red-400">Descreva a cultura para a IA sugerir os parâmetros</p>
-            <textarea
-              value={aiDesc}
-              onChange={(e) => setAiDesc(e.target.value)}
-              placeholder="Ex.: Shiitake em fase de frutificação, temperatura amena, alta umidade..."
-              rows={3}
-              className="w-full resize-none rounded-md border border-red-200 dark:border-red-800 bg-white dark:bg-stone-900 px-3 py-2 text-xs text-stone-700 dark:text-stone-300 outline-none focus:border-red-400"
-            />
-            {aiError && <p className="mt-1 text-[11px] text-red-600 dark:text-red-400">{aiError}</p>}
-            <div className="mt-2 flex gap-2">
-              <button
-                type="button"
-                onClick={() => { setAiOpen(false); setAiDesc(''); setAiError(null); }}
-                className="rounded border border-stone-300 dark:border-stone-700 px-3 py-1.5 text-xs text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={handleAISuggest}
-                disabled={aiLoading || !aiDesc.trim()}
-                className="rounded bg-red-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-red-700 disabled:opacity-40"
-              >
-                {aiLoading ? 'Gerando...' : 'Gerar sugestão'}
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
       <div className="space-y-5 px-5 py-4 max-h-[65vh] overflow-y-auto">
