@@ -1183,9 +1183,12 @@ const GreenhousePanel = ({
                       <p className="text-[11px]">
                         Ideal {metric.expected?.min ?? '-'}{unitMap[metricKey]} a {metric.expected?.max ?? '-'}{unitMap[metricKey]}
                       </p>
-                      <p className="text-[11px]">
-                        {metric.evaluated === false ? 'Sem dado coletado para este parâmetro' : `Fonte usada: ${sourceLabel}`}
-                      </p>
+                      {metric.evaluated === false && (
+                        <p className="text-[11px]">Sem dado coletado para este parâmetro</p>
+                      )}
+                      {metric.evaluated !== false && sourceLabel !== 'Não informado' && (
+                        <p className="text-[11px]">Fonte: {sourceLabel}</p>
+                      )}
                     </div>
                   );
                 })}

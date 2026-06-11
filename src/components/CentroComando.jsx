@@ -450,6 +450,10 @@ export const CentroComando = ({ estufaId, isReader = false }) => {
               <i className="fa-solid fa-leaf text-lime-400 text-sm" />
             </div>
             <h3 className="text-sm font-semibold text-stone-800 dark:text-stone-100">Situação do Cultivo</h3>
+            <i
+              className="fa-solid fa-circle-question text-[11px] text-stone-400 cursor-help"
+              title="Mostra o quanto cada sensor está dentro da faixa ideal do preset ativo. Atualiza com base na última leitura recebida do ESP32."
+            />
           </div>
 
           {data.lastTelemetryTimestamp && (

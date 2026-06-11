@@ -45,7 +45,7 @@ const statusOf = (value, range) => {
 
 const STATUS = {
   green: { card: 'border-emerald-500/25 bg-emerald-500/8', val: 'text-emerald-400', dot: 'bg-emerald-400', badge: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400', label: 'OK' },
-  amber: { card: 'border-amber-500/25 bg-amber-500/8',   val: 'text-amber-400',   dot: 'bg-amber-400',   badge: 'border-amber-500/30 bg-amber-500/10 text-amber-400',   label: 'Atencao' },
+  amber: { card: 'border-amber-500/25 bg-amber-500/8',   val: 'text-amber-400',   dot: 'bg-amber-400',   badge: 'border-amber-500/30 bg-amber-500/10 text-amber-400',   label: 'Atenção' },
   red:   { card: 'border-red-500/25 bg-red-500/8',       val: 'text-red-400',     dot: 'bg-red-400',     badge: 'border-red-500/30 bg-red-500/10 text-red-400',         label: 'Risco' },
   stone: { card: 'border-stone-200 dark:border-stone-800/50 bg-stone-50 dark:bg-stone-900/25',  val: 'text-stone-600 dark:text-stone-300',   dot: 'bg-stone-400 dark:bg-stone-500',   badge: 'border-stone-300 dark:border-stone-700/50 bg-stone-100 dark:bg-stone-800/50 text-stone-500 dark:text-stone-400',   label: 'Sem dados' },
 };
