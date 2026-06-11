@@ -815,6 +815,9 @@ const GreenhousePanel = ({
                       className="rounded-md border border-stone-300 bg-slate-50 dark:bg-stone-700/50 px-3 py-2 text-sm text-slate-700 dark:text-stone-300 cursor-not-allowed"
                     />
                   </div>
+                  <p className="text-[10px] text-slate-400 dark:text-stone-500">
+                    Cidade e estado são preenchidos automaticamente pelo CEP e não podem ser editados manualmente para evitar erros que comprometem o funcionamento do clima externo.
+                  </p>
                 </div>
               </div>
 
@@ -956,19 +959,19 @@ const GreenhousePanel = ({
       </div>
 
       {/* ── Banner: CEP não informado ─────────────────────────────────────── */}
-      {!greenhouse.cep && !readOnly ? (
+      {(!greenhouse.city || !greenhouse.state) && !readOnly ? (
         <div className="mt-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-800/40 dark:bg-amber-900/20 px-4 py-3 text-xs text-amber-800 dark:text-amber-300">
           <span className="mt-0.5 shrink-0">⚠️</span>
           <div>
-            <p className="font-semibold">Localização não cadastrada</p>
+            <p className="font-semibold">Sem endereço — o clima externo não funciona</p>
             <p className="mt-0.5 font-normal">
-              Sem o CEP, o clima externo e a avaliação automática por região ficam pendentes.{' '}
+              Cidade e estado são necessários para consultar o clima externo via OpenWeather.{' '}
               <button
                 type="button"
                 onClick={() => setMenuOpen(true)}
                 className="underline underline-offset-2 hover:text-amber-900 dark:hover:text-amber-200 transition"
               >
-                Adicionar agora
+                Cadastrar agora
               </button>
             </p>
           </div>

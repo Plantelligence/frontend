@@ -374,9 +374,12 @@ export const WizardOnboardingCriarEstufa = ({
               className="w-full rounded-xl border border-slate-300 dark:border-stone-600 bg-slate-50 dark:bg-stone-700/50 px-3 py-2 text-sm text-slate-700 dark:text-stone-200 outline-none cursor-not-allowed"
             />
           </div>
-          {!city && !state ? (
+          <p className="text-[10px] text-slate-400 dark:text-stone-500">
+            Cidade e estado são preenchidos automaticamente pelo CEP e não podem ser editados manualmente — isso evita erros que comprometem o funcionamento do clima externo.
+          </p>
+          {!city || !state ? (
             <p className="text-xs text-amber-600 dark:text-amber-400">
-              Sem CEP, o clima externo e a avaliação por região ficarão pendentes até você adicionar a localização.
+              Sem cidade e estado, o clima externo não funcionará. Você pode cadastrar o CEP agora ou depois na edição da estufa.
             </p>
           ) : null}
         </div>
