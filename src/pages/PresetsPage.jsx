@@ -409,7 +409,7 @@ function DetailPanel({ preset, open, saving, onSave, onClose, readOnly = false }
           onClick={onClose}
           className="flex-1 rounded border border-stone-200 dark:border-stone-700 px-3 py-2 text-sm text-stone-700 dark:text-stone-300 transition hover:bg-stone-50 dark:hover:bg-stone-800"
         >
-          Fechar painel
+          Cancelar
         </button>
         <button
           onClick={() => onSave(form)}
@@ -547,6 +547,7 @@ export const PresetsPage = () => {
   const [presets, setPresets] = useState([]);
   const [selected, setSelected] = useState(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isDraft, setIsDraft] = useState(false);
   const [activeFilter, setActiveFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
@@ -659,17 +660,25 @@ export const PresetsPage = () => {
   }), [filtered]);
 
   const handleSave = async (updated) => {
-    if (!updated?.id || updated.sistema) {
-      return;
-    }
+    if (updated?.sistema) return;
 
     setSaving(true);
     setError(null);
 
     try {
-      const response = await updateCulturePreset(updated.id, updated);
-      const normalized = deriveUiPreset(response);
-      setPresets((prev) => prev.map((entry) => entry.id === normalized.id ? normalized : entry));
+      let normalized;
+      if (isDraft) {
+        // rascunho: ainda não existe no backend — cria agora
+        const response = await createCulturePreset(updated);
+        normalized = deriveUiPreset(response);
+        setPresets((prev) => [normalized, ...prev]);
+        setIsDraft(false);
+      } else {
+        if (!updated?.id) return;
+        const response = await updateCulturePreset(updated.id, updated);
+        normalized = deriveUiPreset(response);
+        setPresets((prev) => prev.map((entry) => entry.id === normalized.id ? normalized : entry));
+      }
       setSelected(normalized);
       setIsDetailOpen(false);
     } catch (saveError) {
@@ -692,19 +701,13 @@ export const PresetsPage = () => {
     }
   };
 
-  const handleCreate = async () => {
-    setError(null);
-    try {
-      const response = await createCulturePreset(makeDefaultPreset());
-      const normalized = deriveUiPreset(response);
-      setPresets((prev) => [normalized, ...prev]);
-      setActiveFilter('custom');
-      setSearch('');
-      setSelected(normalized);
-      setIsDetailOpen(true);
-    } catch (createError) {
-      setError(createError?.response?.data?.detail ?? createError?.response?.data?.message ?? 'Não foi possível criar novo perfil de cultivo.');
-    }
+  const handleCreate = () => {
+    // abre o painel com rascunho local — só cria no backend ao clicar em Salvar
+    setSelected(makeDefaultPreset());
+    setIsDraft(true);
+    setIsDetailOpen(true);
+    setActiveFilter('custom');
+    setSearch('');
   };
 
   const handleAIUse = async (suggestion) => {
@@ -918,7 +921,7 @@ export const PresetsPage = () => {
             open={isDetailOpen}
             saving={saving}
             onSave={handleSave}
-            onClose={() => setIsDetailOpen(false)}
+            onClose={() => { setIsDetailOpen(false); setIsDraft(false); }}
             readOnly={isReader || selected?.sistema}
           />
 
