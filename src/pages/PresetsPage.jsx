@@ -94,7 +94,7 @@ const getIdealMetric = (ranges) => {
 
 const getPresetLoadErrorMessage = (error) => {
   if (!error) {
-    return 'Nao foi possivel carregar os perfis de cultivo.';
+    return 'Não foi possível carregar os perfis de cultivo.';
   }
 
   if (error.code === 'ECONNABORTED') {
@@ -107,7 +107,7 @@ const getPresetLoadErrorMessage = (error) => {
 
   return error?.response?.data?.detail
     ?? error?.response?.data?.message
-    ?? 'Nao foi possivel carregar os perfis de cultivo.';
+    ?? 'Não foi possível carregar os perfis de cultivo.';
 };
 
 const deriveUiPreset = (preset) => {

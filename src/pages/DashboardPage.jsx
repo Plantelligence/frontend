@@ -2625,7 +2625,7 @@ export const DashboardPage = () => {
               setDeleteTarget(null);
               navigate('/dashboard');
             } catch {
-              setError('Nao foi possivel remover a estufa.');
+              setError('Não foi possível remover a estufa.');
             } finally {
               setDeleteBusy(false);
             }

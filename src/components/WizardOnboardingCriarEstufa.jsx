@@ -203,7 +203,7 @@ export const WizardOnboardingCriarEstufa = ({
       setCepError(
         resolveError?.response?.data?.detail
         ?? resolveError?.response?.data?.message
-        ?? 'Nao foi possivel consultar esse CEP agora.'
+        ?? 'Não foi possível consultar esse CEP agora.'
       );
     } finally {
       setCepLoading(false);
@@ -399,15 +399,15 @@ export const WizardOnboardingCriarEstufa = ({
             </div>
             <div className="flex items-center justify-between">
               <dt>CEP</dt>
-              <dd className="font-semibold">{cep || 'Nao informado'}</dd>
+              <dd className="font-semibold">{cep || 'Não informado'}</dd>
             </div>
             <div className="flex items-center justify-between">
               <dt>Cidade</dt>
-              <dd className="font-semibold">{city || 'Nao informada'}</dd>
+              <dd className="font-semibold">{city || 'Não informada'}</dd>
             </div>
             <div className="flex items-center justify-between">
               <dt>Estado</dt>
-              <dd className="font-semibold">{state || 'Nao informado'}</dd>
+              <dd className="font-semibold">{state || 'Não informado'}</dd>
             </div>
             <div className="flex items-center justify-between">
               <dt>Tipo</dt>
