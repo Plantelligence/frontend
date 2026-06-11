@@ -352,7 +352,9 @@ export const RelatoriosPage = () => {
         const list = res?.greenhouses ?? [];
         setGreenhouses(list);
         if (list.length > 0 && !selectedId) {
-          setSelectedId(list[0].id);
+          // prefere a primeira estufa que já teve ESP; caso nenhuma, usa a primeira da lista
+          const firstWithDevice = list.find((g) => g.hasEverHadDevice);
+          setSelectedId((firstWithDevice ?? list[0]).id);
         }
       })
       .catch(() => setError('Não foi possível carregar as estufas.'));
@@ -451,11 +453,17 @@ export const RelatoriosPage = () => {
               {greenhouses.length > 1 && (
                 <select
                   value={selectedId}
-                  onChange={(e) => setSelectedId(e.target.value)}
+                  onChange={(e) => {
+                    const chosen = greenhouses.find((g) => g.id === e.target.value);
+                    if (chosen?.hasEverHadDevice === false) return; // bloqueia seleção sem ESP
+                    setSelectedId(e.target.value);
+                  }}
                   className="rounded-xl border border-stone-300 dark:border-stone-700/60 bg-white dark:bg-stone-800/60 px-3 py-2 text-sm text-stone-800 dark:text-stone-100 outline-none focus:border-red-400 transition"
                 >
                   {greenhouses.map((g) => (
-                    <option key={g.id} value={g.id}>{g.name}</option>
+                    <option key={g.id} value={g.id} disabled={!g.hasEverHadDevice}>
+                      {g.name}{!g.hasEverHadDevice ? ' (sem ESP)' : ''}
+                    </option>
                   ))}
                 </select>
               )}
