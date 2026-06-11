@@ -1312,6 +1312,22 @@ const GreenhousePanel = ({
                     ? 'Ainda sem telemetria interna completa: avaliação parcial baseada principalmente no clima da cidade.'
                     : 'Sem dados suficientes para avaliar agora. Aguarde novos dados.'}
             </p>
+            {notifyFeedback && (
+              <div className={`mt-2 rounded-lg px-3 py-2 text-[11px] font-medium flex items-start gap-1.5 ${
+                notifyFeedback.type === 'success'
+                  ? 'bg-emerald-50 border border-emerald-200 text-emerald-700 dark:bg-emerald-900/20 dark:border-emerald-800/50 dark:text-emerald-400'
+                  : notifyFeedback.type === 'error'
+                    ? 'bg-rose-50 border border-rose-200 text-rose-700 dark:bg-rose-900/20 dark:border-rose-800/50 dark:text-rose-400'
+                    : 'bg-sky-50 border border-sky-200 text-sky-700 dark:bg-sky-900/20 dark:border-sky-800/50 dark:text-sky-400'
+              }`}>
+                <i className={`fa-solid mt-0.5 flex-shrink-0 ${
+                  notifyFeedback.type === 'success' ? 'fa-circle-check' :
+                  notifyFeedback.type === 'error' ? 'fa-triangle-exclamation' :
+                  'fa-circle-info'
+                }`} />
+                <span>{notifyFeedback.text}</span>
+              </div>
+            )}
           </div>
 
         </article>
