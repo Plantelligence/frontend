@@ -111,6 +111,24 @@ const ProgressBar = ({ etapaAtual }) => {
 
 // ── Componente principal ───────────────────────────────────────────────────────
 
+const ONBOARDING_STATUS_PT = {
+  awaiting_first_connection: 'Aguardando primeira conexão',
+  connected:                 'Conectado',
+  online:                    'Online',
+  firmware_updated:          'Firmware atualizado',
+  configured:                'Configurado',
+  error:                     'Erro',
+  offline:                   'Offline',
+  registering:               'Registrando...',
+  registered:                'Registrado no IoT Hub',
+};
+
+function traduzirStatusOnboarding(status) {
+  if (!status) return 'Aguardando...';
+  return ONBOARDING_STATUS_PT[status] || status.replace(/_/g, ' ');
+}
+
+
 export const WizardOnboardingDispositivo = ({ estufaId, onClose, onSuccess }) => {
   // ── Estado do wizard ────────────────────────────────────────────────────────
   const [etapa,    setEtapa]    = useState('form');
@@ -423,7 +441,7 @@ export const WizardOnboardingDispositivo = ({ estufaId, onClose, onSuccess }) =>
                     <div className="rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50 px-4 py-3 text-left">
                       <p className="text-[11px] font-semibold text-stone-700 dark:text-stone-300 mb-2">Status do onboarding:</p>
                       <div className="space-y-1 text-[11px] text-stone-600 dark:text-stone-400">
-                        <p><span className="text-stone-500">Status:</span> {pollStatus.onboarding_status || 'aguardando'}</p>
+                        <p><span className="text-stone-500">Status:</span> {traduzirStatusOnboarding(pollStatus.onboarding_status)}</p>
                         <p><span className="text-stone-500">Device:</span> {pollStatus.device_id || 'aguardando'}</p>
                         {pollStatus.last_seen_at && (
                           <p><span className="text-stone-500">Último contato:</span> {new Date(pollStatus.last_seen_at).toLocaleTimeString('pt-BR')}</p>
