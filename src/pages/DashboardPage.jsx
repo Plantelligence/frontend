@@ -1341,8 +1341,8 @@ const GreenhousePanel = ({
           </ol>
           <div className="mt-1 flex items-center gap-2 rounded-lg border border-blue-200 bg-white dark:border-stone-700/40 dark:bg-stone-800/40 px-3 py-2">
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-stone-500">ID desta estufa (ESTUFA_ID)</p>
-              <p className="text-xs font-mono text-slate-700 dark:text-stone-400 mt-0.5 truncate">{greenhouse.id}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-stone-300">ID desta estufa (ESTUFA_ID)</p>
+              <p className="text-xs font-mono text-slate-700 dark:text-stone-100 mt-0.5 truncate">{greenhouse.id}</p>
             </div>
             <button
               type="button"
@@ -2628,7 +2628,7 @@ export const DashboardPage = () => {
             externalWeather={externalWeatherById[selectedGreenhouse.id]}
             externalWeatherLoading={externalWeatherLoadingById[selectedGreenhouse.id]}
             onSave={(_greenhouseId, payload) => handleSaveGreenhouse(selectedGreenhouse.id, payload)}
-            onUpdateTeam={(ids) => handleUpdateTeam(selectedGreenhouse.id, ids)}
+            onUpdateTeam={(_greenhouseId, ids) => handleUpdateTeam(selectedGreenhouse.id, ids)}
             onToggleAlerts={(_id, enabled) => handleToggleAlerts(selectedGreenhouse.id, enabled)}
             onNotify={() => handleNotifyTeam(selectedGreenhouse.id)}
             onDeleteRequest={() => setDeleteTarget({ id: selectedGreenhouse.id, name: selectedGreenhouse.name })}
