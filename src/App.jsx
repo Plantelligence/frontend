@@ -368,12 +368,15 @@ const App = () => {
   const authUser        = useAuthStore((s) => s.user);
 
 
-  // Bloqueia apos 30 minutos de inatividade (so quando autenticado e nao bloqueado)
-  // Desativa o timer quando não autenticado ou quando já está bloqueado
+  // Rotas protegidas onde o idle timer deve estar ativo
+  // Páginas públicas (site, termos, sobre nós, etc.) não devem acionar o lock screen
+  const isProtectedRoute = /^\/(dashboard|settings|help|admin)/.test(location.pathname);
+
+  // Bloqueia apos 30 minutos de inatividade (só em rotas protegidas, autenticado e não bloqueado)
   useIdleTimer(
     30 * 60 * 1000,
     () => lockSession('idle'),
-    isAuthenticated && !isLocked
+    isAuthenticated && !isLocked && isProtectedRoute
   );
 
   // Detecta token de primeiro acesso na query string e redireciona para a página correta
