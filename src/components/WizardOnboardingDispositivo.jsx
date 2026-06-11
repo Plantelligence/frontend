@@ -169,6 +169,12 @@ export const WizardOnboardingDispositivo = ({ estufaId, onClose, onSuccess }) =>
       });
 
       if (data.onboarding_status === 'failed') {
+        // Dispositivo foi salvo no banco mas IoT Hub falhou — limpa imediatamente
+        try {
+          await api.delete(`/estufas/${estufaId}/dispositivos/${data.id}`);
+        } catch (_) {
+          // falha silenciosa — não bloqueia exibição do erro
+        }
         throw new Error(data.onboarding_error || 'Falha ao registrar no IoT Hub.');
       }
 
