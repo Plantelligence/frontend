@@ -22,4 +22,5 @@ export const sendChatMessage = (payload) =>
 // Solicita ao assistente que sugira parâmetros de cultivo com base em uma pergunta livre
 // retorna um objeto com os campos do preset já preenchidos pela IA
 export const requestPresetSuggestion = (question) =>
-  api.post('/chat/preset-suggestion', { question }).then((res) => res.data);
+  // timeout estendido para 60s: chamadas de IA podem demorar no cold start do servidor
+  api.post('/chat/preset-suggestion', { question }, { timeout: 60000 }).then((res) => res.data);

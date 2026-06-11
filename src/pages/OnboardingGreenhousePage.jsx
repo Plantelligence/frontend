@@ -57,17 +57,23 @@ const buildCustomPresetPayload = (customParams) => {
   const substrateIdeal = normalizeIdealRange(
     customParams?.soilMoistureMin,
     customParams?.soilMoistureMax,
-    { min: 0, max: 500 },
-    { min: 180, max: 500 }
+    { min: 0, max: 100 },
+    { min: 50, max: 80 }
   );
+
+  // luminosidade: campo obrigatório no schema; não é configurado pelo wizard,
+  // então usamos um range padrão adequado para cultivo de cogumelos (ambiente escuro)
+  const luminosidadeDefault = buildMetricRangesFromIdeal({ min: 0, max: 300 }, { min: 0, max: 1000 });
 
   return {
     nome_cultura: (customParams?.profileName ?? '').trim(),
     tipo_cultura: 'Cogumelos',
-    descricao: (customParams?.plantation ?? '').trim(),
+    // descricao: usa plantation se preenchido, senão usa profileName como fallback
+    descricao: (customParams?.plantation || customParams?.profileName || 'Perfil personalizado').trim(),
     temperatura: buildMetricRangesFromIdeal(temperatureIdeal, { min: -5, max: 45 }),
     umidade: buildMetricRangesFromIdeal(humidityIdeal, { min: 0, max: 100 }),
-    luminosidade: buildMetricRangesFromIdeal(substrateIdeal, { min: 0, max: 500 }),
+    luminosidade: luminosidadeDefault,
+    umidade_solo: buildMetricRangesFromIdeal(substrateIdeal, { min: 0, max: 100 }),
   };
 };
 
@@ -142,7 +148,7 @@ export const OnboardingGreenhousePage = () => {
 
       if (cropType === 'personalizado') {
         const customPayload = buildCustomPresetPayload(customParams);
-        if (!customPayload.nome_cultura || !customPayload.descricao) {
+        if (!customPayload.nome_cultura) {
           throw new Error('Informe nome e descrição para criar o perfil personalizado.');
         }
 

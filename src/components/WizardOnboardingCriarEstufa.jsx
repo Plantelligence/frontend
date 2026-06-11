@@ -26,7 +26,7 @@ const digitsOnly = (value) => String(value ?? '').replace(/\D/g, '');
 const CUSTOM_LIMITS = {
   temperature: { min: -5, max: 45, step: '0.1', label: '-5 a 45 °C' },
   humidity: { min: 0, max: 100, step: '1', label: '0 a 100 %' },
-  soilMoisture: { min: 0, max: 500, step: '1', label: '0 a 500 %' }
+  soilMoisture: { min: 0, max: 100, step: '1', label: '0 a 100 %' }
 };
 
 // o id precisa bater com o slug do backend (flower_profiles.py)
@@ -493,9 +493,9 @@ export const WizardOnboardingCriarEstufa = ({
                     type="text"
                     value={customParams.profileName}
                     onChange={(event) => setCustomParams((prev) => ({ ...prev, profileName: event.target.value.slice(0, 80) }))}
-                    disabled={isAiTab}
+                    disabled={aiLoading}
                     placeholder="Ex.: Shiitake - Frutificacao inverno"
-                    className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm ${isAiTab ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500' : 'border-amber-300 bg-white dark:bg-stone-800 text-slate-900 dark:text-stone-100'}`}
+                    className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm ${aiLoading ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500' : 'border-amber-300 bg-white dark:bg-stone-800 text-slate-900 dark:text-stone-100'}`}
                   />
                   <p className="mt-1 text-[11px] text-slate-600 dark:text-stone-400">
                     Esse e o nome do perfil que sera usado para aplicar os limites ideais da estufa.
@@ -507,9 +507,9 @@ export const WizardOnboardingCriarEstufa = ({
                     type="text"
                     value={customParams.plantation}
                     onChange={(event) => setCustomParams((prev) => ({ ...prev, plantation: event.target.value.slice(0, 120) }))}
-                    disabled={isAiTab}
+                    disabled={aiLoading}
                     placeholder="Ex.: Perfil para frutificacao com alta umidade e ventilacao moderada"
-                    className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm ${isAiTab ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500' : 'border-amber-300 bg-white dark:bg-stone-800 text-slate-900 dark:text-stone-100'}`}
+                    className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm ${aiLoading ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500' : 'border-amber-300 bg-white dark:bg-stone-800 text-slate-900 dark:text-stone-100'}`}
                   />
                   <p className="mt-1 text-[11px] text-slate-600 dark:text-stone-400">
                     Esse texto ajuda a identificar rapidamente quando usar esse perfil.
@@ -521,11 +521,11 @@ export const WizardOnboardingCriarEstufa = ({
                     type="number"
                     value={customParams.temperatureMin}
                     onChange={handleCustomNumericChange('temperatureMin', CUSTOM_LIMITS.temperature.min, CUSTOM_LIMITS.temperature.max)}
-                    disabled={isAiTab}
+                    disabled={aiLoading}
                     min={CUSTOM_LIMITS.temperature.min}
                     max={CUSTOM_LIMITS.temperature.max}
                     step={CUSTOM_LIMITS.temperature.step}
-                    className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm ${isAiTab ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500' : 'border-amber-300 bg-white dark:bg-stone-800 text-slate-900 dark:text-stone-100'}`}
+                    className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm ${aiLoading ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500' : 'border-amber-300 bg-white dark:bg-stone-800 text-slate-900 dark:text-stone-100'}`}
                   />
                   <p className="mt-1 text-[11px] text-slate-500 dark:text-stone-400">Permitido: {CUSTOM_LIMITS.temperature.label}</p>
                 </label>
@@ -535,11 +535,11 @@ export const WizardOnboardingCriarEstufa = ({
                     type="number"
                     value={customParams.temperatureMax}
                     onChange={handleCustomNumericChange('temperatureMax', CUSTOM_LIMITS.temperature.min, CUSTOM_LIMITS.temperature.max)}
-                    disabled={isAiTab}
+                    disabled={aiLoading}
                     min={CUSTOM_LIMITS.temperature.min}
                     max={CUSTOM_LIMITS.temperature.max}
                     step={CUSTOM_LIMITS.temperature.step}
-                    className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm ${isAiTab ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500' : 'border-amber-300 bg-white dark:bg-stone-800 text-slate-900 dark:text-stone-100'}`}
+                    className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm ${aiLoading ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500' : 'border-amber-300 bg-white dark:bg-stone-800 text-slate-900 dark:text-stone-100'}`}
                   />
                   <p className="mt-1 text-[11px] text-slate-500 dark:text-stone-400">Permitido: {CUSTOM_LIMITS.temperature.label}</p>
                 </label>
@@ -549,11 +549,11 @@ export const WizardOnboardingCriarEstufa = ({
                     type="number"
                     value={customParams.humidityMin}
                     onChange={handleCustomNumericChange('humidityMin', CUSTOM_LIMITS.humidity.min, CUSTOM_LIMITS.humidity.max)}
-                    disabled={isAiTab}
+                    disabled={aiLoading}
                     min={CUSTOM_LIMITS.humidity.min}
                     max={CUSTOM_LIMITS.humidity.max}
                     step={CUSTOM_LIMITS.humidity.step}
-                    className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm ${isAiTab ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500' : 'border-amber-300 bg-white dark:bg-stone-800 text-slate-900 dark:text-stone-100'}`}
+                    className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm ${aiLoading ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500' : 'border-amber-300 bg-white dark:bg-stone-800 text-slate-900 dark:text-stone-100'}`}
                   />
                   <p className="mt-1 text-[11px] text-slate-500 dark:text-stone-400">Permitido: {CUSTOM_LIMITS.humidity.label}</p>
                 </label>
@@ -563,11 +563,11 @@ export const WizardOnboardingCriarEstufa = ({
                     type="number"
                     value={customParams.humidityMax}
                     onChange={handleCustomNumericChange('humidityMax', CUSTOM_LIMITS.humidity.min, CUSTOM_LIMITS.humidity.max)}
-                    disabled={isAiTab}
+                    disabled={aiLoading}
                     min={CUSTOM_LIMITS.humidity.min}
                     max={CUSTOM_LIMITS.humidity.max}
                     step={CUSTOM_LIMITS.humidity.step}
-                    className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm ${isAiTab ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500' : 'border-amber-300 bg-white dark:bg-stone-800 text-slate-900 dark:text-stone-100'}`}
+                    className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm ${aiLoading ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500' : 'border-amber-300 bg-white dark:bg-stone-800 text-slate-900 dark:text-stone-100'}`}
                   />
                   <p className="mt-1 text-[11px] text-slate-500 dark:text-stone-400">Permitido: {CUSTOM_LIMITS.humidity.label}</p>
                 </label>
@@ -577,11 +577,11 @@ export const WizardOnboardingCriarEstufa = ({
                     type="number"
                     value={customParams.soilMoistureMin}
                     onChange={handleCustomNumericChange('soilMoistureMin', CUSTOM_LIMITS.soilMoisture.min, CUSTOM_LIMITS.soilMoisture.max)}
-                    disabled={isAiTab}
+                    disabled={aiLoading}
                     min={CUSTOM_LIMITS.soilMoisture.min}
                     max={CUSTOM_LIMITS.soilMoisture.max}
                     step={CUSTOM_LIMITS.soilMoisture.step}
-                    className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm ${isAiTab ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500' : 'border-amber-300 bg-white dark:bg-stone-800 text-slate-900 dark:text-stone-100'}`}
+                    className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm ${aiLoading ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500' : 'border-amber-300 bg-white dark:bg-stone-800 text-slate-900 dark:text-stone-100'}`}
                   />
                   <p className="mt-1 text-[11px] text-slate-500 dark:text-stone-400">Permitido: {CUSTOM_LIMITS.soilMoisture.label}</p>
                 </label>
@@ -591,11 +591,11 @@ export const WizardOnboardingCriarEstufa = ({
                     type="number"
                     value={customParams.soilMoistureMax}
                     onChange={handleCustomNumericChange('soilMoistureMax', CUSTOM_LIMITS.soilMoisture.min, CUSTOM_LIMITS.soilMoisture.max)}
-                    disabled={isAiTab}
+                    disabled={aiLoading}
                     min={CUSTOM_LIMITS.soilMoisture.min}
                     max={CUSTOM_LIMITS.soilMoisture.max}
                     step={CUSTOM_LIMITS.soilMoisture.step}
-                    className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm ${isAiTab ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500' : 'border-amber-300 bg-white dark:bg-stone-800 text-slate-900 dark:text-stone-100'}`}
+                    className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm ${aiLoading ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500' : 'border-amber-300 bg-white dark:bg-stone-800 text-slate-900 dark:text-stone-100'}`}
                   />
                   <p className="mt-1 text-[11px] text-slate-500 dark:text-stone-400">Permitido: {CUSTOM_LIMITS.soilMoisture.label}</p>
                 </label>

@@ -66,7 +66,8 @@ export const deleteCulturePreset = (presetId) =>
 // envia uma descrição livre para a IA e recebe os parâmetros sugeridos como JSON
 // permite criar presets sem precisar conhecer os valores ideais manualmente
 export const suggestPresetWithAI = (descricao) =>
-  api.post('/presets/sugestao-ia', { descricao }).then((res) => res.data);
+  // timeout estendido para 60s: chamadas de IA podem demorar no cold start do servidor
+  api.post('/presets/sugestao-ia', { descricao }, { timeout: 60000 }).then((res) => res.data);
 
 // cria um clone do preset com nome "(copia)" — facilita criar variações
 // útil quando o usuário quer ajustar um perfil sem perder o original
