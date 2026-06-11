@@ -55,7 +55,7 @@ const NotificationBell = ({ userId }) => {
   const fetchNotifications = useCallback(async () => {
     if (!userId) return;
     try {
-      const res = await api.get('/notifications', { params: { limit: 15 } });
+      const res = await api.get('/notifications/', { params: { limit: 15 } });
       const items = res.data?.notifications ?? res.data?.items ?? [];
       setNotifications(items);
       setUnread(items.filter((n) => !n.read).length);

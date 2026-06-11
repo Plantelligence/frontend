@@ -55,7 +55,7 @@ const NotificationBell = ({ userId }) => {
   const fetchNotifications = useCallback(async () => {
     if (!userId) return;
     try {
-      const res = await api.get('/notifications', { params: { limit: 15 } });
+      const res = await api.get('/notifications/', { params: { limit: 15 } });
       // Normaliza a resposta que pode vir em formatos diferentes
       const items = res.data?.notifications ?? res.data?.items ?? [];
       setNotifications(items);
@@ -241,9 +241,8 @@ export const TopNav = () => {
       // Refresh token no httpOnly cookie — backend limpa o cookie automaticamente (B3.6)
       await logout({ accessJti: tokens?.accessJti, userId: user?.id });
     } catch (error) {
-      // Mesmo que o logout falhe no servidor, limpa o estado local
-      console.warn('Erro ao encerrar sessão', error);
-    } finally {
+      // notificações indisponíveis — falha silenciosa para não poluir o console
+        } finally {
       setMenuOpen(false);
       clearSession();
       navigate('/login');
