@@ -417,7 +417,7 @@ export const MonitoramentoTab = ({ estufaId, telemetry, profile, externalWeather
 
         <div className="rounded-2xl border border-stone-200 dark:border-stone-800/60 bg-white dark:bg-stone-900/35 p-5">
           <div className="mb-4">
-            <p className="text-xs font-semibold text-stone-800 dark:text-stone-100">Comparativo de periodos</p>
+            <p className="text-xs font-semibold text-stone-800 dark:text-stone-100">Comparativo de períodos</p>
             <p className="text-[10px] text-stone-500 mt-0.5">Últimos 6 pontos</p>
           </div>
           <SvgBarChart

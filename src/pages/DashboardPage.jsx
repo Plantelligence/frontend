@@ -15,7 +15,6 @@ import {
   listGreenhouses,
   updateGreenhouse,
   updateGreenhouseAlerts,
-  updateAlertThresholds,
   evaluateGreenhouseMetrics,
   deleteGreenhouse,
   listGreenhouseTeamMembers,
@@ -421,7 +420,6 @@ const GreenhousePanel = ({
   onToggleAlerts,
   onNotify,
   onDeleteRequest,
-  onUpdateAlertThresholds,
   devices = [],
   devicesLoading = false,
   onCreateDevice,
@@ -446,9 +444,6 @@ const GreenhousePanel = ({
     setSearchParams((prev) => { prev.set('tab', tab); return prev; }, { replace: true });
   };
 
-  const [thresholdDraft, setThresholdDraft] = useState(() => greenhouse.alertThresholds ?? {});
-  const [thresholdSaving, setThresholdSaving] = useState(false);
-  const [thresholdFeedback, setThresholdFeedback] = useState(null);
 
   // estado local do formulário de cadastro de dispositivo
   const [showDeviceWizard,  setShowDeviceWizard]  = useState(false);
@@ -482,13 +477,10 @@ const GreenhousePanel = ({
     if (_isFirstRender.current) {
       // no primeiro render mantém a aba da URL (preserva após F5)
       _isFirstRender.current = false;
-      setThresholdDraft(greenhouse.alertThresholds ?? {});
-      return;
+        return;
     }
     // ao trocar de estufa reseta para a aba padrão
     setActiveTopic('comando');
-    setThresholdDraft(greenhouse.alertThresholds ?? {});
-    setThresholdFeedback(null);
   }, [greenhouse.id]);
 
   useEffect(() => {
@@ -1133,81 +1125,7 @@ const GreenhousePanel = ({
             </p>
           ) : null}
         </article>
-        {!readOnly ? (
-          <article className="col-span-full mt-4 rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-5 text-sm text-slate-700">
-            <h3 className="text-base font-semibold text-slate-800 dark:text-stone-100">Faixas de alerta personalizadas</h3>
-            <p className="mt-1 text-xs text-slate-500 dark:text-stone-400">
-              Defina o mínimo e o máximo de cada parâmetro. O sistema usa esses valores para gerar avaliações e notificações automáticas.
-            </p>
-            <div className="mt-4 grid gap-4 grid-cols-2 sm:grid-cols-4">
-              {[
-                { key: 'temperatura', label: 'Temperatura', unit: '°C' },
-                { key: 'umidade', label: 'Umidade do ar', unit: '%' },
-                { key: 'umidade_solo', label: 'Umidade do solo', unit: '%' },
-                { key: 'luminosidade', label: 'Luminosidade', unit: 'lux' }
-              ].map(({ key, label, unit }) => (
-                <div key={key} className="rounded-xl border border-stone-200 dark:border-stone-800/50 bg-white dark:bg-stone-800 p-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-red-700">{label}</p>
-                  <div className="mt-2 grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="text-[10px] text-slate-500 dark:text-stone-400">Mínimo</label>
-                      <input
-                        type="number"
-                        value={thresholdDraft[key]?.min ?? ''}
-                        onChange={(event) => setThresholdDraft((prev) => ({
-                          ...prev,
-                          [key]: { ...prev[key], min: event.target.value === '' ? undefined : Number(event.target.value) }
-                        }))}
-                        className="mt-0.5 w-full rounded border border-stone-300 dark:border-stone-700/50 bg-white dark:bg-stone-800 px-2 py-1.5 text-sm text-slate-800 dark:text-stone-100 outline-none focus:border-red-400"
-                        placeholder={`min ${unit}`}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] text-slate-500 dark:text-stone-400">Máximo</label>
-                      <input
-                        type="number"
-                        value={thresholdDraft[key]?.max ?? ''}
-                        onChange={(event) => setThresholdDraft((prev) => ({
-                          ...prev,
-                          [key]: { ...prev[key], max: event.target.value === '' ? undefined : Number(event.target.value) }
-                        }))}
-                        className="mt-0.5 w-full rounded border border-stone-300 dark:border-stone-700/50 bg-white dark:bg-stone-800 px-2 py-1.5 text-sm text-slate-800 dark:text-stone-100 outline-none focus:border-red-400"
-                        placeholder={`max ${unit}`}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 flex items-center gap-4">
-              <button
-                type="button"
-                disabled={thresholdSaving}
-                onClick={async () => {
-                  if (!onUpdateAlertThresholds) return;
-                  setThresholdSaving(true);
-                  setThresholdFeedback(null);
-                  try {
-                    await onUpdateAlertThresholds(greenhouse.id, thresholdDraft);
-                    setThresholdFeedback({ type: 'success', text: 'Faixas salvas com sucesso.' });
-                  } catch (_err) {
-                    setThresholdFeedback({ type: 'error', text: 'Não foi possível salvar as faixas.' });
-                  } finally {
-                    setThresholdSaving(false);
-                  }
-                }}
-                className="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {thresholdSaving ? 'Salvando...' : 'Salvar faixas'}
-              </button>
-              {thresholdFeedback ? (
-                <p className={`text-xs ${thresholdFeedback.type === 'success' ? 'text-emerald-700' : 'text-rose-700'}`}>
-                  {thresholdFeedback.text}
-                </p>
-              ) : null}
-            </div>
-          </article>
-        ) : null}
+
       </div>
       ) : null}
 
@@ -1989,15 +1907,6 @@ export const DashboardPage = () => {
     }
   }, []);
 
-  const handleUpdateAlertThresholds = useCallback(async (greenhouseId, thresholds) => {
-    const response = await updateAlertThresholds(greenhouseId, thresholds);
-    const updated = response?.greenhouse ?? response;
-    if (updated) {
-      setGreenhouses((prev) =>
-        prev.map((greenhouse) => (greenhouse.id === greenhouseId ? { ...greenhouse, ...updated } : greenhouse))
-      );
-    }
-  }, []);
 
   const handleNotifyTeam = useCallback(async (greenhouseId) => {
     const telemetry = telemetryById[greenhouseId];
@@ -2493,10 +2402,9 @@ export const DashboardPage = () => {
             externalWeatherLoading={externalWeatherLoadingById[selectedGreenhouse.id]}
             onSave={(_greenhouseId, payload) => handleSaveGreenhouse(selectedGreenhouse.id, payload)}
             onUpdateTeam={(ids) => handleUpdateTeam(selectedGreenhouse.id, ids)}
-            onToggleAlerts={(enabled) => handleToggleAlerts(selectedGreenhouse.id, enabled)}
+            onToggleAlerts={(_id, enabled) => handleToggleAlerts(selectedGreenhouse.id, enabled)}
             onNotify={() => handleNotifyTeam(selectedGreenhouse.id)}
             onDeleteRequest={() => setDeleteTarget({ id: selectedGreenhouse.id, name: selectedGreenhouse.name })}
-            onUpdateAlertThresholds={(t) => handleUpdateAlertThresholds(selectedGreenhouse.id, t)}
             devices={devicesById[selectedGreenhouse.id] ?? []}
             devicesLoading={devicesLoadingById[selectedGreenhouse.id] ?? false}
             onCreateDevice={(device) => {
