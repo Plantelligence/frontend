@@ -45,3 +45,19 @@ export const getHistoricoTelemetria = (estufaId, horas = 24, janela = 30) =>
   api
     .get(`/estufas/${estufaId}/telemetria/historico`, { params: { horas, janela } })
     .then((res) => res.data);
+
+/**
+ * Busca a leitura mais recente dos sensores e atuadores para o dashboard ao vivo.
+ * Retorna null se não houver leituras nos últimos 7 dias.
+ *
+ * Campos retornados:
+ *   temperatura, umidade, umidade_solo, luminosidade (float | undefined)
+ *   atuador_aquecimento, atuador_iluminacao, atuador_umidificador (0.0=off, 1.0=on | undefined)
+ *   timestamp (string ISO 8601 | undefined)
+ *
+ * @param {string} estufaId - ID da estufa
+ */
+export const getLatestTelemetria = (estufaId) =>
+  api
+    .get(`/estufas/${estufaId}/telemetria/latest`)
+    .then((res) => res.data);  // null se sem leituras, dict se houver

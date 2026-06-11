@@ -443,15 +443,21 @@ export const CentroComando = ({ estufaId, isReader = false }) => {
           )}
         </div>
 
-        {/* Aderencia ao Preset */}
+        {/* Situacao do Cultivo */}
         <div className="rounded-2xl border border-stone-200 dark:border-stone-800/60 bg-white dark:bg-stone-900/35 p-5">
           <div className="flex items-center gap-2.5 mb-4">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-lime-500/10">
               <i className="fa-solid fa-leaf text-lime-400 text-sm" />
             </div>
-            <h3 className="text-sm font-semibold text-stone-800 dark:text-stone-100">Aderência ao preset</h3>
+            <h3 className="text-sm font-semibold text-stone-800 dark:text-stone-100">Situação do Cultivo</h3>
           </div>
 
+          {data.lastTelemetryTimestamp && (
+            <p className="text-[10px] text-stone-500 dark:text-stone-600 mb-3 flex items-center gap-1">
+              <i className="fa-solid fa-clock-rotate-left text-[9px]" />
+              Última leitura: {new Date(data.lastTelemetryTimestamp).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            </p>
+          )}
           {!data.presetName ? (
             <div className="flex flex-col items-center gap-2 py-6 text-center">
               <i className="fa-solid fa-circle-xmark text-xl text-stone-400 dark:text-stone-600" />
@@ -480,6 +486,10 @@ export const CentroComando = ({ estufaId, isReader = false }) => {
               <i className="fa-solid fa-robot text-blue-400 text-sm" />
             </div>
             <h3 className="text-sm font-semibold text-stone-800 dark:text-stone-100">Automação</h3>
+            <i
+              className="fa-solid fa-circle-question text-[11px] text-stone-400 cursor-help"
+              title="O sistema verifica os sensores a cada 90s e aciona os equipamentos automaticamente (aquecimento, nebulizador, iluminação) quando algum valor sair da faixa do preset. No modo Manual, os equipamentos não são acionados automaticamente — você controla tudo pela aba Controles."
+            />
             <span className={`ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
               isManual
                 ? 'bg-amber-50 border-amber-400 text-amber-700 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-400'

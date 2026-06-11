@@ -24,6 +24,7 @@ import {
 } from '../api/greenhouseService.js';
 import { listCulturePresets } from '../api/presetService.js';
 import { listDevices, createDevice, updateDevice, deleteDevice } from '../api/deviceService.js';
+import { getLatestTelemetria } from '../api/telemetriaService.js';
 import { WizardOnboardingDispositivo } from '../components/WizardOnboardingDispositivo.jsx';
 import { MfaReconfirmModal } from '../components/MfaReconfirmModal.jsx';
 import { ControlesPanel } from '../components/ControlesPanel.jsx';
@@ -935,16 +936,17 @@ const GreenhousePanel = ({
 
       <div className="mt-4 flex flex-wrap items-center gap-2 overflow-x-auto rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-2">
         {[
-          { id: 'comando', label: 'Centro de Comando', icon: 'fa-gauge-high' },
-          { id: 'operacao', label: 'Operação', icon: null },
-          { id: 'monitoramento', label: 'Monitoramento', icon: null },
-          { id: 'dispositivos', label: 'Dispositivos', icon: null },
-          { id: 'controles', label: 'Controles', icon: null },
-          { id: 'guia', label: 'Guia rápido', icon: null }
+          { id: 'comando',       label: 'Centro de Comando', icon: 'fa-gauge-high', title: 'Visão geral da estufa: saúde, alertas, automação e eventos recentes' },
+          { id: 'operacao',      label: 'Operação',           icon: null,            title: 'Configure o perfil de cultivo, equipe responsável e avalie as condições atuais' },
+          { id: 'monitoramento', label: 'Monitoramento',      icon: null,            title: 'Gráficos e leituras em tempo real dos sensores de temperatura, umidade, solo e luz' },
+          { id: 'dispositivos',  label: 'Dispositivos',       icon: null,            title: 'Gerencie os ESP32 conectados a esta estufa' },
+          { id: 'controles',     label: 'Controles',          icon: null,            title: 'Acione manualmente os equipamentos: aquecimento, nebulizador e iluminação LED' },
+          { id: 'guia',          label: 'Guia rápido',        icon: null,            title: 'Aprenda o que cada indicador e função significam' }
         ].map((topic) => (
           <button
             key={topic.id}
             type="button"
+            title={topic.title}
             onClick={() => setActiveTopic(topic.id)}
             className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
               activeTopic === topic.id
@@ -1120,7 +1122,15 @@ const GreenhousePanel = ({
         </article>
 
         <article className="rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-5">
-          <h3 className="text-base font-semibold text-slate-800 dark:text-stone-100">Próximos passos</h3>
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="text-base font-semibold text-slate-800 dark:text-stone-100">Análise do Cultivo</h3>
+            {telemetry?.lastUpdate && (
+              <span className="text-[10px] text-slate-500 dark:text-stone-500 flex items-center gap-1 shrink-0">
+                <i className="fa-solid fa-clock-rotate-left text-[9px]" />
+                {new Date(telemetry.lastUpdate).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+              </span>
+            )}
+          </div>
           {resolvedEvaluation.status === 'pending' ? (
             <p className="mt-2 text-xs text-slate-500 dark:text-stone-400">
               Clique em Gerar avaliação para receber orientações com os dados disponíveis neste momento.
@@ -1770,6 +1780,49 @@ export const DashboardPage = () => {
       clearInterval(refreshHandle);
     };
   }, [selectedGreenhouse?.id]);
+
+  // polling de telemetria ao vivo — busca leitura mais recente a cada 30s
+  useEffect(() => {
+    if (!selectedGreenhouse?.id || !selectedGreenhouse?.hasEverHadDevice) {
+      return undefined;
+    }
+
+    const estufaId = selectedGreenhouse.id;
+    let active = true;
+
+    const fetchLatest = async () => {
+      try {
+        const data = await getLatestTelemetria(estufaId);
+        if (!active || !data) return;
+
+        // mapeia os campos snake_case do backend para o formato interno do frontend
+        setTelemetryById((prev) => ({
+          ...prev,
+          [estufaId]: {
+            ...(prev[estufaId] ?? {}),
+            temperature:          data.temperatura        ?? prev[estufaId]?.temperature        ?? null,
+            humidity:             data.umidade            ?? prev[estufaId]?.humidity            ?? null,
+            soilMoisture:         data.umidade_solo       ?? prev[estufaId]?.soilMoisture        ?? null,
+            luminosidade:         data.luminosidade       ?? prev[estufaId]?.luminosidade        ?? null,
+            atuador_aquecimento:  data.atuador_aquecimento  != null ? data.atuador_aquecimento  : (prev[estufaId]?.atuador_aquecimento  ?? null),
+            atuador_iluminacao:   data.atuador_iluminacao   != null ? data.atuador_iluminacao   : (prev[estufaId]?.atuador_iluminacao   ?? null),
+            atuador_umidificador: data.atuador_umidificador != null ? data.atuador_umidificador : (prev[estufaId]?.atuador_umidificador ?? null),
+            lastUpdate:           data.timestamp          ?? prev[estufaId]?.lastUpdate          ?? null,
+          },
+        }));
+      } catch (_err) {
+        // silencia erros de polling — não deve interromper a UX
+      }
+    };
+
+    fetchLatest();
+    const handle = setInterval(fetchLatest, 30_000);
+
+    return () => {
+      active = false;
+      clearInterval(handle);
+    };
+  }, [selectedGreenhouse?.id, selectedGreenhouse?.hasEverHadDevice]);
 
   // carrega os dispositivos sempre que a estufa selecionada muda
   useEffect(() => {

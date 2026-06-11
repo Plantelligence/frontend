@@ -74,12 +74,14 @@ export const GreenhousesPage = () => {
   }, [navigate, user?.role]);
 
   const filteredGreenhouses = useMemo(() => {
-    return greenhouses.filter((greenhouse) => {
-      const type = resolveGreenhouseType(greenhouse);
-      const matchType = typeFilter === 'todos' || type === typeFilter;
-      const matchQuery = (greenhouse.name ?? '').toLowerCase().includes(query.trim().toLowerCase());
-      return matchType && matchQuery;
-    });
+    return greenhouses
+      .filter((greenhouse) => {
+        const type = resolveGreenhouseType(greenhouse);
+        const matchType = typeFilter === 'todos' || type === typeFilter;
+        const matchQuery = (greenhouse.name ?? '').toLowerCase().includes(query.trim().toLowerCase());
+        return matchType && matchQuery;
+      })
+      .sort((a, b) => (a.name ?? '').localeCompare(b.name ?? '', 'pt-BR', { sensitivity: 'base' }));
   }, [greenhouses, typeFilter, query]);
 
   const getCardVisual = (greenhouse) => {

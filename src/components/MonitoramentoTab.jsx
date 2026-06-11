@@ -355,6 +355,14 @@ export const MonitoramentoTab = ({ estufaId, telemetry, profile, externalWeather
   return (
     <div className="mt-5 space-y-4">
 
+      {/* Última atualização */}
+      {telemetry?.lastUpdate && (
+        <div className="flex items-center gap-1.5 text-[10px] text-stone-500 dark:text-stone-500">
+          <i className="fa-solid fa-clock-rotate-left text-[9px]" />
+          <span>Última atualização: {new Date(telemetry.lastUpdate).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+        </div>
+      )}
+
       {/* Seletor de janela */}
       <div className="flex items-center justify-between">
         <p className="text-xs font-semibold text-stone-600 dark:text-stone-500 uppercase tracking-widest">Telemetria em tempo real</p>
@@ -378,7 +386,7 @@ export const MonitoramentoTab = ({ estufaId, telemetry, profile, externalWeather
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <KpiCard icon="fa-temperature-half" label="Temperatura" value={fmt(temp)} unit="°C" range={rTemp} color={statusOf(temp, rTemp)} />
         <KpiCard icon="fa-droplet"          label="Umidade do ar" value={fmt(hum)} unit="%" range={rHum} color={statusOf(hum, rHum)} />
-        <KpiCard icon="fa-seedling"         label="Substrato" value={fmt(soil)} unit="%" range={rSoil} color={statusOf(soil, rSoil)} />
+        <KpiCard icon="fa-seedling"         label="Umidade do Solo" value={fmt(soil)} unit="%" range={rSoil} color={statusOf(soil, rSoil)} />
         <KpiCard icon="fa-sun"              label="Luminosidade" value={fmt(lux, 0)} unit="lux" range={rLux} color={statusOf(lux, rLux)} />
       </div>
 
