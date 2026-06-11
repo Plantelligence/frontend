@@ -654,9 +654,6 @@ const GreenhousePanel = ({
           <p className="mt-1 text-sm text-slate-600 dark:text-stone-400">Aqui você acompanha como a estufa está agora.</p>
         </div>
         <div className="flex w-full flex-wrap items-center justify-start gap-3 md:w-auto md:justify-end">
-          <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${statusTone}`}>
-            {statusLabel}
-          </span>
           {currentProfile ? (
             <span className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
               Perfil: {currentProfile.name}
@@ -668,16 +665,6 @@ const GreenhousePanel = ({
             </span>
           ) : (
             <>
-              <label className="flex items-center gap-2 rounded-full border border-stone-300 bg-white dark:border-stone-700/50 dark:bg-stone-800/50 px-3 py-1.5 text-xs text-slate-700 dark:text-stone-300">
-                <input
-                  type="checkbox"
-                  checked={Boolean(greenhouse.alertsEnabled)}
-                  onChange={handleToggleAlerts}
-                  disabled={alertsSaving}
-                  className="h-4 w-4 rounded border border-stone-400 bg-white dark:bg-stone-800/50 text-red-600 focus:ring-red-400"
-                />
-                <span>{greenhouse.alertsEnabled ? 'Alertas ligados' : 'Alertas desligados'}</span>
-              </label>
               <Button variant="secondary" onClick={() => setMenuOpen(true)}>
                 Editar estufa
               </Button>
@@ -1124,7 +1111,7 @@ const GreenhousePanel = ({
           </div>
         </article>
 
-        <article className="rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-5">
+        <article className="rounded-2xl border border-stone-200 bg-white dark:border-stone-700/70 dark:bg-stone-900/50 p-5">
           <div className="flex items-center justify-between gap-2">
             <h3 className="text-base font-semibold text-slate-800 dark:text-stone-100">Análise do Cultivo</h3>
             {telemetry?.lastUpdate && (
@@ -1244,19 +1231,7 @@ const GreenhousePanel = ({
                     : 'Sem dados suficientes para avaliar agora. Aguarde novos dados.'}
             </p>
           </div>
-          {notifyFeedback ? (
-            <p
-              className={`mt-3 rounded border px-3 py-2 text-xs ${
-                notifyFeedback.type === 'success'
-                  ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                  : notifyFeedback.type === 'info'
-                    ? 'border-stone-300 bg-stone-100 dark:border-stone-700/40 dark:bg-stone-700/30 dark:text-stone-400 text-slate-600'
-                    : 'border-rose-200 bg-rose-50 text-rose-700'
-              }`}
-            >
-              {notifyFeedback.text}
-            </p>
-          ) : null}
+
         </article>
 
       </div>

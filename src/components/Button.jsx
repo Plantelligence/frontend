@@ -33,7 +33,7 @@ export const Button = ({
     primary: 'bg-gradient-to-r from-red-700 to-red-600 text-primary-foreground hover:from-red-600 hover:to-red-500',
     // Secondary: fundo escuro com borda — ação secundária ou cancelamento
     secondary:
-      'border-stone-600 bg-stone-800 text-stone-100 hover:border-stone-500 hover:bg-stone-700 focus-visible:outline-stone-300',
+      'border-stone-400 bg-white text-slate-700 hover:bg-stone-100 hover:border-stone-500 dark:border-stone-600 dark:bg-stone-800/80 dark:text-stone-100 dark:hover:bg-stone-700 dark:hover:border-stone-500 focus-visible:outline-stone-300',
     // Danger: vermelho sólido mais intenso — para ações destrutivas como excluir
     danger: 'bg-rose-700 text-white hover:bg-rose-600 focus-visible:outline-rose-300'
   };

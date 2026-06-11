@@ -462,9 +462,14 @@ export const ControlesPanel = ({ greenhouse, devices, devicesLoading, telemetry,
                 <p className="text-xs font-semibold text-stone-700 dark:text-stone-200">{esp32.nome}</p>
                 <p className="text-[10px] text-stone-500 dark:text-stone-400">
                   {esp32.iothub_device_id || esp32.identificador}
-                  {esp32.onboarding_status === 'connected'
-                    ? <span className="ml-2 text-emerald-500"><i className="fa-solid fa-circle text-[8px] mr-0.5" />Online</span>
-                    : <span className="ml-2 text-stone-400"><i className="fa-solid fa-circle text-[8px] mr-0.5" />{esp32.onboarding_status || 'aguardando'}</span>}
+                  {(() => {
+                    const lastUp = telemetry?.lastUpdate ? new Date(telemetry.lastUpdate) : null;
+                    const isOnline = (esp32.onboarding_status === 'connected') ||
+                      (lastUp && (Date.now() - lastUp.getTime()) < 5 * 60 * 1000);
+                    return isOnline
+                      ? <span className="ml-2 text-emerald-500"><i className="fa-solid fa-circle text-[8px] mr-0.5" />Online</span>
+                      : <span className="ml-2 text-stone-400"><i className="fa-solid fa-circle text-[8px] mr-0.5" />Aguardando sinal</span>;
+                  })()}
                 </p>
               </div>
             </div>
