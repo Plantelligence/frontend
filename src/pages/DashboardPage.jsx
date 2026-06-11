@@ -654,11 +654,7 @@ const GreenhousePanel = ({
           <p className="mt-1 text-sm text-slate-600 dark:text-stone-400">Aqui você acompanha como a estufa está agora.</p>
         </div>
         <div className="flex w-full flex-wrap items-center justify-start gap-3 md:w-auto md:justify-end">
-          {currentProfile ? (
-            <span className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
-              Perfil: {currentProfile.name}
-            </span>
-          ) : null}
+
           {readOnly ? (
             <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">
               Perfil Leitor: consulta somente
@@ -1028,7 +1024,14 @@ const GreenhousePanel = ({
       <div className="mt-6 grid gap-6 md:grid-cols-2">
         <article className="rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-5 text-sm text-slate-700">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h3 className="text-base font-semibold text-slate-800 dark:text-stone-100">Meta do cultivo</h3>
+            <div>
+              <h3 className="text-base font-semibold text-slate-800 dark:text-stone-100">Meta do cultivo</h3>
+              {currentProfile && (
+                <p className="mt-0.5 text-xs font-semibold text-red-700 dark:text-red-400">
+                  Perfil de cultivo: {currentProfile.name}
+                </p>
+              )}
+            </div>
             <Link
               to="/dashboard/presets"
               className="inline-flex items-center justify-center rounded-md border border-stone-300 dark:border-stone-600 dark:text-stone-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-red-400 hover:text-red-700"
@@ -1492,7 +1495,7 @@ export const DashboardPage = () => {
 
         const normalizedProfiles = rawProfiles
           .map(normalizeProfile)
-          .filter((profile) => profile?.id && profile?.temperature && profile?.humidity && profile?.soilMoisture);
+          .filter((profile) => profile?.id && profile?.temperature && profile?.humidity);
 
         setProfiles(normalizedProfiles);
         setGreenhouses(resolvedGreenhouses?.greenhouses ?? []);
