@@ -13,6 +13,7 @@
 
 // Página de histórico de relatórios periódicos por estufa.
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { ConfirmDialog } from '../components/ConfirmDialog.jsx';
 import { useAuthStore } from '../store/authStore.js';
@@ -337,7 +338,8 @@ export const RelatoriosPage = () => {
   const isReader = user?.role === 'Reader';
 
   const [greenhouses, setGreenhouses] = useState([]);
-  const [selectedId, setSelectedId] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [selectedId, setSelectedId] = useState(() => searchParams.get('estufa') || '');
   const [relatorios, setRelatorios] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -354,10 +356,15 @@ export const RelatoriosPage = () => {
       .then((res) => {
         const list = res?.greenhouses ?? [];
         setGreenhouses(list);
-        if (list.length > 0 && !selectedId) {
-          // prefere a primeira estufa que já teve ESP; caso nenhuma, usa a primeira da lista
-          const firstWithDevice = list.find((g) => g.hasEverHadDevice);
-          setSelectedId((firstWithDevice ?? list[0]).id);
+        if (list.length > 0) {
+          const paramId = searchParams.get('estufa');
+          const validParam = paramId && list.some((g) => g.id === paramId);
+          if (!selectedId && !validParam) {
+            const firstWithDevice = list.find((g) => g.hasEverHadDevice);
+            setSelectedId((firstWithDevice ?? list[0]).id);
+          } else if (validParam && !selectedId) {
+            setSelectedId(paramId);
+          }
         }
       })
       .catch(() => setError('Não foi possível carregar as estufas.'));
@@ -373,6 +380,13 @@ export const RelatoriosPage = () => {
       .catch(() => setError('Não foi possível carregar os relatórios.'))
       .finally(() => setLoading(false));
   }, [selectedId]);
+
+  // sincroniza selectedId com URL ao fazer auto-seleção
+  useEffect(() => {
+    if (selectedId) {
+      setSearchParams((prev) => { prev.set('estufa', selectedId); return prev; }, { replace: true });
+    }
+  }, [selectedId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // carrega dispositivos da estufa selecionada — usado para detectar se há ESP cadastrado
   useEffect(() => {
@@ -463,7 +477,11 @@ export const RelatoriosPage = () => {
               {greenhouses.length > 1 && (
                 <select
                   value={selectedId}
-                  onChange={(e) => setSelectedId(e.target.value)}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    setSelectedId(id);
+                    setSearchParams((prev) => { prev.set('estufa', id); return prev; }, { replace: true });
+                  }}
                   className="rounded-xl border border-stone-300 dark:border-stone-700/60 bg-white dark:bg-stone-800/60 px-3 py-2 text-sm text-stone-800 dark:text-stone-100 outline-none focus:border-red-400 transition"
                 >
                   {greenhouses.map((g) => (
