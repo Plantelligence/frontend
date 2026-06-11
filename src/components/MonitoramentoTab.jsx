@@ -69,7 +69,7 @@ function KpiCard({ icon, label, value, unit, range, color }) {
         <span className={`text-3xl font-bold ${st.val}`}>{value}</span>
         <span className="text-sm text-stone-500">{unit}</span>
       </div>
-      {range && <p className="text-[10px] text-stone-500 dark:text-stone-600 mt-1.5">Meta: {range.min}–{range.max} {unit}</p>}
+      {range && <p className="text-[10px] text-stone-500 dark:text-stone-600 mt-1.5">Meta: {range.min} a {range.max} {unit}</p>}
     </div>
   );
 }
@@ -482,15 +482,4 @@ export const MonitoramentoTab = ({ estufaId, telemetry, profile, externalWeather
           <div className="flex items-center gap-3 rounded-xl border border-dashed border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/20 px-4 py-5">
             <i className="fa-solid fa-location-dot text-stone-300 dark:text-stone-600 text-xl" />
             <div>
-              <p className="text-xs font-medium text-stone-500 dark:text-stone-400">Localização não cadastrada</p>
-              <p className="text-[11px] text-stone-400 dark:text-stone-500 mt-0.5">Adicione o CEP da estufa para visualizar temperatura, umidade e condições externas em tempo real.</p>
-            </div>
-          </div>
-        )}
-      </div>
-
-    </div>
-  );
-};
-
-export default MonitoramentoTab;
+           
