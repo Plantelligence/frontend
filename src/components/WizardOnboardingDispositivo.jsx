@@ -47,6 +47,18 @@ const CodeViewer = ({ label, code, filename }) => {
     });
   };
 
+  const handleDownload = () => {
+    const blob = new Blob([code], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename || 'code.py';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50 overflow-hidden">
       {/* cabeçalho */}
@@ -56,18 +68,27 @@ const CodeViewer = ({ label, code, filename }) => {
           <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">{filename}</span>
           {label && <span className="rounded bg-stone-200 dark:bg-stone-700 px-2 py-0.5 text-[10px] text-stone-600 dark:text-stone-400">{label}</span>}
         </div>
-        <button
-          type="button"
-          onClick={handleCopy}
-          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-medium text-stone-500 dark:text-stone-400 transition hover:bg-stone-200 dark:hover:bg-stone-700 hover:text-stone-800 dark:hover:text-stone-200"
-        >
-          {copied
-            ? <><i className="fa-solid fa-check text-emerald-600" /> Copiado!</>
-            : <><i className="fa-regular fa-copy" /> Copiar</>}
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={handleDownload}
+            className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-medium text-stone-500 dark:text-stone-400 transition hover:bg-stone-200 dark:hover:bg-stone-700 hover:text-stone-800 dark:hover:text-stone-200"
+          >
+            <i className="fa-solid fa-download" /> Baixar
+          </button>
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-medium text-stone-500 dark:text-stone-400 transition hover:bg-stone-200 dark:hover:bg-stone-700 hover:text-stone-800 dark:hover:text-stone-200"
+          >
+            {copied
+              ? <><i className="fa-solid fa-check text-emerald-600" /> Copiado!</>
+              : <><i className="fa-regular fa-copy" /> Copiar</>}
+          </button>
+        </div>
       </div>
       {/* código */}
-      <pre className="max-h-36 overflow-auto p-3 text-[11px] leading-relaxed text-stone-800 dark:text-stone-100 whitespace-pre-wrap break-all">
+      <pre className="max-h-96 overflow-auto p-3 text-[11px] leading-relaxed text-stone-800 dark:text-stone-100 whitespace-pre-wrap break-all">
         {code}
       </pre>
     </div>
