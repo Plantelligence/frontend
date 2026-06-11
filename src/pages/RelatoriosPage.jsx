@@ -582,7 +582,7 @@ export const RelatoriosPage = () => {
               />
             ))}
           </div>
-        )}
+        ) : null}
       </section>
 
       <ConfirmDialog
