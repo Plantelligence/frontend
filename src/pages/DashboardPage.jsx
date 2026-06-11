@@ -681,9 +681,6 @@ const GreenhousePanel = ({
           <span className="text-xs font-semibold uppercase tracking-[0.18em] text-red-700">
             Visão geral da estufa
           </span>
-          <h2 className="text-2xl font-semibold text-slate-800 dark:text-stone-100">
-            {resolvedTelemetry.greenhouseName}
-          </h2>
           <p className="mt-1 text-sm text-slate-600 dark:text-stone-400">Aqui você acompanha como a estufa está agora.</p>
         </div>
         <div className="flex w-full flex-wrap items-center justify-start gap-3 md:w-auto md:justify-end">
