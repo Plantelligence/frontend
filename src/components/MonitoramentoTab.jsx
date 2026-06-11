@@ -278,7 +278,7 @@ const WINDOWS = [
 
 // ── Componente principal ──────────────────────────────────────────────────────
 
-export const MonitoramentoTab = ({ estufaId, telemetry, profile, externalWeather, city }) => {
+export const MonitoramentoTab = ({ estufaId, telemetry, profile, externalWeather, city, hasEverHadDevice = false }) => {
   const [series, setSeries]     = useState([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState(null);
@@ -327,6 +327,21 @@ export const MonitoramentoTab = ({ estufaId, telemetry, profile, externalWeather
       temperatura: p.temperatura ?? null,
       umidade: p.umidade ?? null,
     })), [chartData]);
+
+  if (!hasEverHadDevice) return (
+    <div className="mt-5 flex flex-col items-center gap-4 rounded-2xl border border-dashed border-amber-300/60 bg-amber-50/30 dark:border-amber-700/40 dark:bg-amber-900/10 p-12 text-center">
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-200 bg-amber-100 dark:border-amber-700/40 dark:bg-amber-900/30">
+        <i className="fa-solid fa-microchip text-xl text-amber-500" />
+      </div>
+      <div>
+        <p className="text-sm font-semibold text-stone-700 dark:text-stone-300">Nenhum ESP32 cadastrado nesta estufa</p>
+        <p className="mt-1 text-xs text-stone-500 dark:text-stone-400 max-w-sm">
+          Os gráficos de monitoramento e os dados em tempo real ficam disponíveis após o primeiro ESP32 ser cadastrado e conectado.
+          Vá em <strong>Dispositivos</strong> para adicionar um.
+        </p>
+      </div>
+    </div>
+  );
 
   if (loading) return (
     <div className="mt-5 space-y-4">

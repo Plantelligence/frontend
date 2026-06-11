@@ -155,7 +155,7 @@ function RelatorioForm({ onSave, onCancel, saving, estufaId }) {
                   disabled={loadingResumo || !form.periodoInicio || !form.periodoFim}
                   className="rounded border border-red-200 bg-red-50 px-3 py-1 text-[11px] font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-40"
                 >
-                  {loadingResumo ? 'Buscando...' : 'Calcular do sensor'}
+                  {loadingResumo ? 'Buscando...' : 'Buscar médias do ESP32'}
                 </button>
               </div>
               {resumoMsg ? (
@@ -164,7 +164,7 @@ function RelatorioForm({ onSave, onCancel, saving, estufaId }) {
                 </p>
               ) : (
                 <p className="mb-3 rounded-md border border-stone-100 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/40 px-3 py-2 text-[11px] text-slate-500 dark:text-stone-400">
-                  Clique em "Calcular do sensor" para preencher automaticamente a partir dos dados gravados, ou preencha manualmente.
+                  Clique em <strong className="font-semibold text-slate-600 dark:text-stone-300">Calcular do sensor</strong> para buscar automaticamente as médias do ESP32 no período selecionado, ou preencha os valores manualmente.
                 </p>
               )}
               <div className="grid gap-3 sm:grid-cols-2">
@@ -494,14 +494,30 @@ export const RelatoriosPage = () => {
           </div>
         )}
 
+        {/* gate: estufa sem ESP cadastrado */}
+        {selectedGreenhouse && !selectedGreenhouse.hasEverHadDevice ? (
+          <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-amber-300/60 bg-amber-50/30 dark:border-amber-700/40 dark:bg-amber-900/10 p-12 text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-200 bg-amber-100 dark:border-amber-700/40 dark:bg-amber-900/30">
+              <i className="fa-solid fa-microchip text-xl text-amber-500" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-stone-700 dark:text-stone-300">Nenhum ESP32 cadastrado nesta estufa</p>
+              <p className="mt-1 text-xs text-stone-500 dark:text-stone-400 max-w-sm">
+                Os relatórios são gerados a partir dos dados coletados pelos sensores do ESP32.
+                Cadastre um dispositivo no painel da estufa para liberar esta funcionalidade.
+              </p>
+            </div>
+          </div>
+        ) : null}
+
         {/* lista de relatorios */}
-        {loading ? (
+        {selectedGreenhouse?.hasEverHadDevice && loading ? (
           <div className="grid gap-4 md:grid-cols-2">
             {[0, 1, 2].map((i) => (
               <div key={i} className="h-44 animate-pulse rounded-2xl border border-stone-800/40 bg-stone-900/20" />
             ))}
           </div>
-        ) : relatorios.length === 0 ? (
+        ) : selectedGreenhouse?.hasEverHadDevice && relatorios.length === 0 ? (
           <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-stone-300 bg-stone-50 dark:border-stone-700/40 dark:bg-stone-800/20 p-12 text-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-stone-300 bg-stone-100 dark:border-stone-700/40 dark:bg-stone-800/60">
               <i className="fa-solid fa-chart-bar text-xl text-stone-400 dark:text-stone-600" />
@@ -513,7 +529,7 @@ export const RelatoriosPage = () => {
               </p>
             )}
           </div>
-        ) : (
+        ) : selectedGreenhouse?.hasEverHadDevice ? (
           <div className="grid gap-4 md:grid-cols-2">
             {relatorios.map((r) => (
               <RelatorioCard

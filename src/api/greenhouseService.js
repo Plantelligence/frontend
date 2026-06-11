@@ -68,6 +68,8 @@ const mapGreenhouse = (item) => ({
   alertThresholds: item?.alert_thresholds ?? item?.alertThresholds ?? null,
   // IDs dos usuários responsáveis pela estufa
   responsibleUserIds: item?.responsible_user_ids ?? item?.responsibleUserIds ?? [],
+  // True se ao menos um ESP32 já conectou com sucesso — libera relatórios e monitoramento
+  hasEverHadDevice: item?.teve_dispositivo ?? item?.hasEverHadDevice ?? false,
   // Detalhes dos watchers para exibir nomes e avatares sem nova requisição
   watchersDetails: item?.watchers_details ?? item?.watchersDetails ?? [],
   // Perfil de cultivo embutido na resposta — evita uma segunda chamada à API

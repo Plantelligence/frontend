@@ -993,6 +993,7 @@ const GreenhousePanel = ({
           profile={normalizeProfile(profiles.find((p) => p.id === greenhouse.flowerProfileId) ?? null)}
           externalWeather={externalWeather}
           city={greenhouse.city ?? ''}
+          hasEverHadDevice={greenhouse.hasEverHadDevice ?? false}
         />
       ) : null}
 
