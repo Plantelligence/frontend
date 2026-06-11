@@ -409,7 +409,7 @@ const App = () => {
     <>
       {/* Lock Screen: bloqueio por inatividade (nao destroi sessao) */}
       {/* Renderizado como overlay acima de tudo usando z-[9999] */}
-      {isLocked && isAuthenticated && (
+      {isLocked && isAuthenticated && isProtectedRoute && (
         <LockScreen
           user={authUser}
           onUnlock={unlockSession}
