@@ -84,17 +84,16 @@ export const deleteRelatorio = (estufaId, relatorioId) =>
  * Exporta relatórios da estufa em PDF, XLSX ou CSV.
  * Abre o arquivo para download diretamente no navegador.
  */
-export const exportRelatorios = async (estufaId, format = 'pdf', params = {}) => {
-  const query = new URLSearchParams({ format, ...params }).toString();
+export const exportRelatoriosPDF = async (estufaId, params = {}) => {
+  const query = new URLSearchParams({ format: 'pdf', ...params }).toString();
   const res = await api.get(`/estufas/${estufaId}/relatorios/export?${query}`, {
     responseType: 'blob',
   });
   const url = URL.createObjectURL(res.data);
   const a = document.createElement('a');
   a.href = url;
-  const ext = format;
   const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-  a.download = `relatorios_${estufaId}_${date}.${ext}`;
+  a.download = `relatorios_${estufaId}_${date}.pdf`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
