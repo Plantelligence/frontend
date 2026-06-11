@@ -1058,7 +1058,9 @@ const GreenhousePanel = ({
                 <div className="rounded border border-stone-200 dark:border-stone-800/50 bg-white dark:bg-stone-800 p-3">
                   <dt className="text-[11px] uppercase tracking-widest text-slate-500 dark:text-stone-400">Umidade do solo</dt>
                   <dd>
-                    {currentProfile.soilMoisture?.min ?? '-'}% a {currentProfile.soilMoisture?.max ?? '-'}%
+                    {currentProfile.soilMoisture
+                      ? `${currentProfile.soilMoisture.min}% a ${currentProfile.soilMoisture.max}%`
+                      : <span className="text-slate-400 dark:text-stone-500">Não configurado</span>}
                   </dd>
                 </div>
                 <div className="rounded border border-stone-200 dark:border-stone-800/50 bg-white dark:bg-stone-800 p-3">

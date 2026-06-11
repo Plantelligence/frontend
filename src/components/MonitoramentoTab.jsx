@@ -294,7 +294,8 @@ export const MonitoramentoTab = ({ estufaId, telemetry, profile, externalWeather
       const res = await getHistoricoTelemetria(estufaId, win.horas, win.janela);
       setSeries(res.series || []);
     } catch {
-      setError('Não foi possível carregar o histórico. Exibindo dados em tempo real.');
+      // falha silenciosa: os gauges de tempo real continuam funcionando normalmente
+      setError(null);
     } finally {
       setLoading(false);
     }
