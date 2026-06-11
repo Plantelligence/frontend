@@ -69,7 +69,7 @@ function KpiCard({ icon, label, value, unit, range, color }) {
         <span className={`text-3xl font-bold ${st.val}`}>{value}</span>
         <span className="text-sm text-stone-500">{unit}</span>
       </div>
-      {range && <p className="text-[10px] text-stone-500 dark:text-stone-600 mt-1.5">Meta: {range.min}-{range.max} {unit}</p>}
+      {range && <p className="text-[10px] text-stone-500 dark:text-stone-600 mt-1.5">Meta: {range.min}–{range.max} {unit}</p>}
     </div>
   );
 }
@@ -376,7 +376,7 @@ export const MonitoramentoTab = ({ estufaId, telemetry, profile, externalWeather
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KpiCard icon="fa-temperature-half" label="Temperatura" value={fmt(temp)} unit="C" range={rTemp} color={statusOf(temp, rTemp)} />
+        <KpiCard icon="fa-temperature-half" label="Temperatura" value={fmt(temp)} unit="°C" range={rTemp} color={statusOf(temp, rTemp)} />
         <KpiCard icon="fa-droplet"          label="Umidade do ar" value={fmt(hum)} unit="%" range={rHum} color={statusOf(hum, rHum)} />
         <KpiCard icon="fa-seedling"         label="Substrato" value={fmt(soil)} unit="%" range={rSoil} color={statusOf(soil, rSoil)} />
         <KpiCard icon="fa-sun"              label="Luminosidade" value={fmt(lux, 0)} unit="lux" range={rLux} color={statusOf(lux, rLux)} />
@@ -456,8 +456,8 @@ export const MonitoramentoTab = ({ estufaId, telemetry, profile, externalWeather
         {externalWeather ? (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
-              { label: 'Temperatura', value: externalWeather.temperatura, unit: 'C', color: 'text-red-400' },
-              { label: 'Umidade', value: externalWeather.umidade, unit: '%', color: 'text-blue-400' },
+              { label: 'Temperatura', value: externalWeather.temperatura != null ? Number(externalWeather.temperatura).toFixed(1) : null, unit: '°C', color: 'text-red-400' },
+              { label: 'Umidade', value: externalWeather.umidade != null ? Number(externalWeather.umidade).toFixed(1) : null, unit: '%', color: 'text-blue-400' },
               { label: 'Condição', value: externalWeather.descricao, unit: '', color: 'text-stone-400' },
               { label: 'Nuvens', value: externalWeather.nuvens, unit: '%', color: 'text-stone-400' },
             ].filter((i) => i.value != null).map((item) => (

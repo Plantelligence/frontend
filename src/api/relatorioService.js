@@ -80,6 +80,27 @@ export const deleteRelatorio = (estufaId, relatorioId) =>
  * As datas devem estar no formato YYYY-MM-DD (ex.: "2025-01-01").
  * O resultado é usado para preencher automaticamente um novo relatório.
  */
+/**
+ * Exporta relatórios da estufa em PDF, XLSX ou CSV.
+ * Abre o arquivo para download diretamente no navegador.
+ */
+export const exportRelatorios = async (estufaId, format = 'pdf', params = {}) => {
+  const query = new URLSearchParams({ format, ...params }).toString();
+  const res = await api.get(`/estufas/${estufaId}/relatorios/export?${query}`, {
+    responseType: 'blob',
+  });
+  const url = URL.createObjectURL(res.data);
+  const a = document.createElement('a');
+  a.href = url;
+  const ext = format;
+  const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  a.download = `relatorios_${estufaId}_${date}.${ext}`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
 export const getRelatorioResumo = (estufaId, inicio, fim) =>
   api
     // Envia as datas como query params para o backend montar a query no InfluxDB

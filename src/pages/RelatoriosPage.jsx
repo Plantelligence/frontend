@@ -17,7 +17,14 @@ import { createPortal } from 'react-dom';
 import { ConfirmDialog } from '../components/ConfirmDialog.jsx';
 import { useAuthStore } from '../store/authStore.js';
 import { listGreenhouses } from '../api/greenhouseService.js';
-import { listRelatorios, createRelatorio, deleteRelatorio, getRelatorioResumo } from '../api/relatorioService.js';
+import { listRelatorios, createRelatorio, deleteRelatorio, getRelatorioResumo, exportRelatorios } from '../api/relatorioService.js';
+
+// formata número para 1 casa decimal; para luminosidade usa 0 casas
+const fmtVal = (v, decimals = 1) => {
+  if (v == null || v === '') return null;
+  const n = parseFloat(v);
+  return isNaN(n) ? v : n.toFixed(decimals);
+};
 
 // formata ISO para dd/mm/aaaa
 const formatDate = (iso) => {
@@ -304,10 +311,10 @@ function RelatorioCard({ relatorio, onDelete }) {
 
       {hasMetrics ? (
         <div className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-xl border border-stone-200 bg-stone-50 dark:border-stone-800/40 dark:bg-stone-800/30 p-3">
-          <MetricCell label="Temperatura" value={relatorio.avgTemperatura} unit="C" icon="temperatura" color="text-red-400" />
-          <MetricCell label="Umidade do ar" value={relatorio.avgUmidade} unit="%" icon="umidade" color="text-blue-400" />
-          <MetricCell label="Umidade do solo" value={relatorio.avgUmidadeSolo} unit="%" icon="umidade_solo" color="text-emerald-400" />
-          <MetricCell label="Luminosidade" value={relatorio.avgLuminosidade} unit=" lux" icon="luminosidade" color="text-amber-400" />
+          <MetricCell label="Temperatura" value={fmtVal(relatorio.avgTemperatura)} unit="°C" icon="temperatura" color="text-red-400" />
+          <MetricCell label="Umidade do ar" value={fmtVal(relatorio.avgUmidade)} unit="%" icon="umidade" color="text-blue-400" />
+          <MetricCell label="Umidade do solo" value={fmtVal(relatorio.avgUmidadeSolo)} unit="%" icon="umidade_solo" color="text-emerald-400" />
+          <MetricCell label="Luminosidade" value={fmtVal(relatorio.avgLuminosidade, 0)} unit=" lux" icon="luminosidade" color="text-amber-400" />
         </div>
       ) : (
         <div className="rounded-xl border border-stone-200 bg-stone-50 dark:border-stone-800/40 dark:bg-stone-800/20 px-4 py-3 text-center">
@@ -336,6 +343,7 @@ export const RelatoriosPage = () => {
   const [saving, setSaving] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [exporting, setExporting] = useState(null); // 'pdf' | 'xlsx' | 'csv' | null
 
   // carrega lista de estufas disponíveis
   useEffect(() => {
@@ -390,6 +398,18 @@ export const RelatoriosPage = () => {
     }
   }, [deleteTarget, selectedId]);
 
+  const handleExport = useCallback(async (format) => {
+    if (!selectedId) return;
+    setExporting(format);
+    try {
+      await exportRelatorios(selectedId, format);
+    } catch {
+      setError('Não foi possível exportar os relatórios.');
+    } finally {
+      setExporting(null);
+    }
+  }, [selectedId]);
+
   const selectedGreenhouse = useMemo(
     () => greenhouses.find((g) => g.id === selectedId) ?? null,
     [greenhouses, selectedId]
@@ -438,6 +458,29 @@ export const RelatoriosPage = () => {
                     <option key={g.id} value={g.id}>{g.name}</option>
                   ))}
                 </select>
+              )}
+              {selectedId && relatorios.length > 0 && (
+                <div className="flex items-center gap-1">
+                  {[
+                    { fmt: 'pdf',  icon: 'fa-file-pdf',   label: 'PDF',  color: 'text-red-600 border-red-200 hover:bg-red-50 dark:border-red-800/50 dark:hover:bg-red-900/20' },
+                    { fmt: 'xlsx', icon: 'fa-file-excel',  label: 'Excel', color: 'text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800/50 dark:hover:bg-emerald-900/20' },
+                    { fmt: 'csv',  icon: 'fa-file-csv',   label: 'CSV',  color: 'text-blue-600 border-blue-200 hover:bg-blue-50 dark:border-blue-800/50 dark:hover:bg-blue-900/20' },
+                  ].map(({ fmt, icon, label, color }) => (
+                    <button
+                      key={fmt}
+                      type="button"
+                      disabled={!!exporting}
+                      onClick={() => handleExport(fmt)}
+                      className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition disabled:opacity-50 ${color}`}
+                      title={`Exportar ${label}`}
+                    >
+                      {exporting === fmt
+                        ? <i className="fa-solid fa-spinner fa-spin text-xs" />
+                        : <i className={`fa-solid ${icon} text-xs`} />}
+                      {label}
+                    </button>
+                  ))}
+                </div>
               )}
               {!isReader && selectedId && (
                 <button
@@ -545,7 +588,7 @@ export const RelatoriosPage = () => {
       <ConfirmDialog
         open={!!deleteTarget}
         title="Remover relatório"
-        description={`Deseja remover o relatório do período ${deleteTarget?.periodo_inicio ?? ''}? Esta ação não pode ser desfeita.`}
+        description={`Deseja remover o relatório do período ${deleteTarget?.periodoInicio ?? ''}? Esta ação não pode ser desfeita.`}
         onConfirm={handleConfirmDelete}
         onCancel={() => setDeleteTarget(null)}
         confirmLabel="Remover"
