@@ -72,7 +72,7 @@ const aiResponseToPreset = (suggestion) => ({
   descricao: suggestion?.summary ?? '',
   temperatura: buildRangesFromIdeal(suggestion?.temperature?.min ?? 15, suggestion?.temperature?.max ?? 25),
   umidade: buildRangesFromIdeal(suggestion?.humidity?.min ?? 70, suggestion?.humidity?.max ?? 90),
-  luminosidade: buildRangesFromIdeal(suggestion?.luminosity?.min ?? suggestion?.soilMoisture?.min ?? 0, suggestion?.luminosity?.max ?? suggestion?.soilMoisture?.max ?? 500),
+  luminosidade: buildRangesFromIdeal(suggestion?.luminosity?.min ?? 0, suggestion?.luminosity?.max ?? 2500),
   umidade_solo: buildRangesFromIdeal(suggestion?.soilMoisture?.min ?? 55, suggestion?.soilMoisture?.max ?? 70),
 });
 
@@ -362,7 +362,7 @@ function DetailPanel({ preset, open, saving, onSave, onClose, readOnly = false, 
           <p className="mb-1 border-b border-stone-100 dark:border-stone-800 pb-2 text-[10px] font-semibold uppercase tracking-widest text-stone-400">Faixa ideal para o cultivo</p>
           <p className="mb-3 text-xs text-stone-500">Ajuste os valores mínimo e máximo recomendados para cada parâmetro.</p>
           <p className="mb-3 rounded-md border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 px-3 py-2 text-[11px] text-stone-600 dark:text-stone-400">
-            Limites: temperatura -5 a 45 °C, umidade 0 a 100%, umidade do solo 0 a 100% e luminosidade 0 a 3000 lux.
+            Limites: temperatura -5 a 45 °C, umidade 0 a 100%, umidade do solo 0 a 100% e luminosidade 0 a 4095.
           </p>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-4">
             <MetricInput
@@ -888,7 +888,7 @@ export const PresetsPage = () => {
               <div className="mt-2 flex flex-wrap gap-2 text-xs text-stone-400">
                 <span className="rounded-full border border-stone-300 bg-stone-100 text-stone-600 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-400 px-2.5 py-1 text-[11px]">Temperatura: valor em °C</span>
                 <span className="rounded-full border border-stone-300 bg-stone-100 text-stone-600 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-400 px-2.5 py-1 text-[11px]">Umidade: valor em %</span>
-                <span className="rounded-full border border-stone-300 bg-stone-100 text-stone-600 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-400 px-2.5 py-1 text-[11px]">Luminosidade: valor em lux</span>
+                <span className="rounded-full border border-stone-300 bg-stone-100 text-stone-600 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-400 px-2.5 py-1 text-[11px]">Luminosidade: escala ADC 0-4095</span>
               </div>
             </section>
 

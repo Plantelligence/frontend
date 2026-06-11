@@ -472,7 +472,8 @@ const GreenhousePanel = ({
     if (greenhouse.profile) {
       return greenhouse.profile;
     }
-    return profiles.find((profile) => profile.id === greenhouse.flowerProfileId) ?? null;
+    const raw = profiles.find((profile) => profile.id === greenhouse.flowerProfileId) ?? null;
+    return normalizeProfile(raw) ?? null;
   }, [greenhouse.profile, greenhouse.flowerProfileId, profiles]);
 
   useEffect(() => {
@@ -628,6 +629,29 @@ const GreenhousePanel = ({
     metricSources: {},
     missingMetrics: []
   };
+
+  // preview de métricas em tempo real — exibido antes de "Gerar avaliação"
+  const livePreviewMetrics = useMemo(() => {
+    if (!currentProfile) return {};
+    const result = {};
+    ['temperature', 'humidity', 'soilMoisture', 'luminosity'].forEach((key) => {
+      const value = typeof previewEvaluationPayload.metrics[key] === 'number'
+        ? previewEvaluationPayload.metrics[key]
+        : null;
+      const expected = currentProfile[key] ?? null;
+      const evaluated = value !== null;
+      let ok = true;
+      let direction = 'unavailable';
+      if (evaluated && expected) {
+        ok = value >= expected.min && value <= expected.max;
+        direction = value < expected.min ? 'low' : value > expected.max ? 'high' : 'in-range';
+      } else if (evaluated) {
+        direction = 'not-configured';
+      }
+      result[key] = { value, expected, ok, evaluated, direction };
+    });
+    return result;
+  }, [previewEvaluationPayload, currentProfile]);
   const statusTone =
     resolvedEvaluation.status === 'ok'
       ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
@@ -1006,7 +1030,7 @@ const GreenhousePanel = ({
           </div>
           <div className="rounded border border-stone-200 dark:border-stone-800/50 bg-white dark:bg-stone-800 p-3">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600 dark:text-stone-300">Luminosidade</p>
-            <p className="mt-1 text-xs text-slate-600 dark:text-stone-400">Nível de luz medido em lux. Cogumelos precisam de pouca luz. Excesso prejudica o crescimento.</p>
+            <p className="mt-1 text-xs text-slate-600 dark:text-stone-400">Nível de luz medido em escala ADC (0 a 4095). Cogumelos precisam de pouca luz. Excesso prejudica o crescimento.</p>
           </div>
           <div className="rounded border border-stone-200 dark:border-stone-800/50 bg-white dark:bg-stone-800 p-3">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600 dark:text-stone-300">Perfil de cultivo</p>
@@ -1025,7 +1049,13 @@ const GreenhousePanel = ({
         <article className="rounded-2xl border border-stone-300 bg-white dark:border-stone-800/60 dark:bg-stone-900/35 p-5 text-sm text-slate-700">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h3 className="text-base font-semibold text-slate-800 dark:text-stone-100">Meta do cultivo</h3>
+              <div className="flex items-center gap-1.5">
+                <h3 className="text-base font-semibold text-slate-800 dark:text-stone-100">Meta do cultivo</h3>
+                <i
+                  className="fa-solid fa-circle-question text-[11px] text-stone-400 cursor-help"
+                  title="Faixas ideais do perfil de cultivo ativo. Os sensores devem manter os valores dentro desses limites para garantir uma boa produção."
+                />
+              </div>
               {currentProfile && (
                 <p className="mt-0.5 text-xs font-semibold text-red-700 dark:text-red-400">
                   Perfil de cultivo: {currentProfile.name}
@@ -1066,7 +1096,7 @@ const GreenhousePanel = ({
                 <div className="rounded border border-stone-200 dark:border-stone-800/50 bg-white dark:bg-stone-800 p-3">
                   <dt className="text-[11px] uppercase tracking-widest text-slate-500 dark:text-stone-400">Luminosidade</dt>
                   <dd>
-                    {currentProfile.luminosity?.min ?? '-'} lux a {currentProfile.luminosity?.max ?? '-'} lux
+                    {currentProfile.luminosity?.min ?? '-'} a {currentProfile.luminosity?.max ?? '-'}
                   </dd>
                 </div>
               </dl>
@@ -1118,7 +1148,13 @@ const GreenhousePanel = ({
 
         <article className="rounded-2xl border border-stone-200 bg-white dark:border-stone-700/70 dark:bg-stone-900/50 p-5">
           <div className="flex items-center justify-between gap-2">
-            <h3 className="text-base font-semibold text-slate-800 dark:text-stone-100">Análise do Cultivo</h3>
+            <div className="flex items-center gap-1.5">
+              <h3 className="text-base font-semibold text-slate-800 dark:text-stone-100">Análise do Cultivo</h3>
+              <i
+                className="fa-solid fa-circle-question text-[11px] text-stone-400 cursor-help"
+                title="Avalia os sensores em tempo real contra o perfil de cultivo ativo. Clique em Gerar avaliação para enviar um alerta à equipe se algo estiver fora do ideal."
+              />
+            </div>
             {telemetry?.lastUpdate && (
               <span className="text-[10px] text-slate-500 dark:text-stone-500 flex items-center gap-1 shrink-0">
                 <i className="fa-solid fa-clock-rotate-left text-[9px]" />
@@ -1127,9 +1163,38 @@ const GreenhousePanel = ({
             )}
           </div>
           {resolvedEvaluation.status === 'pending' ? (
-            <p className="mt-2 text-xs text-slate-500 dark:text-stone-400">
-              Clique em Gerar avaliação para receber orientações com os dados disponíveis neste momento.
-            </p>
+            <>
+              <p className="mt-2 text-xs text-slate-500 dark:text-stone-400">
+                Clique em Gerar avaliação para notificar a equipe com os dados atuais.
+              </p>
+              {currentProfile && (
+                <div className="mt-3 grid gap-3 text-xs text-slate-700 dark:text-stone-300 grid-cols-2 sm:grid-cols-4">
+                  {['temperature', 'humidity', 'soilMoisture', 'luminosity'].map((metricKey) => {
+                    const metric = livePreviewMetrics[metricKey] ?? {};
+                    const labelMap = { temperature: 'Temperatura', humidity: 'Umidade do ar', soilMoisture: 'Umidade do solo', luminosity: 'Luminosidade' };
+                    const unitMap = { temperature: '°C', humidity: '%', soilMoisture: '%', luminosity: '' };
+                    const notEvaluated = !metric.evaluated;
+                    const cardClass = notEvaluated
+                      ? 'border-stone-200 bg-stone-100 dark:border-stone-700/40 dark:bg-stone-700/30 dark:text-stone-400 text-slate-600'
+                      : metric.ok
+                        ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                        : 'border-amber-200 bg-amber-50 text-amber-700';
+                    return (
+                      <div key={metricKey} className={`rounded border px-3 py-2 ${cardClass}`}>
+                        <p className="text-[11px] uppercase tracking-[0.2em]">{labelMap[metricKey]}</p>
+                        <p className="text-sm font-semibold">
+                          {typeof metric.value === 'number' ? `${metric.value.toFixed(1)}${unitMap[metricKey]}` : '—'}
+                        </p>
+                        <p className="text-[11px]">
+                          Ideal {metric.expected?.min ?? '-'}{unitMap[metricKey]} a {metric.expected?.max ?? '-'}{unitMap[metricKey]}
+                        </p>
+                        {notEvaluated && <p className="text-[11px]">Sem dado coletado</p>}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
           ) : (
             <>
               <p
@@ -1159,7 +1224,7 @@ const GreenhousePanel = ({
                     temperature: '°C',
                     humidity: '%',
                     soilMoisture: '%',
-                    luminosity: ' lux'
+                    luminosity: ''
                   };
                   const sourceLabel =
                     resolvedEvaluation.metricSources?.[metricKey] === 'external'

@@ -361,7 +361,13 @@ export const MonitoramentoTab = ({ estufaId, telemetry, profile, externalWeather
 
       {/* Seletor de janela */}
       <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold text-stone-600 dark:text-stone-500 uppercase tracking-widest">Telemetria em tempo real</p>
+        <div className="flex items-center gap-1.5">
+          <p className="text-xs font-semibold text-stone-600 dark:text-stone-500 uppercase tracking-widest">Telemetria em tempo real</p>
+          <i
+            className="fa-solid fa-circle-question text-[11px] text-stone-400 cursor-help"
+            title="Os cards mostram a última leitura do ESP32. Os botões 6h/24h/3d/7d calculam a media dos dados recebidos nesse periodo - o valor atualiza automaticamente conforme novas leituras chegam."
+          />
+        </div>
         <div className="flex items-center gap-1">
           {WINDOWS.map((w, i) => (
             <button key={w.label} type="button" onClick={() => setWinIdx(i)}
@@ -383,7 +389,7 @@ export const MonitoramentoTab = ({ estufaId, telemetry, profile, externalWeather
         <KpiCard icon="fa-temperature-half" label="Temperatura" value={fmt(temp)} unit="°C" range={rTemp} color={statusOf(temp, rTemp)} />
         <KpiCard icon="fa-droplet"          label="Umidade do ar" value={fmt(hum)} unit="%" range={rHum} color={statusOf(hum, rHum)} />
         <KpiCard icon="fa-seedling"         label="Umidade do Solo" value={fmt(soil)} unit="%" range={rSoil} color={statusOf(soil, rSoil)} />
-        <KpiCard icon="fa-sun"              label="Luminosidade" value={fmt(lux, 0)} unit="lux" range={rLux} color={statusOf(lux, rLux)} />
+        <KpiCard icon="fa-sun"              label="Luminosidade" value={fmt(lux, 0)} unit="" range={rLux} color={statusOf(lux, rLux)} />
       </div>
 
       {/* Erro */}

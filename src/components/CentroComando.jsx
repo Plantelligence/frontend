@@ -101,6 +101,11 @@ function HealthScoreGauge({ score, status }) {
         <span className={`h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
         {cfg.label}
       </span>
+      <div className="mt-2 flex items-center gap-2.5 text-[9px] text-stone-500">
+        <span className="flex items-center gap-1"><span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400" />Saudável (80+)</span>
+        <span className="flex items-center gap-1"><span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-400" />Atenção (55–79)</span>
+        <span className="flex items-center gap-1"><span className="inline-block h-1.5 w-1.5 rounded-full bg-red-400" />Risco (0–54)</span>
+      </div>
     </div>
   );
 }
@@ -290,7 +295,11 @@ export const CentroComando = ({ estufaId, isReader = false }) => {
     }
   }, [estufaId]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+    const interval = setInterval(load, 30000);
+    return () => clearInterval(interval);
+  }, [load]);
 
   const showFeedback = (msg, isError = false) => {
     setActionFeedback({ msg, isError });
