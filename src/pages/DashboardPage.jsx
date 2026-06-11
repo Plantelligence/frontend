@@ -443,6 +443,9 @@ const GreenhousePanel = ({
   const [draftCity, setDraftCity] = useState(greenhouse.city ?? '');
   const [draftState, setDraftState] = useState(greenhouse.state ?? '');
   const [draftCepLoading, setDraftCepLoading] = useState(false);
+
+  // Detecta se há ESP32 cadastrado: flag persistente OU dispositivo já registrado no painel
+  const hasDevice = greenhouse.hasEverHadDevice || (!devicesLoading && devices.length > 0);
   const [draftCepError, setDraftCepError] = useState('');
   const [menuFeedback, setMenuFeedback] = useState(null);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -995,7 +998,7 @@ const GreenhousePanel = ({
           profile={normalizeProfile(profiles.find((p) => p.id === greenhouse.flowerProfileId) ?? null)}
           externalWeather={externalWeather}
           city={greenhouse.city ?? ''}
-          hasEverHadDevice={greenhouse.hasEverHadDevice ?? false}
+          hasEverHadDevice={hasDevice}
         />
       ) : null}
 
@@ -1783,7 +1786,9 @@ export const DashboardPage = () => {
 
   // polling de telemetria ao vivo — busca leitura mais recente a cada 30s
   useEffect(() => {
-    if (!selectedGreenhouse?.id || !selectedGreenhouse?.hasEverHadDevice) {
+    const currentDevices = devicesById[selectedGreenhouse?.id] ?? [];
+    const greenhouseHasDevice = selectedGreenhouse?.hasEverHadDevice || currentDevices.length > 0;
+    if (!selectedGreenhouse?.id || !greenhouseHasDevice) {
       return undefined;
     }
 
@@ -1822,7 +1827,7 @@ export const DashboardPage = () => {
       active = false;
       clearInterval(handle);
     };
-  }, [selectedGreenhouse?.id, selectedGreenhouse?.hasEverHadDevice]);
+  }, [selectedGreenhouse?.id, selectedGreenhouse?.hasEverHadDevice, devicesById]);
 
   // carrega os dispositivos sempre que a estufa selecionada muda
   useEffect(() => {

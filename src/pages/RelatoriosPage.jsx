@@ -17,6 +17,7 @@ import { createPortal } from 'react-dom';
 import { ConfirmDialog } from '../components/ConfirmDialog.jsx';
 import { useAuthStore } from '../store/authStore.js';
 import { listGreenhouses } from '../api/greenhouseService.js';
+import { listDevices } from '../api/deviceService.js';
 import { listRelatorios, createRelatorio, deleteRelatorio, getRelatorioResumo, exportRelatoriosPDF } from '../api/relatorioService.js';
 
 // formata número para 1 casa decimal; para luminosidade usa 0 casas
@@ -344,6 +345,8 @@ export const RelatoriosPage = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [exporting, setExporting] = useState(false);
+  const [devices, setDevices] = useState([]);
+  const [devicesLoading, setDevicesLoading] = useState(false);
 
   // carrega lista de estufas disponíveis
   useEffect(() => {
@@ -369,6 +372,16 @@ export const RelatoriosPage = () => {
       .then((res) => setRelatorios(res.relatorios ?? []))
       .catch(() => setError('Não foi possível carregar os relatórios.'))
       .finally(() => setLoading(false));
+  }, [selectedId]);
+
+  // carrega dispositivos da estufa selecionada — usado para detectar se há ESP cadastrado
+  useEffect(() => {
+    if (!selectedId) return;
+    setDevicesLoading(true);
+    listDevices(selectedId)
+      .then(({ devices: list }) => setDevices(list ?? []))
+      .catch(() => setDevices([]))
+      .finally(() => setDevicesLoading(false));
   }, [selectedId]);
 
   const handleSave = useCallback(async (payload) => {
@@ -416,6 +429,9 @@ export const RelatoriosPage = () => {
     () => greenhouses.find((g) => g.id === selectedId) ?? null,
     [greenhouses, selectedId]
   );
+
+  // Detecta se há ESP32 cadastrado: flag persistente OU dispositivo registrado no painel
+  const hasDevice = (selectedGreenhouse?.hasEverHadDevice ?? false) || (!devicesLoading && devices.length > 0);
 
 
 
@@ -471,9 +487,9 @@ export const RelatoriosPage = () => {
               {!isReader && selectedId && (
                 <button
                   type="button"
-                  disabled={!selectedGreenhouse?.hasEverHadDevice}
-                  onClick={() => selectedGreenhouse?.hasEverHadDevice && setFormOpen(true)}
-                  title={!selectedGreenhouse?.hasEverHadDevice ? 'Cadastre um ESP32 nesta estufa para criar relatórios' : undefined}
+                  disabled={!hasDevice}
+                  onClick={() => hasDevice && setFormOpen(true)}
+                  title={!hasDevice ? 'Cadastre um ESP32 nesta estufa para criar relatórios' : undefined}
                   className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-red-500 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-red-600"
                 >
                   <i className="fa-solid fa-plus text-xs" />
@@ -494,7 +510,7 @@ export const RelatoriosPage = () => {
         )}
 
         {/* aviso: sem ESP e sem relatórios — banner informativo, não bloqueador */}
-        {selectedGreenhouse && !selectedGreenhouse.hasEverHadDevice && !loading && relatorios.length === 0 && (
+        {selectedGreenhouse && !hasDevice && !loading && relatorios.length === 0 && (
           <div className="flex items-start gap-4 rounded-2xl border border-dashed border-amber-300/60 bg-amber-50/30 dark:border-amber-700/40 dark:bg-amber-900/10 px-6 py-5">
             <i className="fa-solid fa-microchip text-xl text-amber-500 mt-0.5 flex-shrink-0" />
             <div>
@@ -514,7 +530,7 @@ export const RelatoriosPage = () => {
               <div key={i} className="h-44 animate-pulse rounded-2xl border border-stone-800/40 bg-stone-900/20" />
             ))}
           </div>
-        ) : selectedGreenhouse && !loading && relatorios.length === 0 && selectedGreenhouse.hasEverHadDevice ? (
+        ) : selectedGreenhouse && !loading && relatorios.length === 0 && hasDevice ? (
           <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-stone-300 bg-stone-50 dark:border-stone-700/40 dark:bg-stone-800/20 p-12 text-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-stone-300 bg-stone-100 dark:border-stone-700/40 dark:bg-stone-800/60">
               <i className="fa-solid fa-chart-bar text-xl text-stone-400 dark:text-stone-600" />

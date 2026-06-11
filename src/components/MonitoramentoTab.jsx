@@ -345,7 +345,7 @@ export const MonitoramentoTab = ({ estufaId, telemetry, profile, externalWeather
         <div className="flex items-center gap-2.5 rounded-xl border border-amber-300/50 bg-amber-50/40 dark:border-amber-700/40 dark:bg-amber-900/10 px-4 py-2.5">
           <i className="fa-solid fa-microchip text-amber-500 text-sm flex-shrink-0" />
           <p className="text-xs text-stone-600 dark:text-stone-400">
-            Nenhum ESP32 cadastrado — vá em <strong>Dispositivos</strong> para adicionar um e habilitar o monitoramento em tempo real.
+            Nenhum ESP32 cadastrado. Vá em <strong>Dispositivos</strong> para adicionar um e habilitar o monitoramento em tempo real.
           </p>
         </div>
       )}
