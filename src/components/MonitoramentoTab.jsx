@@ -328,21 +328,6 @@ export const MonitoramentoTab = ({ estufaId, telemetry, profile, externalWeather
       umidade: p.umidade ?? null,
     })), [chartData]);
 
-  if (!hasEverHadDevice) return (
-    <div className="mt-5 flex flex-col items-center gap-4 rounded-2xl border border-dashed border-amber-300/60 bg-amber-50/30 dark:border-amber-700/40 dark:bg-amber-900/10 p-12 text-center">
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-200 bg-amber-100 dark:border-amber-700/40 dark:bg-amber-900/30">
-        <i className="fa-solid fa-microchip text-xl text-amber-500" />
-      </div>
-      <div>
-        <p className="text-sm font-semibold text-stone-700 dark:text-stone-300">Nenhum ESP32 cadastrado nesta estufa</p>
-        <p className="mt-1 text-xs text-stone-500 dark:text-stone-400 max-w-sm">
-          Os gráficos de monitoramento e os dados em tempo real ficam disponíveis após o primeiro ESP32 ser cadastrado e conectado.
-          Vá em <strong>Dispositivos</strong> para adicionar um.
-        </p>
-      </div>
-    </div>
-  );
-
   if (loading) return (
     <div className="mt-5 space-y-4">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -354,6 +339,16 @@ export const MonitoramentoTab = ({ estufaId, telemetry, profile, externalWeather
 
   return (
     <div className="mt-5 space-y-4">
+
+      {/* Aviso: sem ESP */}
+      {!hasEverHadDevice && (
+        <div className="flex items-center gap-2.5 rounded-xl border border-amber-300/50 bg-amber-50/40 dark:border-amber-700/40 dark:bg-amber-900/10 px-4 py-2.5">
+          <i className="fa-solid fa-microchip text-amber-500 text-sm flex-shrink-0" />
+          <p className="text-xs text-stone-600 dark:text-stone-400">
+            Nenhum ESP32 cadastrado — vá em <strong>Dispositivos</strong> para adicionar um e habilitar o monitoramento em tempo real.
+          </p>
+        </div>
+      )}
 
       {/* Última atualização */}
       {telemetry?.lastUpdate && (

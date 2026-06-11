@@ -447,17 +447,11 @@ export const RelatoriosPage = () => {
               {greenhouses.length > 1 && (
                 <select
                   value={selectedId}
-                  onChange={(e) => {
-                    const chosen = greenhouses.find((g) => g.id === e.target.value);
-                    if (chosen?.hasEverHadDevice === false) return; // bloqueia seleção sem ESP
-                    setSelectedId(e.target.value);
-                  }}
+                  onChange={(e) => setSelectedId(e.target.value)}
                   className="rounded-xl border border-stone-300 dark:border-stone-700/60 bg-white dark:bg-stone-800/60 px-3 py-2 text-sm text-stone-800 dark:text-stone-100 outline-none focus:border-red-400 transition"
                 >
                   {greenhouses.map((g) => (
-                    <option key={g.id} value={g.id} disabled={!g.hasEverHadDevice}>
-                      {g.name}
-                    </option>
+                    <option key={g.id} value={g.id}>{g.name}</option>
                   ))}
                 </select>
               )}
@@ -477,8 +471,10 @@ export const RelatoriosPage = () => {
               {!isReader && selectedId && (
                 <button
                   type="button"
-                  onClick={() => setFormOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-red-500 active:scale-[0.98]"
+                  disabled={!selectedGreenhouse?.hasEverHadDevice}
+                  onClick={() => selectedGreenhouse?.hasEverHadDevice && setFormOpen(true)}
+                  title={!selectedGreenhouse?.hasEverHadDevice ? 'Cadastre um ESP32 nesta estufa para criar relatórios' : undefined}
+                  className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-red-500 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-red-600"
                 >
                   <i className="fa-solid fa-plus text-xs" />
                   Novo relatório
@@ -497,30 +493,28 @@ export const RelatoriosPage = () => {
           </div>
         )}
 
-        {/* gate: estufa sem ESP cadastrado */}
-        {selectedGreenhouse && !selectedGreenhouse.hasEverHadDevice ? (
-          <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-amber-300/60 bg-amber-50/30 dark:border-amber-700/40 dark:bg-amber-900/10 p-12 text-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-200 bg-amber-100 dark:border-amber-700/40 dark:bg-amber-900/30">
-              <i className="fa-solid fa-microchip text-xl text-amber-500" />
-            </div>
+        {/* aviso: sem ESP e sem relatórios — banner informativo, não bloqueador */}
+        {selectedGreenhouse && !selectedGreenhouse.hasEverHadDevice && !loading && relatorios.length === 0 && (
+          <div className="flex items-start gap-4 rounded-2xl border border-dashed border-amber-300/60 bg-amber-50/30 dark:border-amber-700/40 dark:bg-amber-900/10 px-6 py-5">
+            <i className="fa-solid fa-microchip text-xl text-amber-500 mt-0.5 flex-shrink-0" />
             <div>
               <p className="text-sm font-semibold text-stone-700 dark:text-stone-300">Nenhum ESP32 cadastrado nesta estufa</p>
-              <p className="mt-1 text-xs text-stone-500 dark:text-stone-400 max-w-sm">
+              <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
                 Os relatórios são gerados a partir dos dados coletados pelos sensores do ESP32.
                 Cadastre um dispositivo no painel da estufa para liberar esta funcionalidade.
               </p>
             </div>
           </div>
-        ) : null}
+        )}
 
-        {/* lista de relatorios */}
-        {selectedGreenhouse?.hasEverHadDevice && loading ? (
+        {/* lista de relatórios — sempre visível quando há estufa selecionada */}
+        {selectedGreenhouse && loading ? (
           <div className="grid gap-4 md:grid-cols-2">
             {[0, 1, 2].map((i) => (
               <div key={i} className="h-44 animate-pulse rounded-2xl border border-stone-800/40 bg-stone-900/20" />
             ))}
           </div>
-        ) : selectedGreenhouse?.hasEverHadDevice && relatorios.length === 0 ? (
+        ) : selectedGreenhouse && !loading && relatorios.length === 0 && selectedGreenhouse.hasEverHadDevice ? (
           <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-stone-300 bg-stone-50 dark:border-stone-700/40 dark:bg-stone-800/20 p-12 text-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-stone-300 bg-stone-100 dark:border-stone-700/40 dark:bg-stone-800/60">
               <i className="fa-solid fa-chart-bar text-xl text-stone-400 dark:text-stone-600" />
@@ -532,7 +526,7 @@ export const RelatoriosPage = () => {
               </p>
             )}
           </div>
-        ) : selectedGreenhouse?.hasEverHadDevice ? (
+        ) : selectedGreenhouse && relatorios.length > 0 ? (
           <div className="grid gap-4 md:grid-cols-2">
             {relatorios.map((r) => (
               <RelatorioCard
