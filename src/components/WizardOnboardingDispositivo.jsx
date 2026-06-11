@@ -268,8 +268,9 @@ export const WizardOnboardingDispositivo = ({ estufaId, onClose, onSuccess }) =>
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 py-4">
-      <div className="w-full max-w-2xl rounded-2xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-[#1c1917] shadow-2xl">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm">
+      <div className="flex min-h-full items-center justify-center px-4 py-6">
+      <div className="w-full max-w-2xl rounded-2xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-[#1c1917] shadow-2xl flex flex-col max-h-[90vh]">
         {/* cabeçalho */}
         <div className="flex items-center justify-between border-b border-stone-200 dark:border-stone-700 px-5 py-3">
           <div>
@@ -282,7 +283,7 @@ export const WizardOnboardingDispositivo = ({ estufaId, onClose, onSuccess }) =>
         </div>
 
         {/* conteúdo */}
-        <div className="px-5 py-4">
+        <div className="px-5 py-4 overflow-y-auto flex-1">
           <ProgressBar etapaAtual={etapa} />
 
           {/* ── Etapa 1: Formulário ── */}
@@ -515,6 +516,7 @@ export const WizardOnboardingDispositivo = ({ estufaId, onClose, onSuccess }) =>
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   );
