@@ -351,6 +351,7 @@ export const WizardOnboardingCriarEstufa = ({
             <Button
               type="button"
               variant="secondary"
+              className="border-stone-400 hover:border-stone-500"
               onClick={handleCepLookup}
               disabled={cepLoading || digitsOnly(cep).length !== 8}
             >
@@ -375,7 +376,7 @@ export const WizardOnboardingCriarEstufa = ({
             />
           </div>
           <p className="text-[10px] text-slate-400 dark:text-stone-500">
-            Cidade e estado são preenchidos automaticamente pelo CEP e não podem ser editados manualmente — isso evita erros que comprometem o funcionamento do clima externo.
+            Cidade e estado são preenchidos automaticamente pelo CEP e não podem ser editados manualmente, isso evita erros que comprometem o funcionamento do clima externo.
           </p>
           {!city || !state ? (
             <p className="text-[11px] text-slate-400 dark:text-stone-500 italic">
