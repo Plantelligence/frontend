@@ -161,7 +161,10 @@ export const WizardOnboardingDispositivo = ({ estufaId, onClose, onSuccess }) =>
       onClose();
       return;
     }
-    // Dispositivo criado mas não conectado — pergunta e deleta
+    // Para o polling imediatamente para evitar race condition com onSuccess
+    clearInterval(pollTimerRef.current);
+    clearTimeout(timeoutRef.current);
+    // Dispositivo criado mas não conectado — deleta do banco e IoT Hub
     setDeletando(true);
     try {
       await api.delete(`/estufas/${estufaId}/dispositivos/${dispositivo.id}`);
