@@ -278,7 +278,7 @@ const WINDOWS = [
 
 // ── Componente principal ──────────────────────────────────────────────────────
 
-export const MonitoramentoTab = ({ estufaId, telemetry, profile, externalWeather }) => {
+export const MonitoramentoTab = ({ estufaId, telemetry, profile, externalWeather, city }) => {
   const [series, setSeries]     = useState([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState(null);
@@ -435,7 +435,9 @@ export const MonitoramentoTab = ({ estufaId, telemetry, profile, externalWeather
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10">
               <i className="fa-solid fa-cloud-sun text-blue-500 dark:text-blue-400 text-sm" />
             </div>
-            <p className="text-xs font-semibold text-stone-800 dark:text-stone-100">Clima externo</p>
+            <p className="text-xs font-semibold text-stone-800 dark:text-stone-100">
+              Clima externo{city ? <span className="ml-1 font-normal text-stone-400 dark:text-stone-500">({city})</span> : null}
+            </p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
