@@ -79,19 +79,68 @@ export function useEmailCooldown() {
 
 // Per-key cooldown map (e.g. per-user resend invite buttons)
 // Versão para múltiplos botões independentes na mesma tela (ex.: reenviar convite por usuário)
+// Suporta persistência no localStorage: o cooldown sobrevive a recargas de página.
 export function useEmailCooldownMap(fixedCooldown = null) {
-  // Mapa de { chave: segundosRestantes } para cada botão individual
-  const [seconds, setSeconds] = useState({});       // { [key]: secondsLeft }
+  const LS_PREFIX = 'plt_cooldown_end_'; // prefixo de chave no localStorage
+
+  // Calcula segundos restantes a partir do timestamp de fim salvo no localStorage
+  function _secondsFromStorage(key) {
+    try {
+      const end = parseInt(localStorage.getItem(LS_PREFIX + key) || '0', 10);
+      const remaining = Math.ceil((end - Date.now()) / 1000);
+      return remaining > 0 ? remaining : 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  // Inicializa o estado com qualquer cooldown ativo persistido (restaura após F5)
+  const [seconds, setSeconds] = useState(() => {
+    // Não tenta ler localStorage durante SSR
+    if (typeof localStorage === 'undefined') return {};
+    try {
+      const restored = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith(LS_PREFIX)) {
+          const mapKey = k.slice(LS_PREFIX.length);
+          const remaining = _secondsFromStorage(mapKey);
+          if (remaining > 0) restored[mapKey] = remaining;
+        }
+      }
+      return restored;
+    } catch {
+      return {};
+    }
+  });
+
   // Mapa de contadores de envio por chave para o backoff progressivo
   const [counts, setCounts] = useState({});          // { [key]: sendCount }
   // Mapa de IDs de timer para cada chave — permite cancelar timers individualmente
   const timers = useRef({});
 
-  // Limpa todos os timers ativos ao desmontar o componente
+  // Restaura timers para chaves com cooldown ativo ao montar o componente
   useEffect(() => {
+    Object.entries(seconds).forEach(([key, secs]) => {
+      if (secs > 0 && !timers.current[key]) {
+        timers.current[key] = setInterval(() => {
+          setSeconds((s) => {
+            const cur = s[key] ?? 0;
+            if (cur <= 1) {
+              clearInterval(timers.current[key]);
+              timers.current[key] = null;
+              try { localStorage.removeItem(LS_PREFIX + key); } catch {}
+              return { ...s, [key]: 0 };
+            }
+            return { ...s, [key]: cur - 1 };
+          });
+        }, 1000);
+      }
+    });
     return () => {
       Object.values(timers.current).forEach(clearInterval);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Registra um envio para a chave especificada e inicia o cooldown dessa chave
@@ -100,6 +149,8 @@ export function useEmailCooldownMap(fixedCooldown = null) {
       const next = (prev[key] ?? 0) + 1;
       const delay = fixedCooldown !== null ? fixedCooldown : getNextCooldown(next);
       if (delay > 0) {
+        // Persiste o timestamp de fim no localStorage para sobreviver a F5
+        try { localStorage.setItem(LS_PREFIX + key, String(Date.now() + delay * 1000)); } catch {}
         // Inicializa o contador de segundos para esta chave específica
         setSeconds((s) => ({ ...s, [key]: delay }));
         if (timers.current[key]) clearInterval(timers.current[key]);
@@ -108,9 +159,9 @@ export function useEmailCooldownMap(fixedCooldown = null) {
           setSeconds((s) => {
             const cur = s[key] ?? 0;
             if (cur <= 1) {
-              // Zera e para o timer quando o cooldown desta chave termina
               clearInterval(timers.current[key]);
               timers.current[key] = null;
+              try { localStorage.removeItem(LS_PREFIX + key); } catch {}
               return { ...s, [key]: 0 };
             }
             return { ...s, [key]: cur - 1 };
@@ -119,7 +170,8 @@ export function useEmailCooldownMap(fixedCooldown = null) {
       }
       return { ...prev, [key]: next };
     });
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fixedCooldown]);
 
   // Verifica se o botão de uma chave específica está liberado para envio
   const canSend = useCallback((key) => (seconds[key] ?? 0) === 0, [seconds]);
