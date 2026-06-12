@@ -1004,6 +1004,7 @@ const GreenhousePanel = ({
         <CentroComando
           estufaId={greenhouse.id}
           isReader={readOnly}
+          telemetry={telemetryById[greenhouse.id] ?? null}
         />
       ) : null}
 

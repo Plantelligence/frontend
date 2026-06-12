@@ -270,7 +270,7 @@ function PhaseModal({ currentPhase, onConfirm, onClose }) {
 
 // ── Componente principal ──────────────────────────────────────────────────────
 
-export const CentroComando = ({ estufaId, isReader = false }) => {
+export const CentroComando = ({ estufaId, isReader = false, telemetry = null }) => {
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -337,6 +337,34 @@ export const CentroComando = ({ estufaId, isReader = false }) => {
       setActionLoading(null);
     }
   };
+
+
+  // Mapeia campo do presetAdherence para a chave no objeto telemetry do DashboardPage
+  const METRIC_TO_TELEMETRY = {
+    temperatura:  'temperature',
+    umidade:      'humidity',
+    umidade_solo: 'soilMoisture',
+    luminosidade: 'luminosidade',
+  };
+
+  // Sobrescreve os valores do presetAdherence com os dados ao vivo do telemetry prop
+  // para garantir que Situação do Cultivo e Análise do Cultivo mostrem os mesmos números
+  function applyLiveTelemetry(items) {
+    if (!telemetry || !Array.isArray(items)) return items;
+    return items.map((item) => {
+      const key = METRIC_TO_TELEMETRY[item.metric];
+      const liveVal = key != null ? telemetry[key] : undefined;
+      if (liveVal == null || typeof liveVal !== 'number') return item;
+      let status = item.status;
+      let direction = item.direction;
+      if (item.rangeMin != null && item.rangeMax != null) {
+        if (liveVal < item.rangeMin) { status = 'warning'; direction = 'low'; }
+        else if (liveVal > item.rangeMax) { status = 'warning'; direction = 'high'; }
+        else { status = 'ok'; direction = 'in-range'; }
+      }
+      return { ...item, value: liveVal, status, direction };
+    });
+  }
 
   // ── Loading state ────────────────────────────────────────────────────────────
   if (loading) {
@@ -463,10 +491,10 @@ export const CentroComando = ({ estufaId, isReader = false }) => {
             />
           </div>
 
-          {data.lastTelemetryTimestamp && (
+          {(data.lastUpdated || telemetry?.lastUpdate) && (
             <p className="text-[10px] text-stone-500 dark:text-stone-600 mb-3 flex items-center gap-1">
               <i className="fa-solid fa-clock-rotate-left text-[9px]" />
-              Última leitura: {new Date(data.lastTelemetryTimestamp).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              Última conexão ESP32: {new Date(telemetry?.lastUpdate || data.lastUpdated).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
             </p>
           )}
           {!data.presetName ? (
@@ -479,7 +507,7 @@ export const CentroComando = ({ estufaId, isReader = false }) => {
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-2">
-              {(data.presetAdherence || []).map((item) => (
+              {applyLiveTelemetry(data.presetAdherence || []).map((item) => (
                 <AdherenceBar key={item.metric} item={item} />
               ))}
             </div>
