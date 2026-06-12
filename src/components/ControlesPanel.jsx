@@ -403,9 +403,15 @@ export const ControlesPanel = ({ greenhouse, devices, devicesLoading, telemetry,
   const [estadosLocais, setEstadosLocais] = useState({});
 
   // Lê o estado real da última telemetria do ESP32
+  // Normaliza float (1.0/0.0) ou string ("on"/"off") para "on"/"off"
   const getEstadoAtual = (telKey) => {
-    if (estadosLocais[telKey] !== undefined) return estadosLocais[telKey];
-    return telemetry?.[telKey] ?? null;
+    const raw = estadosLocais[telKey] !== undefined
+      ? estadosLocais[telKey]
+      : telemetry?.[telKey] ?? null;
+    if (raw === null || raw === undefined) return null;
+    if (raw === 'on' || raw === 1 || raw === 1.0) return 'on';
+    if (raw === 'off' || raw === 0 || raw === 0.0) return 'off';
+    return raw;
   };
 
   const handleComando = (parametro, acao) => {
