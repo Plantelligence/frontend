@@ -123,39 +123,37 @@ function AdherenceBar({ item }) {
   }
 
   return (
-    <div className={`rounded-xl border p-3 transition-all ${
-      noData ? 'border-stone-200 dark:border-stone-800/40 bg-stone-50 dark:bg-stone-900/20 opacity-60' :
+    <div className={`rounded-xl border p-3 transition-all flex flex-col items-center justify-center text-center ${
+      (noData && item.value == null) ? 'border-stone-200 dark:border-stone-800/40 bg-stone-50 dark:bg-stone-900/20 opacity-60' :
       isOk   ? 'border-stone-200 dark:border-stone-800/50 bg-white dark:bg-stone-900/30' :
       item.status === 'warning' ? 'border-amber-300 dark:border-amber-500/25 bg-amber-50 dark:bg-amber-500/5' :
       'border-red-300 dark:border-red-500/30 bg-red-50 dark:bg-red-500/5'
     }`}>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[10px] font-semibold uppercase tracking-widest text-stone-600 dark:text-stone-500">
-          {item.label}
-        </span>
-        {noData ? (
-          <span className="text-[10px] text-stone-500 dark:text-stone-600">sem dados</span>
-        ) : (
-          <div className="flex items-center gap-1.5">
-            <i className={`fa-solid ${dir.icon} text-[10px] ${dir.color}`} />
-            <span className={`text-[10px] font-semibold ${isOk ? 'text-emerald-400' : item.status === 'warning' ? 'text-amber-400' : 'text-red-400'}`}>
-              {isOk ? 'OK' : item.direction === 'low' ? 'Abaixo' : 'Acima'}
-            </span>
-          </div>
-        )}
-      </div>
+      <span className="text-[10px] font-semibold uppercase tracking-widest text-stone-600 dark:text-stone-500 mb-1">
+        {item.label}
+      </span>
 
-      <div className="flex items-baseline gap-1.5 mb-2">
+      <div className="flex items-baseline gap-1.5 justify-center">
         <span className="text-xl font-bold text-stone-900 dark:text-stone-100">
-          {item.value != null ? item.value.toFixed(item.value % 1 === 0 ? 0 : 1) : ''}
+          {item.value != null ? item.value.toFixed(item.value % 1 === 0 ? 0 : 1) : '—'}
         </span>
         <span className="text-xs text-stone-500">{item.unit}</span>
-        {item.rangeMin != null && (
-          <span className="text-[10px] text-stone-500 dark:text-stone-600 ml-auto">
-            ideal: {item.rangeMin}-{item.rangeMax} {item.unit}
-          </span>
-        )}
       </div>
+
+      {item.rangeMin != null && (
+        <span className="text-[10px] text-stone-500 dark:text-stone-600 mt-0.5">
+          ideal: {item.rangeMin}–{item.rangeMax} {item.unit}
+        </span>
+      )}
+
+      {!noData && (
+        <div className="flex items-center gap-1 mt-1">
+          <i className={`fa-solid ${dir.icon} text-[10px] ${dir.color}`} />
+          <span className={`text-[10px] font-semibold ${isOk ? 'text-emerald-400' : item.status === 'warning' ? 'text-amber-400' : 'text-red-400'}`}>
+            {isOk ? 'OK' : item.direction === 'low' ? 'Abaixo' : 'Acima'}
+          </span>
+        </div>
+      )}
 
       {/* barra de posicao */}
       {!noData && item.rangeMin != null && (
