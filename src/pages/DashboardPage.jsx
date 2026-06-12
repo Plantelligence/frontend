@@ -1190,7 +1190,7 @@ const GreenhousePanel = ({
                         : 'border-amber-200 bg-amber-50 text-amber-700';
                     return (
                       <div key={metricKey} className={`rounded border px-3 py-2 ${cardClass}`}>
-                        <p className="text-[10px] uppercase tracking-[0.05em] leading-tight break-all">{labelMap[metricKey]}</p>
+                        <p className="text-[10px] uppercase tracking-[0.05em] leading-tight break-words">{labelMap[metricKey]}</p>
                         <p className="text-sm font-semibold">
                           {typeof metric.value === 'number' ? `${metric.value.toFixed(1)}${unitMap[metricKey]}` : '—'}
                         </p>
@@ -1248,7 +1248,7 @@ const GreenhousePanel = ({
                       : 'border-amber-200 bg-amber-50 text-amber-700';
                   return (
                     <div key={metricKey} className={`rounded border px-3 py-2 ${className}`}>
-                      <p className="text-[10px] uppercase tracking-[0.06em] leading-tight break-all">{labelMap[metricKey]}</p>
+                      <p className="text-[10px] uppercase tracking-[0.06em] leading-tight break-words">{labelMap[metricKey]}</p>
                       <p className="text-sm font-semibold">
                         {typeof metric.value === 'number'
                           ? `${metric.value.toFixed(1)}${unitMap[metricKey]}`
