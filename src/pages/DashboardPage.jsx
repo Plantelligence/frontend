@@ -1297,14 +1297,16 @@ const GreenhousePanel = ({
                 {notifyBusy
                   ? 'Processando...'
                   : notifyOnCooldown
-                    ? `Aguarde ${notifySecondsLeft}s`
+                    ? `Aguarde ${Math.floor(notifySecondsLeft / 60)}:${String(notifySecondsLeft % 60).padStart(2, '0')}`
                     : resolvedEvaluation.status === 'alert'
                       ? 'Notificar equipe'
                       : 'Gerar avaliação'}
               </Button>
-              <p className="text-[10px] text-slate-500 dark:text-stone-400">
-                {readOnly ? 'Perfil Leitor não executa ações.' : 'Para evitar repetição, um novo aviso sai só após 15 min.'}
-              </p>
+              {!notifyFeedback && !notifyOnCooldown && (
+                <p className="text-[10px] text-slate-500 dark:text-stone-400">
+                  {readOnly ? 'Perfil Leitor não executa ações.' : 'Para evitar repetição, um novo aviso sai só após 15 min.'}
+                </p>
+              )}
             </div>
             <p className="mt-2 text-[10px] text-slate-500 dark:text-stone-400">
               {readOnly
@@ -1536,7 +1538,7 @@ export const DashboardPage = () => {
   const [teamSavingById, setTeamSavingById] = useState({});
   const [alertsSavingById, setAlertsSavingById] = useState({});
   const [notifyBusyById, setNotifyBusyById] = useState({});
-  const notifyCooldown = useEmailCooldownMap(); // cooldown progressivo por estufa: 30s → 60s → 120s → 300s
+  const notifyCooldown = useEmailCooldownMap(900); // cooldown fixo de 15 min (900s) por estufa
   const [externalWeatherById, setExternalWeatherById] = useState({});
   const [externalWeatherLoadingById, setExternalWeatherLoadingById] = useState({});
   const [loading, setLoading] = useState(true);
@@ -2248,15 +2250,28 @@ export const DashboardPage = () => {
           }
         }));
       } else if (result?.status === 'ok') {
-        setNotifyFeedbackById((prev) => ({
-          ...prev,
-          [greenhouseId]: {
-            type: 'success',
-            text: result?.partialEvaluation
-              ? 'Nenhum desvio crítico detectado na avaliação parcial com os dados disponíveis.'
-              : 'Nenhum desvio crítico detectado neste ciclo de avaliação.'
-          }
-        }));
+        if (result?.notified) {
+          notifyCooldown.recordSend(greenhouseId);
+          setNotifyFeedbackById((prev) => ({
+            ...prev,
+            [greenhouseId]: {
+              type: 'success',
+              text: result?.partialEvaluation
+                ? 'Equipe notificada. Situação atual: avaliação parcial — todos os parâmetros disponíveis dentro da faixa ideal.'
+                : 'Equipe notificada. Situação atual: todos os parâmetros dentro da faixa ideal.'
+            }
+          }));
+        } else {
+          setNotifyFeedbackById((prev) => ({
+            ...prev,
+            [greenhouseId]: {
+              type: 'success',
+              text: result?.partialEvaluation
+                ? 'Nenhum desvio crítico detectado na avaliação parcial com os dados disponíveis.'
+                : 'Nenhum desvio crítico detectado neste ciclo de avaliação.'
+            }
+          }));
+        }
       } else if (Array.isArray(result?.alerts) && result.alerts.length > 0) {
         setNotifyFeedbackById((prev) => ({
           ...prev,

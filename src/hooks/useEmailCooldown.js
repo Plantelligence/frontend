@@ -53,7 +53,7 @@ export function useEmailCooldown() {
     setSendCount((prev) => {
       const next = prev + 1;
       // Calcula quanto tempo deve esperar com base no número de envios
-      const delay = getNextCooldown(next);
+      const delay = fixedCooldown !== null ? fixedCooldown : getNextCooldown(next);
       if (delay > 0) {
         setSecondsLeft(delay);
         clearTimer();
@@ -79,7 +79,7 @@ export function useEmailCooldown() {
 
 // Per-key cooldown map (e.g. per-user resend invite buttons)
 // Versão para múltiplos botões independentes na mesma tela (ex.: reenviar convite por usuário)
-export function useEmailCooldownMap() {
+export function useEmailCooldownMap(fixedCooldown = null) {
   // Mapa de { chave: segundosRestantes } para cada botão individual
   const [seconds, setSeconds] = useState({});       // { [key]: secondsLeft }
   // Mapa de contadores de envio por chave para o backoff progressivo
@@ -98,7 +98,7 @@ export function useEmailCooldownMap() {
   const recordSend = useCallback((key) => {
     setCounts((prev) => {
       const next = (prev[key] ?? 0) + 1;
-      const delay = getNextCooldown(next);
+      const delay = fixedCooldown !== null ? fixedCooldown : getNextCooldown(next);
       if (delay > 0) {
         // Inicializa o contador de segundos para esta chave específica
         setSeconds((s) => ({ ...s, [key]: delay }));
