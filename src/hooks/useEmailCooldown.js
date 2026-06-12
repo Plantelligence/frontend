@@ -53,7 +53,7 @@ export function useEmailCooldown() {
     setSendCount((prev) => {
       const next = prev + 1;
       // Calcula quanto tempo deve esperar com base no número de envios
-      const delay = fixedCooldown !== null ? fixedCooldown : getNextCooldown(next);
+      const delay = getNextCooldown(next);
       if (delay > 0) {
         setSecondsLeft(delay);
         clearTimer();
